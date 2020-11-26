@@ -26,6 +26,7 @@ router.post('/login', loginController.login, auth.getToken);
 router.put('/coRegistrationApproval', auth.verifyToken, companyController.approveCompanyRegistration);
 router.get('/directory', auth.verifyToken, companyController.getCompaniesList);
 router.get('/publicDirectory', companyController.getApprovedCompaniesList);
+router.get('/company/:companyId', companyController.getCompanyInfo);
 
 // Users
 router.get('/usersList', auth.verifyToken, userController.getUsersList);

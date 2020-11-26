@@ -46,8 +46,25 @@ const approveCompanyRegistration =  (req, res) => {
 });
 }
 
+const getCompanyInfo =  (req, res) => {
+    models.Company.findOne({
+        where: {
+            id: req.params.companyId
+        }
+    }).then(company => {
+        res.status(200).send({
+            companyInfo: company
+        });
+    }).catch( (err) => {
+        res.status(401).send({
+            message: "Company Info Got"
+        })
+    })
+}
+
 module.exports = {
     getCompaniesList,
     getApprovedCompaniesList,
     approveCompanyRegistration,
+    getCompanyInfo,
 }
