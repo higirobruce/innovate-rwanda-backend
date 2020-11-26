@@ -1,7 +1,9 @@
-const express = require('express');
+var express = require('express');
+var jwt = require('jsonwebtoken');
 const router = express.Router();
 
 // Controllers
+const auth = require('./helpers/authorization_authentication');
 const registrationController = require('./controllers/registrationController');
 const loginController = require('./controllers/loginController');
 const companyController = require('./controllers/companyController');
@@ -18,34 +20,35 @@ const eventController = require('./controllers/eventController');
 router.post('/register', registrationController.register);
 
 // Login
-router.post('/login', loginController.login);
+router.post('/login', loginController.login, auth.getToken);
 
 // Companies
-router.put('/coRegistrationApproval', companyController.approveCompanyRegistration);
-router.get('/directory', companyController.getCompaniesList);
+router.put('/coRegistrationApproval', auth.verifyToken, companyController.approveCompanyRegistration);
+router.get('/directory', auth.verifyToken, companyController.getCompaniesList);
+router.get('/publicDirectory', companyController.getApprovedCompaniesList);
 
 // Users
-router.get('/usersList', userController.getUsersList);
+router.get('/usersList', auth.verifyToken, userController.getUsersList);
 
 // Subscriptions
 router.post('/subscribe', subscriptionController.subscribeToNotification);
 router.put('/unsubscribe', subscriptionController.unsubscribeFromNotification);
-router.get('/subscriptionsList/:status', subscriptionController.getSubscriptions);
+router.get('/subscriptionsList/:status', auth.verifyToken, subscriptionController.getSubscriptions);
 
 // Job Posting
-router.post('/postJob', jobController.jobPost);
-router.put('/approveJobPost', jobController.approveJobPost);
-router.get('/jobsList/:status', jobController.getJobsList);
+router.post('/postJob', auth.verifyToken, jobController.jobPost);
+router.put('/approveJobPost', auth.verifyToken, jobController.approveJobPost);
+router.get('/jobsList/:status', auth.verifyToken, jobController.getJobsList);
 
 // Blogs
-router.post('/postBlog', blogController.blogPost);
-router.put('/approveBlogPost', blogController.approveBlogPost);
-router.get('/blogsList/:status', blogController.getBlogsList);
+router.post('/postBlog', auth.verifyToken, blogController.blogPost);
+router.put('/approveBlogPost', auth.verifyToken, blogController.approveBlogPost);
+router.get('/blogsList/:status', auth.verifyToken, blogController.getBlogsList);
 
 // Events
-router.post('/postEvent', eventController.eventPost);
-router.put('/approveEventPost', eventController.approveEventPost);
-router.get('/eventsList/:status', eventController.getEventsList);
+router.post('/postEvent', auth.verifyToken, eventController.eventPost);
+router.put('/approveEventPost', auth.verifyToken, eventController.approveEventPost);
+router.get('/eventsList/:status', auth.verifyToken, eventController.getEventsList);
 
 /* 
  * To do
@@ -53,7 +56,7 @@ router.get('/eventsList/:status', eventController.getEventsList);
 // Search: all (in everything), on each page - search in title
 //where, time, place, date, flyer, title, about event, description
 
-// Add validation and confirm login for some routes
+// Add validation
 // Sending emails where needed
 // Edit company info and other -- Adding some more info
 // Getting counters (Number of users, registered co, pending registration requests)

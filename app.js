@@ -16,10 +16,10 @@ app.use((req, res, next) => {
     );
   
     if (req.method === "OPTIONS") {
-      res.header("Access-Control-Allow-Methods", "PUT, POST, GET");
+      res.header("Access-Control-Allow-Methods", "PUT, PATCH, POST, GET, DELETE");
       return res.status(400).json({
         status: 400,
-        accepted: "PUT, POST, GET",
+        accepted: "PUT,PATCH, POST, GET,DELETE",
       });
     }
     return next();

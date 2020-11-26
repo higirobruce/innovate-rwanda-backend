@@ -13,6 +13,23 @@ const getCompaniesList =  (req, res) => {
     });
 }
 
+const getApprovedCompaniesList =  (req, res) => {
+    models.Company.findAll({
+        where: {
+          status: 'approved'
+        }
+      }).then(companys => {
+        console.log("All companies:", JSON.stringify(companys, null, 4));
+        res.status(200).send({
+            result: companys
+        });
+    }).catch( (err) => {
+        res.status(401).send({
+            message: "list not got"
+        })
+    });
+}
+
 const approveCompanyRegistration =  (req, res) => {
     models.Company.update({ status: req.body.decision }, {
     where: {
@@ -31,5 +48,6 @@ const approveCompanyRegistration =  (req, res) => {
 
 module.exports = {
     getCompaniesList,
+    getApprovedCompaniesList,
     approveCompanyRegistration,
 }

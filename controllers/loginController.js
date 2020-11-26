@@ -1,7 +1,7 @@
 const bcrypt = require('bcrypt');
 const models = require('../models');
 
-const login =  (req, res) => {
+const login =  (req, res,next) => {
     models.User.findOne({
         where: { email: req.body.email }}).then(user => {
             if (!user) {
@@ -13,20 +13,17 @@ const login =  (req, res) => {
             if (result == true) {
                 models.Company.findOne({
                     where: { id: user.companyId }}).then(company => {
+                        //req.message = "login exist"
+                        user.password =''
+                        res.locals.user = user
                         if (!company) {
-                            res.status(201).send({ // To do: Add user to session for later use
-                                message: "login exist",
-                                user: user,
-                                companyInfo: "Company info not there"
-                            });
+                            res.locals.companyInfo = "Company info not there"                            
                         } else {
-                            res.status(200).send({ // To do: Add user to session for later use
-                                message: "login exist",
-                                user: user,
-                                companyInfo: company
-                            });
+                            res.locals.companyInfo = company
                         }
+                        next();
                     }).catch( (err) => {
+                        console.log(err);
                         res.status(403).send({
                             message: "Error - company info not got"
                         });
