@@ -14,6 +14,7 @@ export default class UserController {
         "companyId",
         "status",
       ],
+      order: [['createdAt', 'DESC']]
     })
       .then((users) => {
         res.status(200).send({
@@ -21,6 +22,7 @@ export default class UserController {
         });
       })
       .catch((err) => {
+        console.log(err)
         return res.status(401).send({
           message: "list of users not got",
         });

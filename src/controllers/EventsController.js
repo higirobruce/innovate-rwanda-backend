@@ -44,7 +44,7 @@ export default class EvenController {
   static async getEventsList(req, res) {
     //To do: Date of deadline need to be set so we don't show outdated ones
     if (req.params.status == "all") {
-      db['Event'].findAll()
+      db['Event'].findAll({order: [['createdAt', 'DESC']]})
         .then((eventPosts) => {
           res.status(200).send({
             result: eventPosts,
@@ -60,6 +60,7 @@ export default class EvenController {
         where: {
           status: req.params.status,
         },
+        order: [['createdAt', 'DESC']]
       })
         .then((eventPosts) => {
           res.status(200).send({

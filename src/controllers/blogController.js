@@ -44,7 +44,7 @@ export default class BlogController {
   static async getBlogsList(req, res) {
     //To do: Date of deadline need to be set so we don't show outdated ones
     if (req.params.status == "all") {
-      db['Blog'].findAll()
+      db['Blog'].findAll({order: [['createdAt', 'DESC']]})
         .then((blogPosts) => {
           res.status(200).send({
             result: blogPosts,
@@ -60,6 +60,7 @@ export default class BlogController {
         where: {
           status: req.params.status,
         },
+        order: [['createdAt', 'DESC']]
       })
         .then((blogPosts) => {
           res.status(200).send({

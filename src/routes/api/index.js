@@ -1,4 +1,5 @@
 import express from "express";
+import generic from "./generic";
 import users from "./users";
 import company from "./company";
 import events from "./events";
@@ -8,6 +9,7 @@ import subscribe from "./subscribe";
 
 const router = express.Router();
 
+router.use("/", generic);
 router.use("/", users);
 router.use("/", company);
 router.use("/", events);

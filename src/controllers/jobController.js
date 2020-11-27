@@ -48,7 +48,7 @@ export default class JobController {
     //To do: Date of deadline need to be set so we don't show outdated ones
     if (req.params.status == "all") {
       db["Job"]
-        .findAll()
+        .findAll({order: [['createdAt', 'DESC']]})
         .then((jobPosts) => {
           res.status(200).send({
             result: jobPosts,
@@ -65,6 +65,7 @@ export default class JobController {
           where: {
             status: req.params.status,
           },
+          order: [['createdAt', 'DESC']]
         })
         .then((jobPosts) => {
           res.status(200).send({

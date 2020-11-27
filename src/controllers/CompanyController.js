@@ -4,6 +4,7 @@ export default class CompanyController {
   static async getCompaniesList(req, res) {
     try {
       const companies = await db["Company"].findAll({
+        order: [['createdAt', 'DESC']],
         raw: true,
       });
       if (companies && companies.length > 0) {
@@ -28,6 +29,7 @@ export default class CompanyController {
         where: {
           status: "approved",
         },
+        order: [['createdAt', 'DESC']]
       })
       .then((companys) => {
         res.status(200).send({
