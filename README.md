@@ -1,1 +1,1 @@
-# innovaterwanda-backend
+# Innovate Rwanda
