@@ -2,76 +2,114 @@ import db from "../models";
 
 export default class EvenController {
   static async eventPost(req, res) {
-    db['Event'].create({
-      title: req.body.title,
-      description: req.body.description,
-      status: "pending approval",
-    })
-      .then((result) => {
-        res.status(200).send({
-          message: "Event Posted",
-        });
-      })
-      .catch((error) => {
-        res.status(401).send({
-          message: "Something went wrong",
-        });
-      });
+    try {
+      const response = await db['Event'].create(req.body);
+      if (response) {
+          return res.status(200).send({
+            message: "Event submitted",
+          });
+      }
+    } catch (err) {
+        console.log(err)
+        return res.status(400).send({ message: " Event not submitted at this moment" });
+    }
   }
 
-  static async approveEventPost(req, res) {
-    // To do: Do more here, once approved send notifications right away or?
-    db['Event'].update(
-      { status: req.body.decision },
-      {
-        where: {
-          id: req.body.id,
-        },
+  static async approveOrDeclineEventPost(req, res) {
+    // To do: Do more here, once approved send notifications
+    try {
+      const update = await db['Event']
+        .update(
+          { status: req.body.decision },
+          {
+            where: {
+              id: req.body.id,
+            },
+          }
+        );
+        return update
+          ? res.status(200).json({
+              message: req.body.decision
+            })
+          : res.status(404).json({
+            error: "Sorry, Approval/Decline failed",
+          });
+      } catch (err) {
+        return res.status(400).send({ message: "Sorry, Action failed" });
       }
-    )
-      .then(() => {
-        res.status(200).send({
-          message: "approved",
-        });
-      })
-      .catch((err) => {
-        res.status(401).send({
-          message: "An error occurred",
-        });
-      });
   }
 
   static async getEventsList(req, res) {
-    //To do: Date of deadline need to be set so we don't show outdated ones
-    if (req.params.status == "all") {
-      db['Event'].findAll({order: [['createdAt', 'DESC']]})
-        .then((eventPosts) => {
-          res.status(200).send({
+    try {
+      var eventPosts;
+      if (req.params.status == "all") {
+        eventPosts = await db['Event']
+          .findAll({
+            order: [['createdAt', 'DESC']]
+          });
+      } else {
+        eventPosts = await db['Event']
+          .findAll({
+            where: {
+              status: req.params.status,
+            },
+            order: [['createdAt', 'DESC']]
+          });
+      }
+      if (eventPosts && eventPosts.length > 0) {
+          return res.status(200).json({
             result: eventPosts,
           });
-        })
-        .catch((err) => {
-          res.status(401).send({
-            message: "list of events posted not got",
+      } else {
+          return res.status(404).json({
+            result: [],
+            error: "No Event Posts found",
           });
+      }
+    } catch (err) {
+      console.log(err)
+      return res.status(400).send({ message: " List of Events not got at this moment" });
+    }
+  }
+
+  static async getEventInfo(req, res) {
+    try {
+      const event = await db["Event"]
+        .findOne({
+          where: {
+            id: req.params.eventId,
+          },
+          raw: true,
         });
-    } else {
-      db['Event'].findAll({
-        where: {
-          status: req.params.status,
-        },
-        order: [['createdAt', 'DESC']]
-      })
-        .then((eventPosts) => {
-          res.status(200).send({
-            result: eventPosts,
+      return event
+        ? res.status(200).json({
+            result: event
+          })
+        : res.status(404).json({
+            error: "Sorry, Event not found",
           });
-        })
-        .catch((err) => {
-          res.status(401).send({
-            message: "list of events not got",
-          });
+    } catch (err) {
+      return res.status(400).send({ message: "Sorry, Event not found" });
+    }
+  }
+
+  static async editEventInfo(req, res) {
+    try {
+      const update = await db["Event"]
+        .update((req.body), {
+          where: {
+            id: req.body.eventId
+          },
         });
+      return update
+        ? res.status(200).json({
+            result: "Edited Successfully"
+          })
+        : res.status(404).json({
+          error: "Sorry, No record edited",
+        });
+    } catch (err) {
+      return res.status(400).send({ message: "Sorry, Edit failed" });
     }
   }
 }

@@ -7,10 +7,14 @@ import checkPermissions from "../../middlewares/checkPermissions";
 
 const events = Router();
 
-// Events
-events.post('/events', 
-checkPermissions("normal"), auth.verifyToken, EventsController.eventPost);
-events.put('/events/approve', auth.verifyToken, EventsController.approveEventPost);
+events.post('/events', checkPermissions("normal"), auth.verifyToken, EventsController.eventPost);
+
+events.put('/events/approve-decline', auth.verifyToken, EventsController.approveOrDeclineEventPost);
+
 events.get('/events/:status', auth.verifyToken, EventsController.getEventsList);
+
+events.get("/events/info/:eventId", EventsController.getEventInfo);
+
+events.patch("/events/edit", auth.verifyToken, EventsController.editEventInfo);
 
 export default events;
