@@ -14,12 +14,21 @@ company.get(
   CompanyController.getCompaniesList
 );
 company.get("/directory/public", CompanyController.getApprovedCompaniesList);
+
 company.put(
   "/company/approve",
   auth.verifyToken,
   checkPermissions("admin-company"),
   CompanyController.approveCompanyRegistration
 );
+
 company.get("/company/:companyId", CompanyController.getCompanyInfo);
+
+company.patch(
+  "/company/edit",
+  auth.verifyToken,
+  checkPermissions(["normal","admin-company"]),
+  CompanyController.editCompanyInfo
+);
 
 export default company;

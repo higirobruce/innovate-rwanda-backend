@@ -53,7 +53,7 @@ export default class CompanyController {
       )
       .then(() => {
         res.status(200).send({
-          message: "approved",
+          message: "Done",
         });
       })
       .catch((err) => {
@@ -88,6 +88,26 @@ export default class CompanyController {
           });
     } catch (err) {
       return res.status(400).send({ message: "Sorry, Company not found" });
+    }
+  }
+
+  static async editCompanyInfo(req, res) {
+    try {
+      const update = await db["Company"]
+        .update((req.body), {
+          where: {
+            id: req.body.id
+          },
+        })
+        return update
+          ? res.status(200).json({
+              result: "Edited Successfully"
+            })
+          : res.status(404).json({
+              error: "Sorry, No record edited",
+            });
+    } catch (err) {
+      return res.status(400).send({ message: "Sorry, Edit failed" });
     }
   }
 }

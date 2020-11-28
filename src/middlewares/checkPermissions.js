@@ -1,7 +1,7 @@
-const checkPermissions = (action) => {
+const checkPermissions = (actions) => {
   return async (req, res, next) => {
     try {
-      if (req.user.role !== action || req.user.role === "super-admin") {
+      if (actions.includes(req.user.role) || req.user.role === "super-admin") {
         next();
       } else {
         return res

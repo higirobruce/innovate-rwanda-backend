@@ -19,7 +19,14 @@ module.exports = (sequelize, DataTypes) => {
     coWebsite: DataTypes.STRING,
     districtBasedIn: DataTypes.STRING,
     areaOfInterest: DataTypes.STRING,
-    shortDescription: DataTypes.STRING,
+    shortDescription: DataTypes.TEXT,
+    logo: DataTypes.BLOG,
+    yearFounded: DataTypes.INTEGER,
+    contactEmail: DataTypes.STRING,
+    contactPhone: DataTypes.STRING,
+    mainAreaOfInterest: DataTypes.STRING,
+    customerBase: DataTypes.STRING,
+    socialMedia: DataTypes.STRING,
     status: DataTypes.STRING
   }, {
     sequelize,
