@@ -43,6 +43,21 @@ export default class CompanyController {
       });
   }
 
+  static async approveOrDeclineCompany(req, res) {
+   const response = await db["Company"]
+      .update(
+        { status: req.body.decision },
+        {
+          where: {
+            id: req.body.id,
+          },
+        }
+      )
+      return res.status(200).json({
+        message: response
+      })
+  }
+  
   static async approveCompanyRegistration(req, res) {
     db["Company"]
       .update(
