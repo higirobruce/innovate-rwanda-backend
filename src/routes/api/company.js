@@ -10,16 +10,16 @@ const company = Router();
 company.get(
   "/directory/admin",
   auth.verifyToken,
-  checkPermissions("normal"),
+  checkPermissions("admin-company"),
   CompanyController.getCompaniesList
 );
 company.get("/directory/public", CompanyController.getApprovedCompaniesList);
 
 company.put(
-  "/company/approve",
+  "/company/approve-decline",
   auth.verifyToken,
   checkPermissions("admin-company"),
-  CompanyController.approveCompanyRegistration
+  CompanyController.approveOrDeclineCompany
 );
 
 company.get("/company/:companyId", CompanyController.getCompanyInfo);
