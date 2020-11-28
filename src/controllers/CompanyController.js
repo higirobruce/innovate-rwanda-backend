@@ -64,21 +64,22 @@ export default class CompanyController {
   }
 
   static async getCompanyInfo(req, res) {
-    db["Company"]
-      .findOne({
+    try {
+      const company = await db["Company"].findOne({
         where: {
           id: req.params.companyId,
         },
-      })
-      .then((company) => {
-        res.status(200).send({
-          companyInfo: company,
-        });
-      })
-      .catch((err) => {
-        res.status(401).send({
-          message: "Company Info Got",
-        });
+        raw: true,
       });
+      return company
+        ? res.status(200).json({
+            result: company,
+          })
+        : res.status(404).json({
+            error: "Sorry, Company not found",
+          });
+    } catch (err) {
+      return res.status(400).send({ message: "Sorry, Company not found" });
+    }
   }
 }
