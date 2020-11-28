@@ -57,29 +57,7 @@ export default class CompanyController {
         message: response
       })
   }
-  
-  static async approveCompanyRegistration(req, res) {
-    db["Company"]
-      .update(
-        { status: req.body.decision },
-        {
-          where: {
-            id: req.body.id,
-          },
-        }
-      )
-      .then(() => {
-        res.status(200).send({
-          message: "Done",
-        });
-      })
-      .catch((err) => {
-        res.status(401).send({
-          message: "An error occurred",
-        });
-      });
-  }
-
+   
   static async getCompanyInfo(req, res) {
     try {
       const company = await db["Company"].findOne({
@@ -109,19 +87,15 @@ export default class CompanyController {
 
   static async editCompanyInfo(req, res) {
     try {
-      const update = await db["Company"]
+      const response = await db["Company"]
         .update((req.body), {
           where: {
             id: req.body.id
           },
         })
-        return update
-          ? res.status(200).json({
-              result: "Edited Successfully"
-            })
-          : res.status(404).json({
-              error: "Sorry, No record edited",
-            });
+        return res.status(200).json({
+          message: response
+        })
     } catch (err) {
       return res.status(400).send({ message: "Sorry, Edit failed" });
     }
