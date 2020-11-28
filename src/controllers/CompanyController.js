@@ -98,7 +98,6 @@ export default class CompanyController {
       return company
         ? res.status(200).json({
             result: { company, owner },
-            owner,
           })
         : res.status(404).json({
             error: "Sorry, Company not found",
