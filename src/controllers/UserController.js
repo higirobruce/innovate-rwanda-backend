@@ -83,8 +83,8 @@ export default class UserController {
       })
       .then((user) => {
         if (!user) {
-          res.status(403).send({
-            message: "Wrong Email",
+          return res.status(403).send({
+            message: "Invalid email, password or company information",
           });
         }
         bcrypt.compare(
@@ -97,8 +97,7 @@ export default class UserController {
                   where: { id: user.companyId },
                 })
                 .then((company) => {
-                  //req.message = "login exist"
-                  user.password = "";
+                  delete user.password;
                   res.locals.user = user;
                   if (!company) {
                     res.locals.companyInfo = "Company info not there";

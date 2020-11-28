@@ -2,18 +2,24 @@ import db from "../models";
 
 export default class CompanyController {
   static async getCompaniesList(req, res) {
-    db["Company"]
-      .findAll()
-      .then((companys) => {
-        return res.status(200).send({
-          result: companys,
-        });
-      })
-      .catch((err) => {
-        return res.status(400).send({
-          message: "Something went wrong",
-        });
+    try {
+      const companies = await db["Company"].findAll({
+        raw: true,
       });
+      if (companies && companies.length > 0) {
+        return res.status(200).json({
+          result: companies,
+        });
+      }
+      return res.status(404).json({
+        result: [],
+        error: "No companies found at this moment",
+      });
+    } catch (err) {
+      return res
+        .status(400)
+        .send({ message: "No companies found at this moment" });
+    }
   }
 
   static async getApprovedCompaniesList(req, res) {
