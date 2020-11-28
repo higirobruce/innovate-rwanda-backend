@@ -36,7 +36,7 @@ export default class UserController {
         districtBasedIn: req.body.districtBasedIn,
         areaOfInterest: req.body.areaOfInterest,
         shortDescription: req.body.shortDescription,
-        status: "pending approval",
+        status: "pending",
       })
       .then((result) => {
         bcrypt.hash(
@@ -52,7 +52,7 @@ export default class UserController {
                 password: hashPassword,
                 role: req.body.role,
                 companyId: result.id,
-                status: "new",
+                status: "active",
               })
               .then((result) => {
                 return res.status(200).send({

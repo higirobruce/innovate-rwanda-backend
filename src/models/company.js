@@ -20,7 +20,7 @@ module.exports = (sequelize, DataTypes) => {
     districtBasedIn: DataTypes.STRING,
     areaOfInterest: DataTypes.STRING,
     shortDescription: DataTypes.TEXT,
-    logo: DataTypes.BLOG,
+    logo: DataTypes.BLOB,
     yearFounded: DataTypes.INTEGER,
     contactEmail: DataTypes.STRING,
     contactPhone: DataTypes.STRING,
