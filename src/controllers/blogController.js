@@ -4,7 +4,6 @@ export default class BlogController {
   static async blogPost(req, res) {
     try {
       const response = await db['Blog'].create(req.body);
-      console.log(response)
       if (response) {
         return res.status(200).send({
           message: "Blog Submitted",
@@ -19,7 +18,7 @@ export default class BlogController {
   static async approveOrDeclineBlogPost(req, res) {
     // To do: Do more here, once approved send notifications right away or?
     try {
-        const update = await db['Blog']
+        const response = await db['Blog']
           .update(
             { status: req.body.decision },
             {
@@ -28,13 +27,9 @@ export default class BlogController {
               },
             }
           );
-          return update
-            ? res.status(200).json({
-                message: req.body.decision
-              })
-            : res.status(404).json({
-              error: "Sorry, Approval/Decline failed",
-            });
+          return res.status(200).json({
+            message: response
+          })
     } catch (err) {
         return res.status(400).send({ message: "Sorry, Action failed" });
     }

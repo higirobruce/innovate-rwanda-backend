@@ -15,7 +15,13 @@ module.exports = (sequelize, DataTypes) => {
   };
   Job.init({
     title: DataTypes.STRING,
-    description: DataTypes.STRING,
+    description: DataTypes.TEXT,
+    companyId: DataTypes.INTEGER,
+    category: DataTypes.STRING,
+    tags: DataTypes.STRING,
+    deadlineDate: DataTypes.DATE,
+    deadlineTime: DataTypes.TIME,
+    jobDetailsDocument: DataTypes.BLOB('long'),
     status: DataTypes.STRING
   }, {
     sequelize,
