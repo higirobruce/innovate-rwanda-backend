@@ -25,4 +25,8 @@ export default class genericController {
       return res.status(400).send({ message: "Sorry, Counts not found" });
     }
   }
+
+  static generateSlug(company_name) {
+    return company_name.replace(/ /g, "-").toLowerCase();
+  }
 }

@@ -1,5 +1,6 @@
 import bcrypt from "bcrypt";
 import db from "../models";
+import genericController from "./GenericController";
 const saltRounds = 10;
 
 export default class UserController {
@@ -30,7 +31,7 @@ export default class UserController {
   }
 
   static async register(req, res, next) {
-    db["Company"]
+    await db["Company"]
       .create({
         coName: req.body.coName,
         coType: req.body.coType,
@@ -38,6 +39,7 @@ export default class UserController {
         districtBasedIn: req.body.districtBasedIn,
         areaOfInterest: req.body.areaOfInterest,
         shortDescription: req.body.shortDescription,
+        slug: genericController.generateSlug(req.body.coName),
         status: "pending",
       })
       .then((result) => {
@@ -71,15 +73,16 @@ export default class UserController {
         );
       })
       .catch((error) => {
+        console.log(error);
         return res.status(401).send({
-          message: "Something went wrong - Company Account",
+          message: "Company potentially already on the system, Please confirm then try again",
           //error: error
         });
       });
   }
 
   static async login(req, res, next) {
-    db["User"]
+    await db["User"]
       .findOne({
         where: { email: req.body.email },
       })

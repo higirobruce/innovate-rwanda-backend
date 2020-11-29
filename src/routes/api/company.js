@@ -17,6 +17,8 @@ company.put("/company/approve-decline", auth.verifyToken, checkPermissions("admi
 
 company.get("/company/:companyId", CompanyController.getCompanyInfo);
 
+company.get("/company/public/:companyId", CompanyController.getCompanyInfoPublic);
+
 company.patch("/company/edit", auth.verifyToken, checkPermissions(["normal","admin-company"]),
               CompanyController.editCompanyInfo);
 

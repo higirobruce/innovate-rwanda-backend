@@ -85,6 +85,34 @@ export default class CompanyController {
     }
   }
 
+  static async getCompanyInfoPublic(req, res) {
+    try {
+      const company = await db["Company"].findOne({
+        where: {
+          slug: req.params.companyId,
+          status: "approved"
+        },
+        raw: true,
+      });
+      const owner = await db["User"].findOne({
+        where: {
+          companyId: company.id,
+        },
+        raw: true
+      });
+      delete owner.password;
+      return company
+        ? res.status(200).json({
+            result: { company, owner },
+          })
+        : res.status(404).json({
+            error: "Sorry, Company not found",
+          });
+    } catch (err) {
+      return res.status(400).send({ message: "Sorry, Company not found" });
+    }
+  }
+
   static async editCompanyInfo(req, res) {
     try {
       const response = await db["Company"]
