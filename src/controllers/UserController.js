@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
 import db from "../models";
-import genericController from "./GenericController";
+import generic from "../helpers/Generic";
 const saltRounds = 10;
 
 export default class UserController {
@@ -39,7 +39,7 @@ export default class UserController {
         districtBasedIn: req.body.districtBasedIn,
         areaOfInterest: req.body.areaOfInterest,
         shortDescription: req.body.shortDescription,
-        slug: genericController.generateSlug(req.body.coName),
+        slug: generic.generateSlug(req.body.coName),
         status: "pending",
       })
       .then((result) => {
