@@ -4,7 +4,7 @@ export default class CompanyController {
   static async getCompaniesList(req, res) {
     try {
       const companies = await db["Company"].findAll({
-        order: [['createdAt', 'DESC']],
+        order: [["createdAt", "DESC"]],
         raw: true,
       });
       if (companies && companies.length > 0) {
@@ -29,7 +29,7 @@ export default class CompanyController {
         where: {
           status: "approved",
         },
-        order: [['createdAt', 'DESC']],
+        order: [["createdAt", "DESC"]],
         raw: true,
       });
       if (companies && companies.length > 0) {
@@ -50,15 +50,14 @@ export default class CompanyController {
 
   static async getApprovedCompaniesByType(req, res) {
     try {
-      const companies = await db["Company"]
-        .findAll({
-          where: {
-            status: "approved",
-            coType: req.params.type,
-          },
-          order: [['createdAt', 'DESC']],
-          raw: true,
-        });
+      const companies = await db["Company"].findAll({
+        where: {
+          status: "approved",
+          coType: req.params.type,
+        },
+        order: [["createdAt", "DESC"]],
+        raw: true,
+      });
       if (companies && companies.length > 0) {
         return res.status(200).json({
           result: companies,
@@ -69,7 +68,7 @@ export default class CompanyController {
         error: "No companies found at this moment",
       });
     } catch (err) {
-      console.log(err)
+      console.log(err);
       return res
         .status(400)
         .send({ message: "No companies found at this moment" });
@@ -112,7 +111,7 @@ export default class CompanyController {
         where: {
           companyId: company.id,
         },
-        raw: true
+        raw: true,
       });
       delete owner.password;
       return company
@@ -131,16 +130,47 @@ export default class CompanyController {
     try {
       const company = await db["Company"].findOne({
         where: {
-          slug: req.params.companyId,
-          status: "approved"
+          slug: req.params.slug,
+          status: "approved",
+        },
+        attributes: {
+          exclude: ["createdAt", "updatedAt"],
         },
         raw: true,
       });
+      if (!company)
+        return res.status(404).json({
+          error: "Sorry, Company not found",
+        });
+      return company
+        ? res.status(200).json({
+            result: { company },
+          })
+        : res.status(404).json({
+            error: "Sorry, Company not found",
+          });
+    } catch (err) {
+      console.log("err", err)
+      return res.status(400).send({ message: "Sorry, Company not found" });
+    }
+  }
+
+  static async getCompanyMyInfo(req, res) {
+    try {
       const owner = await db["User"].findOne({
         where: {
-          companyId: company.id,
+          id: req.user.id,
         },
-        raw: true
+        raw: true,
+      });
+      const company = await db["Company"].findOne({
+        where: {
+          id: owner.companyId,
+        },
+        attributes: {
+          exclude: ["createdAt", "updatedAt"],
+        },
+        raw: true,
       });
       delete owner.password;
       return company
@@ -154,7 +184,6 @@ export default class CompanyController {
       return res.status(400).send({ message: "Sorry, Company not found" });
     }
   }
-
   static async editCompanyInfo(req, res) {
     try {
       const response = await db["Company"]
@@ -167,7 +196,7 @@ export default class CompanyController {
         message: response
       })
     } catch (err) {
-      return res.status(400).send({ message: "Sorry, Edit failed" });
+      return res.status(400).send({ message: "Sorry, Company not found" });
     }
   }
 

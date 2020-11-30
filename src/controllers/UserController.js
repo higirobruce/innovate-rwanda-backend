@@ -2,29 +2,31 @@ import bcrypt from "bcrypt";
 import db from "../models";
 import generic from "../helpers/Generic";
 import jwt from "jsonwebtoken";
+import { UniqueConstraintError } from "sequelize";
 const saltRounds = 10;
 
 export default class UserController {
   static async getUsersList(req, res, next) {
-    db["User"].findAll({
-      attributes: [
-        "firstName",
-        "lastName",
-        "email",
-        "jobTitle",
-        "role",
-        "companyId",
-        "status",
-      ],
-      order: [['createdAt', 'DESC']]
-    })
+    db["User"]
+      .findAll({
+        attributes: [
+          "firstName",
+          "lastName",
+          "email",
+          "jobTitle",
+          "role",
+          "companyId",
+          "status",
+        ],
+        order: [["createdAt", "DESC"]],
+      })
       .then((users) => {
         res.status(200).send({
           result: users,
         });
       })
       .catch((err) => {
-        console.log(err)
+        console.log(err);
         return res.status(401).send({
           message: "list of users not got",
         });
@@ -67,6 +69,14 @@ export default class UserController {
                 });
               })
               .catch((err) => {
+                if (err instanceof UniqueConstraintError) {
+                  return res.status(409).send({
+                    error:
+                      "Company potentially already on the system, Please check your email or company name",
+                    field: err.errors[0].path,
+                    //err: err
+                  });
+                }
                 return res.status(401).send({
                   message: "Something went wrong - User Account",
                   //err: err
@@ -76,9 +86,18 @@ export default class UserController {
         );
       })
       .catch((error) => {
-        console.log(error);
+        if (error instanceof UniqueConstraintError) {
+          return res.status(409).send({
+            error:
+              "Company potentially already on the system, Please check your email or company name",
+            field: error.errors[0].path,
+            //err: err
+          });
+        }
         return res.status(401).send({
-          message: "Company potentially already on the system, Please confirm then try again",
+          message:
+            "Company potentially already on the system, Please confirm then try again",
+          //error: error
         });
       });
   }
@@ -134,6 +153,7 @@ export default class UserController {
         );
       })
       .catch((err) => {
+        console.log("err", err)
         res.status(401).send({
           message: "Error occurred",
         });

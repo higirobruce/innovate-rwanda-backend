@@ -9,8 +9,18 @@ const message = Router();
 
 message.post("/message/post", MessageController.messagePost);
 
-message.get("/message/company/:companyId", checkPermissions("normal"), auth.verifyToken, MessageController.getMessagesListPerCompany);
+message.get(
+  "/message/company/:companyId",
+  auth.verifyToken,
+  checkPermissions("normal"),
+  MessageController.getMessagesListPerCompany
+);
 
-message.get("/message/info/:messageId", checkPermissions("normal"), auth.verifyToken, MessageController.getMessageInfo);
+message.get(
+  "/message/info/:messageId",
+  auth.verifyToken,
+  checkPermissions("normal"),
+  MessageController.getMessageInfo
+);
 
 export default message;

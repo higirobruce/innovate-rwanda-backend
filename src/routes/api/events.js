@@ -7,22 +7,44 @@ import checkPermissions from "../../middlewares/checkPermissions";
 
 const events = Router();
 
-events.post('/events', checkPermissions("normal"), auth.verifyToken, EventsController.eventPost);
+events.post(
+  "/events",
+  auth.verifyToken,
+  checkPermissions("normal"),
+  EventsController.eventPost
+);
 
-events.put('/events/approve-decline', auth.verifyToken, EventsController.approveOrDeclineEventPost);
+events.put(
+  "/events/approve-decline",
+  auth.verifyToken,
+  EventsController.approveOrDeclineEventPost
+);
 
 events.get("/events/public", EventsController.getApprovedEventsList);
 
-events.get("/events/company/:companyId", checkPermissions("normal"), auth.verifyToken,
-    EventsController.getEventsListPerCompany);
+events.get(
+  "/events/company/:companyId",
+  auth.verifyToken,
+  checkPermissions("normal"),
+  EventsController.getEventsListPerCompany
+);
 
-events.get('/events/:status', checkPermissions("admin-event"), auth.verifyToken, EventsController.getEventsList);
+events.get(
+  "/events/:status",
+  auth.verifyToken,
+  checkPermissions("admin-event"),
+  EventsController.getEventsList
+);
 
 events.get("/events/info/:eventId", EventsController.getEventInfo);
 
 events.patch("/events/edit", auth.verifyToken, EventsController.editEventInfo);
 
-events.delete("/events/delete", auth.verifyToken, checkPermissions(["normal", "admin-event"]),
-    EventsController.deleteEvent);
+events.delete(
+  "/events/delete",
+  auth.verifyToken,
+  checkPermissions(["normal", "admin-event"]),
+  EventsController.deleteEvent
+);
 
 export default events;

@@ -67,6 +67,9 @@ export default class BlogController {
         .findAll({
           where: {
             companyId: req.params.companyId,
+            status: {
+              [db.Op.not]: 'deleted'
+            }
           },
           order: [['createdAt', 'DESC']]
         });
@@ -81,7 +84,6 @@ export default class BlogController {
         });
       }
     } catch (err) {
-      console.log(err)
       return res.status(400).send({ message: " List of blogs not got at this moment" });
     }
   }
@@ -145,7 +147,7 @@ export default class BlogController {
       const update = await db["Blog"]
         .update((req.body), {
           where: {
-            id: req.body.blogId
+            id: req.params.blogId
           },
         });
       return update
@@ -168,7 +170,7 @@ export default class BlogController {
           { status: "deleted" },
           {
             where: {
-              id: req.body.blogId,
+              id: req.params.blogId,
             },
           }
         );
