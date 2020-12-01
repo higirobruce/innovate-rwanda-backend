@@ -18,7 +18,7 @@ module.exports = (sequelize, DataTypes) => {
     description: DataTypes.TEXT,
     category: DataTypes.STRING,
     tags: DataTypes.STRING,
-    flyer: DataTypes.BLOB,
+    flyer: DataTypes.STRING,
     eventDate: DataTypes.DATE,
     eventTime: DataTypes.TIME,
     author: DataTypes.STRING,

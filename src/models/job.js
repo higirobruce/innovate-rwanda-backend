@@ -21,7 +21,7 @@ module.exports = (sequelize, DataTypes) => {
     tags: DataTypes.STRING,
     deadlineDate: DataTypes.DATE,
     deadlineTime: DataTypes.TIME,
-    jobDetailsDocument: DataTypes.BLOB('long'),
+    jobDetailsDocument: DataTypes.STRING,
     status: DataTypes.STRING
   }, {
     sequelize,

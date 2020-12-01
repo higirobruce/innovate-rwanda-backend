@@ -11,7 +11,12 @@ const config = {
     host: process.env.DB_HOST_DEV,
     dialect: 'postgres',
     port: process.env.DB_PORT_DEV,
-    dialect: 'postgres'
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    },
   },
   test: {
     use_env_variable: 'DATABASE_URL_TEST',
