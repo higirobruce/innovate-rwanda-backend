@@ -24,38 +24,77 @@ export default class CompanyController {
   }
 
   static async getApprovedCompaniesList(req, res) {
-    db["Company"]
-      .findAll({
+    try {
+      const companies = await db["Company"].findAll({
         where: {
           status: "approved",
         },
-        order: [['createdAt', 'DESC']]
-      })
-      .then((companys) => {
-        res.status(200).send({
-          result: companys,
-        });
-      })
-      .catch((err) => {
-        res.status(401).send({
-          message: "list not got",
-        });
+        order: [['createdAt', 'DESC']],
+        raw: true,
       });
+      if (companies && companies.length > 0) {
+        return res.status(200).json({
+          result: companies,
+        });
+      }
+      return res.status(404).json({
+        result: [],
+        error: "No companies found at this moment",
+      });
+    } catch (err) {
+      return res
+        .status(400)
+        .send({ message: "No companies found at this moment" });
+    }
+  }
+
+  static async getApprovedCompaniesByType(req, res) {
+    try {
+      const companies = await db["Company"]
+        .findAll({
+          where: {
+            status: "approved",
+            coType: req.params.type,
+          },
+          order: [['createdAt', 'DESC']],
+          raw: true,
+        });
+      if (companies && companies.length > 0) {
+        return res.status(200).json({
+          result: companies,
+        });
+      }
+      return res.status(404).json({
+        result: [],
+        error: "No companies found at this moment",
+      });
+    } catch (err) {
+      console.log(err)
+      return res
+        .status(400)
+        .send({ message: "No companies found at this moment" });
+    }
   }
 
   static async approveOrDeclineCompany(req, res) {
-   const response = await db["Company"]
-      .update(
-        { status: req.body.decision },
-        {
-          where: {
-            id: req.body.id,
-          },
-        }
-      )
+    try {
+      const response = await db["Company"]
+        .update(
+          { status: req.body.decision },
+          {
+            where: {
+              id: req.body.id,
+            },
+          }
+        )
       return res.status(200).json({
         message: response
       })
+    } catch (err) {
+      return res
+        .status(400)
+        .send({ message: "Decision not set at this moment" });
+    }
   }
    
   static async getCompanyInfo(req, res) {

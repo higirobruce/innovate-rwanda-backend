@@ -41,6 +41,7 @@ export default class UserController {
         shortDescription: req.body.shortDescription,
         slug: generic.generateSlug(req.body.coName),
         contactEmail: req.body.email,
+        emailDisplay: false,
         status: "pending",
       })
       .then((result) => {

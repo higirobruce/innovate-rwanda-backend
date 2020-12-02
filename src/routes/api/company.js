@@ -12,6 +12,8 @@ company.get("/directory/admin", auth.verifyToken, checkPermissions("admin-compan
 
 company.get("/directory/public", CompanyController.getApprovedCompaniesList);
 
+company.get("/directory/public/:type", CompanyController.getApprovedCompaniesByType);
+
 company.put("/company/approve-decline", auth.verifyToken, checkPermissions("admin-company"),
             CompanyController.approveOrDeclineCompany);
 
