@@ -18,20 +18,20 @@ export default class BlogController {
   static async approveOrDeclineBlogPost(req, res) {
     // To do: Do more here, once approved send notifications right away or?
     try {
-        const response = await db['Blog']
-          .update(
-            { status: req.body.decision },
-            {
-              where: {
-                id: req.body.blogId,
-              },
-            }
-          );
-          return res.status(200).json({
-            message: response
-          })
+      const response = await db['Blog']
+        .update(
+          { status: req.body.decision },
+          {
+            where: {
+              id: req.body.blogId,
+            },
+          }
+        );
+      return res.status(200).json({
+        message: response
+      })
     } catch (err) {
-        return res.status(400).send({ message: "Sorry, Action failed" });
+      return res.status(400).send({ message: "Sorry, Action failed" });
     }
   }
 
@@ -53,14 +53,14 @@ export default class BlogController {
           });
       }
       if (blogPosts && blogPosts.length > 0) {
-          return res.status(200).json({
-            result: blogPosts,
-          });
+        return res.status(200).json({
+          result: blogPosts,
+        });
       } else {
-          return res.status(404).json({
-            result: [],
-            error: "No Blog Posts found",
-          });
+        return res.status(404).json({
+          result: [],
+          error: "No Blog Posts found",
+        });
       }
     } catch (err) {
       console.log(err)
@@ -79,11 +79,11 @@ export default class BlogController {
         });
       return blog
         ? res.status(200).json({
-            result: blog
-          })
+          result: blog
+        })
         : res.status(404).json({
-            error: "Sorry, Blog not found",
-          });
+          error: "Sorry, Blog not found",
+        });
     } catch (err) {
       return res.status(400).send({ message: "Sorry, Blog not found" });
     }
@@ -99,8 +99,8 @@ export default class BlogController {
         });
       return update
         ? res.status(200).json({
-            result: "Edited Successfully"
-          })
+          result: "Edited Successfully"
+        })
         : res.status(404).json({
           error: "Sorry, No record edited",
         });

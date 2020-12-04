@@ -42,7 +42,7 @@ export default class SubscribeController {
 
   static async getSubscriptions(req, res) {
     if (req.params.status == "all") {
-      db['Subscription'].findAll({order: [['createdAt', 'DESC']]})
+      db['Subscription'].findAll({ order: [['createdAt', 'DESC']] })
         .then((subscriptions) => {
           res.status(200).send({
             result: subscriptions,

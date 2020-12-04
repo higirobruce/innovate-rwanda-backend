@@ -185,23 +185,23 @@ export default class UserController {
       });
       if (token) {
         db["User"].update(
-            { resetLink: token },
-            {
-              where: {
-                email: email,
-              },
-            }).then(result => {
-              if (result) {
-                const subject = "[Innovate Rwanda] Please reset your password";
-                const content = "Please use the following link to reset your password: " +
-                  `${process.env.APP_URL}/resetPassword/${token}` +
-                  "  It will expire in 1h.";
-                generic.sendEmail(req.body.email, subject, content);
-                return res.status(200).json({ message: "Email is sent, Check your email for the link" });
-              }
-            }).catch(error => {
-              return res.status(400).json({ error: "Please confirm that the email is right, Try again later" });
-            });
+          { resetLink: token },
+          {
+            where: {
+              email: email,
+            },
+          }).then(result => {
+            if (result) {
+              const subject = "[Innovate Rwanda] Please reset your password";
+              const content = "Please use the following link to reset your password: " +
+                `${process.env.APP_URL}/resetPassword/${token}` +
+                "  It will expire in 1h.";
+              generic.sendEmail(req.body.email, subject, content);
+              return res.status(200).json({ message: "Email is sent, Check your email for the link" });
+            }
+          }).catch(error => {
+            return res.status(400).json({ error: "Please confirm that the email is right, Try again later" });
+          });
       } else {
         return res.status(400).json({ error: "Please try again later" });
       }

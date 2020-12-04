@@ -5,13 +5,13 @@ export default class EvenController {
     try {
       const response = await db['Event'].create(req.body);
       if (response) {
-          return res.status(200).send({
-            message: "Event submitted",
-          });
+        return res.status(200).send({
+          message: "Event submitted",
+        });
       }
     } catch (err) {
-        console.log(err)
-        return res.status(400).send({ message: " Event not submitted at this moment" });
+      console.log(err)
+      return res.status(400).send({ message: " Event not submitted at this moment" });
     }
   }
 
@@ -27,16 +27,16 @@ export default class EvenController {
             },
           }
         );
-        return update
-          ? res.status(200).json({
-              message: req.body.decision
-            })
-          : res.status(404).json({
-            error: "Sorry, Approval/Decline failed",
-          });
-      } catch (err) {
-        return res.status(400).send({ message: "Sorry, Action failed" });
-      }
+      return update
+        ? res.status(200).json({
+          message: req.body.decision
+        })
+        : res.status(404).json({
+          error: "Sorry, Approval/Decline failed",
+        });
+    } catch (err) {
+      return res.status(400).send({ message: "Sorry, Action failed" });
+    }
   }
 
   static async getEventsList(req, res) {
@@ -57,14 +57,14 @@ export default class EvenController {
           });
       }
       if (eventPosts && eventPosts.length > 0) {
-          return res.status(200).json({
-            result: eventPosts,
-          });
+        return res.status(200).json({
+          result: eventPosts,
+        });
       } else {
-          return res.status(404).json({
-            result: [],
-            error: "No Event Posts found",
-          });
+        return res.status(404).json({
+          result: [],
+          error: "No Event Posts found",
+        });
       }
     } catch (err) {
       console.log(err)
@@ -83,11 +83,11 @@ export default class EvenController {
         });
       return event
         ? res.status(200).json({
-            result: event
-          })
+          result: event
+        })
         : res.status(404).json({
-            error: "Sorry, Event not found",
-          });
+          error: "Sorry, Event not found",
+        });
     } catch (err) {
       return res.status(400).send({ message: "Sorry, Event not found" });
     }
@@ -103,8 +103,8 @@ export default class EvenController {
         });
       return update
         ? res.status(200).json({
-            result: "Edited Successfully"
-          })
+          result: "Edited Successfully"
+        })
         : res.status(404).json({
           error: "Sorry, No record edited",
         });

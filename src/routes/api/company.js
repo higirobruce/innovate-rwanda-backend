@@ -8,20 +8,20 @@ import checkPermissions from "../../middlewares/checkPermissions";
 const company = Router();
 
 company.get("/directory/admin", auth.verifyToken, checkPermissions("admin-company"),
-            CompanyController.getCompaniesList);
+    CompanyController.getCompaniesList);
 
 company.get("/directory/public", CompanyController.getApprovedCompaniesList);
 
 company.get("/directory/public/:type", CompanyController.getApprovedCompaniesByType);
 
 company.put("/company/approve-decline", auth.verifyToken, checkPermissions("admin-company"),
-            CompanyController.approveOrDeclineCompany);
+    CompanyController.approveOrDeclineCompany);
 
 company.get("/company/:companyId", CompanyController.getCompanyInfo);
 
 company.get("/company/public/:companyId", CompanyController.getCompanyInfoPublic);
 
-company.patch("/company/edit", auth.verifyToken, checkPermissions(["normal","admin-company"]),
-              CompanyController.editCompanyInfo);
+company.patch("/company/edit", auth.verifyToken, checkPermissions(["normal", "admin-company"]),
+    CompanyController.editCompanyInfo);
 
 export default company;

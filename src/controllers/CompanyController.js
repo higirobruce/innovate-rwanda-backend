@@ -78,25 +78,28 @@ export default class CompanyController {
 
   static async approveOrDeclineCompany(req, res) {
     try {
+      const { decision } = req.body.decision;
       const response = await db["Company"]
         .update(
-          { status: req.body.decision },
+          { status: decision },
           {
             where: {
               id: req.body.id,
             },
           }
         )
-      return res.status(200).json({
-        message: response
-      })
+      if (response) {
+        return res.status(200).json({
+          message: "Company" + decision
+        })
+      }
     } catch (err) {
       return res
         .status(400)
         .send({ message: "Decision not set at this moment" });
     }
   }
-   
+
   static async getCompanyInfo(req, res) {
     try {
       const company = await db["Company"].findOne({
@@ -114,11 +117,11 @@ export default class CompanyController {
       delete owner.password;
       return company
         ? res.status(200).json({
-            result: { company, owner },
-          })
+          result: { company, owner },
+        })
         : res.status(404).json({
-            error: "Sorry, Company not found",
-          });
+          error: "Sorry, Company not found",
+        });
     } catch (err) {
       return res.status(400).send({ message: "Sorry, Company not found" });
     }
@@ -142,11 +145,11 @@ export default class CompanyController {
       delete owner.password;
       return company
         ? res.status(200).json({
-            result: { company, owner },
-          })
+          result: { company, owner },
+        })
         : res.status(404).json({
-            error: "Sorry, Company not found",
-          });
+          error: "Sorry, Company not found",
+        });
     } catch (err) {
       return res.status(400).send({ message: "Sorry, Company not found" });
     }
@@ -160,9 +163,9 @@ export default class CompanyController {
             id: req.body.id
           },
         })
-        return res.status(200).json({
-          message: response
-        })
+      return res.status(200).json({
+        message: response
+      })
     } catch (err) {
       return res.status(400).send({ message: "Sorry, Edit failed" });
     }

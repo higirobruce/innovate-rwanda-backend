@@ -9,8 +9,8 @@ const blog = Router();
 
 blog.post("/blog/post", checkPermissions("normal"), auth.verifyToken, BlogController.blogPost);
 
-blog.put("/blog/approve-decline", checkPermissions("admin"), auth.verifyToken, 
-         BlogController.approveOrDeclineBlogPost);
+blog.put("/blog/approve-decline", checkPermissions("admin"), auth.verifyToken,
+    BlogController.approveOrDeclineBlogPost);
 
 blog.get("/blog/:status", auth.verifyToken, BlogController.getBlogsList);
 

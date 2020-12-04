@@ -19,7 +19,7 @@ export default class genericController {
         }
       });
       return res.status(200).json({
-            result: { pendingRequestsCount, usersCount, approvedCompaniesCount }
+        result: { pendingRequestsCount, usersCount, approvedCompaniesCount }
       })
     } catch (err) {
       return res.status(400).send({ message: "Sorry, Counts not found" });

@@ -9,7 +9,7 @@ const job = Router();
 
 job.post("/jobs/post", checkPermissions("normal"), auth.verifyToken, JobController.jobPost);
 
-job.put("/jobs/approve-decline", checkPermissions("admin-job"), auth.verifyToken, 
+job.put("/jobs/approve-decline", checkPermissions("admin-job"), auth.verifyToken,
         JobController.approveOrDeclineJobPost);
 
 job.get("/jobs/:status", auth.verifyToken, JobController.getJobsList);

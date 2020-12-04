@@ -12,7 +12,7 @@ module.exports = (sequelize, DataTypes) => {
     sequelize,
     modelName: 'Blog',
   });
-  blog.associate = function(models) {
+  blog.associate = function (models) {
     // associations can be defined here
   };
   return blog;
