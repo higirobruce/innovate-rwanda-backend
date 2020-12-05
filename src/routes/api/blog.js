@@ -12,6 +12,8 @@ blog.post("/blog/post", checkPermissions("normal"), auth.verifyToken, BlogContro
 blog.put("/blog/approve-decline", checkPermissions("admin"), auth.verifyToken,
     BlogController.approveOrDeclineBlogPost);
 
+blog.get("/blog/company/:companyId", auth.verifyToken, BlogController.getBlogsListPerCompany);
+
 blog.get("/blog/:status", auth.verifyToken, BlogController.getBlogsList);
 
 blog.get("/blog/info/:blogId", BlogController.getBlogInfo);

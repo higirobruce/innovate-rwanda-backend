@@ -35,6 +35,32 @@ export default class BlogController {
     }
   }
 
+  static async getBlogsListPerCompany(req, res) {
+    try {
+      // companyId is slug
+      const blogPosts = await db['Blog']
+        .findAll({
+          where: {
+            companyId: req.params.companyId,
+          },
+          order: [['createdAt', 'DESC']]
+        });
+      if (blogPosts && blogPosts.length > 0) {
+        return res.status(200).json({
+          result: blogPosts,
+        });
+      } else {
+        return res.status(404).json({
+          result: [],
+          error: "No Blog Posts found",
+        });
+      }
+    } catch (err) {
+      console.log(err)
+      return res.status(400).send({ message: " List of blogs not got at this moment" });
+    }
+  }
+
   static async getBlogsList(req, res) {
     try {
       var blogPosts;
