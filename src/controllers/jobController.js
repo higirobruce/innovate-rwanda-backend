@@ -88,7 +88,7 @@ export default class JobController {
 
   static async getJobsList(req, res) {
     try {
-      const jobPosts;
+      var jobPosts;
       if (req.params.status == "all") {
         jobPosts = await db['Job']
           .findAll({
