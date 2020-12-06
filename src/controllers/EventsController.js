@@ -39,6 +39,57 @@ export default class EvenController {
     }
   }
 
+  static async getApprovedEventsList(req, res) {
+    try {
+      const eventPosts = await db["Event"].findAll({
+        where: {
+          status: "approved",
+        },
+        order: [['createdAt', 'DESC']],
+        raw: true,
+      });
+      if (eventPosts && eventPosts.length > 0) {
+        return res.status(200).json({
+          result: eventPosts,
+        });
+      }
+      return res.status(404).json({
+        result: [],
+        error: "No event found at this moment",
+      });
+    } catch (err) {
+      return res
+        .status(400)
+        .send({ message: "No events found at this moment" });
+    }
+  }
+
+  static async getEventsListPerCompany(req, res) {
+    try {
+      // companyId is slug
+      const eventPosts = await db['Event']
+        .findAll({
+          where: {
+            companyId: req.params.companyId,
+          },
+          order: [['createdAt', 'DESC']]
+        });
+      if (eventPosts && eventPosts.length > 0) {
+        return res.status(200).json({
+          result: eventPosts,
+        });
+      } else {
+        return res.status(404).json({
+          result: [],
+          error: "No Event Posts found",
+        });
+      }
+    } catch (err) {
+      console.log(err)
+      return res.status(400).send({ message: " List of events not got at this moment" });
+    }
+  }
+
   static async getEventsList(req, res) {
     try {
       var eventPosts;

@@ -3,7 +3,7 @@ module.exports = (sequelize, DataTypes) => {
   const job = sequelize.define('Job', {
     title: DataTypes.STRING,
     description: DataTypes.TEXT,
-    companyId: DataTypes.INTEGER,
+    companyId: DataTypes.STRING,
     category: DataTypes.STRING,
     tags: DataTypes.STRING,
     deadlineDate: DataTypes.DATE,
@@ -14,7 +14,7 @@ module.exports = (sequelize, DataTypes) => {
     sequelize,
     modelName: 'Job',
   });
-  job.associate = function(models) {
+  job.associate = function (models) {
     // associations can be defined here
   };
   return job;

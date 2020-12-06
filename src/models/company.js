@@ -23,7 +23,7 @@ module.exports = (sequelize, DataTypes) => {
     sequelize,
     modelName: 'Company',
   });
-  company.associate = function(models) {
+  company.associate = function (models) {
     // associations can be defined here
   };
   return company;

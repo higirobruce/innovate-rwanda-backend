@@ -8,13 +8,14 @@ module.exports = (sequelize, DataTypes) => {
     flyer: DataTypes.STRING,
     eventDate: DataTypes.DATE,
     eventTime: DataTypes.TIME,
+    companyId: DataTypes.STRING,
     author: DataTypes.STRING,
     status: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'Event',
   });
-  event.associate = function(models) {
+  event.associate = function (models) {
     // associations can be defined here
   };
   return event;

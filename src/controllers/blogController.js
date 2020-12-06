@@ -35,6 +35,31 @@ export default class BlogController {
     }
   }
 
+  static async getApprovedBlogsList(req, res) {
+    try {
+      const blogPosts = await db["Blog"].findAll({
+        where: {
+          status: "approved",
+        },
+        order: [['createdAt', 'DESC']],
+        raw: true,
+      });
+      if (blogPosts && blogPosts.length > 0) {
+        return res.status(200).json({
+          result: blogPosts,
+        });
+      }
+      return res.status(404).json({
+        result: [],
+        error: "No blog posts found at this moment",
+      });
+    } catch (err) {
+      return res
+        .status(400)
+        .send({ message: "No blogs found at this moment" });
+    }
+  }
+
   static async getBlogsListPerCompany(req, res) {
     try {
       // companyId is slug

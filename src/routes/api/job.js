@@ -12,7 +12,11 @@ job.post("/jobs/post", checkPermissions("normal"), auth.verifyToken, JobControll
 job.put("/jobs/approve-decline", checkPermissions("admin-job"), auth.verifyToken,
         JobController.approveOrDeclineJobPost);
 
-job.get("/jobs/:status", auth.verifyToken, JobController.getJobsList);
+job.get("/jobs/public", JobController.getApprovedJobsList);
+
+job.get("/jobs/company/:companyId", checkPermissions("normal"), auth.verifyToken, JobController.getJobsListPerCompany);
+
+job.get("/jobs/:status", checkPermissions("admin-job"), auth.verifyToken, JobController.getJobsList);
 
 job.get("/jobs/info/:jobId", JobController.getJobInfo);
 

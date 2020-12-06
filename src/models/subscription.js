@@ -7,7 +7,7 @@ module.exports = (sequelize, DataTypes) => {
     sequelize,
     modelName: 'Subscription',
   });
-  subscription.associate = function(models) {
+  subscription.associate = function (models) {
     // associations can be defined here
   };
   return subscription;

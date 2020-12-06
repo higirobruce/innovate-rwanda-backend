@@ -11,7 +11,12 @@ events.post('/events', checkPermissions("normal"), auth.verifyToken, EventsContr
 
 events.put('/events/approve-decline', auth.verifyToken, EventsController.approveOrDeclineEventPost);
 
-events.get('/events/:status', auth.verifyToken, EventsController.getEventsList);
+events.get("/events/public", EventsController.getApprovedEventsList);
+
+events.get("/events/company/:companyId", checkPermissions("normal"), auth.verifyToken,
+    EventsController.getEventsListPerCompany);
+
+events.get('/events/:status', checkPermissions("admin-event"), auth.verifyToken, EventsController.getEventsList);
 
 events.get("/events/info/:eventId", EventsController.getEventInfo);
 

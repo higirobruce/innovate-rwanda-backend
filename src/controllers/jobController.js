@@ -34,9 +34,61 @@ export default class JobController {
     }
   }
 
+
+  static async getApprovedJobsList(req, res) {
+    try {
+      const jobPosts = await db["Job"].findAll({
+        where: {
+          status: "approved",
+        },
+        order: [['createdAt', 'DESC']],
+        raw: true,
+      });
+      if (jobPosts && jobPosts.length > 0) {
+        return res.status(200).json({
+          result: jobPosts,
+        });
+      }
+      return res.status(404).json({
+        result: [],
+        error: "No job found at this moment",
+      });
+    } catch (err) {
+      return res
+        .status(400)
+        .send({ message: "No jobs found at this moment" });
+    }
+  }
+
+  static async getJobsListPerCompany(req, res) {
+    try {
+      // companyId is slug
+      const jobPosts = await db['Job']
+        .findAll({
+          where: {
+            companyId: req.params.companyId,
+          },
+          order: [['createdAt', 'DESC']]
+        });
+      if (jobPosts && jobPosts.length > 0) {
+        return res.status(200).json({
+          result: jobPosts,
+        });
+      } else {
+        return res.status(404).json({
+          result: [],
+          error: "No Job Posts found",
+        });
+      }
+    } catch (err) {
+      console.log(err)
+      return res.status(400).send({ message: " List of jobs not got at this moment" });
+    }
+  }
+
   static async getJobsList(req, res) {
     try {
-      var jobPosts;
+      const jobPosts;
       if (req.params.status == "all") {
         jobPosts = await db['Job']
           .findAll({
