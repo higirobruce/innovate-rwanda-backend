@@ -22,4 +22,7 @@ events.get("/events/info/:eventId", EventsController.getEventInfo);
 
 events.patch("/events/edit", auth.verifyToken, EventsController.editEventInfo);
 
+events.delete("/events/delete", auth.verifyToken, checkPermissions(["normal", "admin-event"]),
+    EventsController.deleteEvent);
+
 export default events;

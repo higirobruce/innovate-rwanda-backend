@@ -79,7 +79,6 @@ export default class UserController {
         console.log(error);
         return res.status(401).send({
           message: "Company potentially already on the system, Please confirm then try again",
-          //error: error
         });
       });
   }
@@ -87,7 +86,10 @@ export default class UserController {
   static async login(req, res, next) {
     await db["User"]
       .findOne({
-        where: { email: req.body.email },
+        where: {
+          email: req.body.email,
+          status: "active"
+        },
       })
       .then((user) => {
         if (!user) {
@@ -253,6 +255,30 @@ export default class UserController {
       });
     } else {
       return res.status(401).json({ error: "Authentication Error" });
+    }
+  }
+
+  static async deactivateUser(req, res) {
+    try {
+      const response = await db['User']
+        .update(
+          { status: "inactive" },
+          {
+            where: {
+              email: req.body.email,
+            },
+          }
+        );
+      return response
+        ? res.status(200).json({
+          message: "User deactivated successfully"
+        })
+        : res.status(404).json({
+          error: "Sorry, deactivation failed..Try again"
+        });  
+    } catch (err) {
+      console.log(err)
+      return res.status(400).send({ message: "Sorry, Action failed" });
     }
   }
 }

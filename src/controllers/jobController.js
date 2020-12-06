@@ -34,7 +34,6 @@ export default class JobController {
     }
   }
 
-
   static async getApprovedJobsList(req, res) {
     try {
       const jobPosts = await db["Job"].findAll({
@@ -158,6 +157,30 @@ export default class JobController {
     } catch (err) {
       console.log(err)
       return res.status(400).send({ message: "Sorry, Edit failed" });
+    }
+  }
+
+  static async deleteJob(req, res) {
+    try {
+      const response = await db['Job']
+        .update(
+          { status: "deleted" },
+          {
+            where: {
+              id: req.body.jobId,
+            },
+          }
+        );
+      return response
+        ? res.status(200).json({
+          message: "Deleted Successfully"
+        })
+        : res.status(404).json({
+          error: "Sorry, No record deleted"
+        });  
+    } catch (err) {
+      console.log(err)
+      return res.status(400).send({ message: "Sorry, Action failed" });
     }
   }
 }

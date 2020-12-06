@@ -170,4 +170,67 @@ export default class CompanyController {
       return res.status(400).send({ message: "Sorry, Edit failed" });
     }
   }
+
+  static async deleteCompany(req, res) {
+    try {
+      var response = await db["Company"]
+        .update(
+          { status: "deleted" },
+          {
+            where: {
+              id: req.body.companyId,
+            },
+          }
+        )
+      if (response) {
+        response = await db["User"]
+          .update(
+            { status: "inactive" },
+            {
+              where: {
+                companyId: req.body.companyId,
+              },
+            }
+          )
+        response = await db["Blog"]
+          .update(
+            { status: "inactive" },
+            {
+              where: {
+                companyId: req.body.companyId,
+              },
+            }
+          ) 
+        response = await db["Job"]
+          .update(
+            { status: "inactive" },
+            {
+              where: {
+                companyId: req.body.companyId,
+              },
+            }
+          )   
+        response = await db["Event"]
+          .update(
+            { status: "inactive" },
+            {
+              where: {
+                companyId: req.body.companyId,
+              },
+            }
+          )   
+      }        
+      return response
+        ? res.status(200).json({
+          message: "Deleted Successfully"
+        })
+        : res.status(404).json({
+          message: "Sorry, Failed to delete the record completely"
+        });
+    } catch (err) {
+      return res
+        .status(400)
+        .send({ message: "Decision not set at this moment" });
+    }
+  }
 }

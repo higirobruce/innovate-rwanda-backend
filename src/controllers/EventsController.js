@@ -163,4 +163,27 @@ export default class EvenController {
       return res.status(400).send({ message: "Sorry, Edit failed" });
     }
   }
+
+  static async deleteEvent(req, res) {
+    try {
+      const response = await db['Event']
+        .update(
+          { status: "deleted" },
+          {
+            where: {
+              id: req.body.eventId,
+            },
+          }
+        );
+      return response
+        ? res.status(200).json({
+          message: "Deleted Successfully"
+        })
+        : res.status(404).json({
+          error: "Sorry, No record deleted"
+        });
+    } catch (err) {
+      return res.status(400).send({ message: "Sorry, Action failed" });
+    }
+  }
 }

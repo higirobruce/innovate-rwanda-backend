@@ -160,4 +160,27 @@ export default class BlogController {
       return res.status(400).send({ message: "Sorry, Edit failed" });
     }
   }
+
+  static async deleteBlog(req, res) {
+    try {
+      const response = await db['Blog']
+        .update(
+          { status: "deleted" },
+          {
+            where: {
+              id: req.body.blogId,
+            },
+          }
+        );
+      return response
+        ? res.status(200).json({
+          message: "Deleted Successfully"
+        })
+        : res.status(404).json({
+          message: "Sorry, No record deleted"
+        });
+    } catch (err) {
+      return res.status(400).send({ message: "Sorry, Action failed" });
+    }
+  }
 }

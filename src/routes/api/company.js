@@ -24,4 +24,7 @@ company.get("/company/public/:companyId", CompanyController.getCompanyInfoPublic
 company.patch("/company/edit", auth.verifyToken, checkPermissions(["normal", "admin-company"]),
     CompanyController.editCompanyInfo);
 
+company.delete("/company/delete", auth.verifyToken, checkPermissions("admin-company"),
+    CompanyController.deleteCompany);
+
 export default company;

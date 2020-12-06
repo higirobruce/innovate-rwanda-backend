@@ -23,4 +23,7 @@ blog.get("/blog/info/:blogId", BlogController.getBlogInfo);
 
 blog.patch("/blog/edit", auth.verifyToken, BlogController.editBlogInfo);
 
+blog.delete("/blog/delete", auth.verifyToken, checkPermissions(["normal", "admin-blog"]),
+    BlogController.deleteBlog);
+
 export default blog;

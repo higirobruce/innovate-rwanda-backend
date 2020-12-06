@@ -22,4 +22,7 @@ job.get("/jobs/info/:jobId", JobController.getJobInfo);
 
 job.patch("/jobs/edit", auth.verifyToken, JobController.editJobInfo);
 
+job.delete("/jobs/delete", auth.verifyToken, checkPermissions(["normal", "admin-job"]),
+        JobController.deleteJob);
+
 export default job;
