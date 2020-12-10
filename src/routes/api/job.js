@@ -58,4 +58,14 @@ job.delete(
   JobController.deleteJob
 );
 
+job.get(
+  "/jobs/public/filter",
+  JobController.getJobsFiltered
+);
+
+job.get(
+  "/jobs/public/sort",
+  JobController.getJobsSorted
+);
+
 export default job;

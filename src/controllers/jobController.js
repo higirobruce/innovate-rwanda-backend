@@ -177,10 +177,103 @@ export default class JobController {
         })
         : res.status(404).json({
           error: "Sorry, No record deleted"
-        });  
+        });
     } catch (err) {
       console.log(err)
       return res.status(400).send({ message: "Sorry, Action failed" });
+    }
+  }
+
+  static async getJobsFiltered(req, res) {
+    try {
+      const filterBy = req.body.filterBy;
+      const filterValue = req.body.filterValue;
+      var jobPosts;
+      if (filterBy == "company") {
+        jobPosts = await db['Job']
+          .findAll({
+            where: {
+              companyId: filterValue,
+              status: "approved"
+            },
+            order: [['deadlineDate', 'DESC']]
+          });
+      } else if (filterBy == "topic") {
+        let likeOp = db.Op.like;
+        jobPosts = await db['Job']
+          .findAll({
+            where: {
+              status: "approved",
+              tags: {
+                [likeOp]: "%" + filterValue + "%"
+              }
+            },
+            order: [['deadlineDate', 'DESC']]
+          });
+      } else if (filterBy == "year") {
+        let andOp = db.Op.and;
+        jobPosts = await db['Job']
+          .findAll({
+            where: {
+              status: "approved",
+              [andOp]: db.sequelize.where(db.sequelize.literal('EXTRACT(YEAR FROM "Job"."deadlineDate")'), filterValue)
+            },
+            order: [['updatedAt', 'DESC']]
+          });
+      }
+      if (jobPosts && jobPosts.length > 0) {
+        return res.status(200).json({
+          result: jobPosts,
+        });
+      }
+      return res.status(404).json({
+        result: [],
+        error: "No job found at this moment",
+      });
+    } catch (err) {
+      return res
+        .status(400)
+        .send({ message: "No jobs found at this moment" });
+    }
+  }
+
+  static async getJobsSorted(req, res) {
+    try {
+      const sortBy = req.body.sortBy;
+      const sortValue = req.body.sortValue;
+      var jobPosts;
+      if (sortBy == "date") {
+        if (sortValue == "desc" || sortValue == "asc") {
+          jobPosts = await db['Job']
+            .findAll({
+              where: {
+                status: "approved"
+              },
+              order: [['deadlineDate', sortValue]]
+            });
+        }
+      } else if (sortBy == "title") {
+        jobPosts = await db['Job']
+          .findAll({
+            where: {
+              status: "approved"
+            },
+            order: [['title', sortValue]]
+          });
+      }
+      if (jobPosts && jobPosts.length > 0) {
+        return res.status(200).json({
+          result: jobPosts,
+        });
+      }
+      return res.status(404).json({
+        result: [],
+        error: "No job found at this moment",
+      });
+    } catch (err) {
+      return res
+        .status(400)
+        .send({ message: "No jobs found at this moment" });
     }
   }
 }

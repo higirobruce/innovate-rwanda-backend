@@ -58,4 +58,14 @@ blog.delete(
   BlogController.deleteBlog
 );
 
+blog.get(
+  "/blogs/public/filter",
+  BlogController.getBlogsFiltered
+);
+
+blog.get(
+  "/blogs/public/sort",
+  BlogController.getBlogsSorted
+);
+
 export default blog;

@@ -185,4 +185,96 @@ export default class BlogController {
       return res.status(400).send({ message: "Sorry, Action failed" });
     }
   }
+
+  static async getBlogsFiltered(req, res) {
+    try {
+      const filterBy = req.body.filterBy;
+      const filterValue = req.body.filterValue;
+      var blogPosts;
+      if (filterBy == "company") {
+        blogPosts = await db['Blog']
+          .findAll({
+            where: {
+              companyId: filterValue,
+              status: "approved"
+            },
+            order: [['createdAt', 'DESC']]
+          });
+      } else if (filterBy == "topic") {
+        let likeOp = db.Op.like;
+        blogPosts = await db['Blog']
+          .findAll({
+            where: {
+              status: "approved",
+              tags: {
+                [likeOp]: "%" + filterValue + "%"
+              }
+            },
+            order: [['createdAt', 'DESC']]
+          });
+      } else if (filterBy == "year") {
+        let andOp = db.Op.and;
+        blogPosts = await db['Blog']
+          .findAll({
+            where: {
+              status: "approved",
+              andOp: db.sequelize.where(db.sequelize.literal('EXTRACT(YEAR FROM "Blog"."updatedAt")'), filterValue)
+            },
+            order: [['updatedAt', 'DESC']]
+          });
+      }
+      if (blogPosts && blogPosts.length > 0) {
+        return res.status(200).json({
+          result: blogPosts,
+        });
+      } else {
+        return res.status(404).json({
+          result: [],
+          error: "No Blog Posts found",
+        });
+      }
+    } catch (err) {
+      console.log(err);
+      return res.status(400).send({ message: " List of blogs not got at this moment" });
+    }
+  }
+
+  static async getBlogsSorted(req, res) {
+    try {
+      const sortBy = req.body.sortBy;
+      const sortValue = req.body.sortValue;
+      var blogPosts;
+      if (sortBy == "date") {
+        if (sortValue == "desc" || sortValue == "asc") {
+          blogPosts = await db['Blog']
+            .findAll({
+              where: {
+                status: "approved"
+              },
+              order: [['updatedAt', sortValue]]
+            });
+        }
+      } else if (sortBy == "title") {
+        blogPosts = await db['Blog']
+          .findAll({
+            where: {
+              status: "approved"
+            },
+            order: [['title', sortValue]]
+          });
+      }
+      if (blogPosts && blogPosts.length > 0) {
+        return res.status(200).json({
+          result: blogPosts,
+        });
+      } else {
+        return res.status(404).json({
+          result: [],
+          error: "No Blog Posts found",
+        });
+      }
+    } catch (err) {
+      return res.status(400).send({ message: " List of blogs not got at this moment" });
+    }
+  }
 }

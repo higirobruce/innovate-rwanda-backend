@@ -186,4 +186,97 @@ export default class EvenController {
       return res.status(400).send({ message: "Sorry, Action failed" });
     }
   }
+
+  static async getEventsFiltered(req, res) {
+    try {
+      const filterBy = req.body.filterBy;
+      const filterValue = req.body.filterValue;
+      var eventPosts;
+      if (filterBy == "company") {
+        eventPosts = await db['Event']
+          .findAll({
+            where: {
+              companyId: filterValue,
+              status: "approved"
+            },
+            order: [['eventDate', 'DESC']]
+          });
+      } else if (filterBy == "topic") {
+        let likeOp = db.Op.like;
+        eventPosts = await db['Event']
+          .findAll({
+            where: {
+              status: "approved",
+              tags: {
+                [likeOp]: "%" + filterValue + "%"
+              }
+            },
+            order: [['eventDate', 'DESC']]
+          });
+      } else if (filterBy == "year") {
+        let andOp = db.Op.and;
+        eventPosts = await db['Event']
+          .findAll({
+            where: {
+              status: "approved",
+              andOp: db.sequelize.where(db.sequelize.literal('EXTRACT(YEAR FROM "Event"."eventDate")'), filterValue)
+            },
+            order: [['updatedAt', 'DESC']]
+          });
+      }
+      if (eventPosts && eventPosts.length > 0) {
+        return res.status(200).json({
+          result: eventPosts,
+        });
+      } else {
+        return res.status(404).json({
+          result: [],
+          error: "No Event Posts found",
+        });
+      }
+    } catch (err) {
+      console.log(err)
+      return res.status(400).send({ message: " List of Events not got at this moment" });
+    }
+  }
+
+  static async getEventsSorted(req, res) {
+    try {
+      const sortBy = req.body.sortBy;
+      const sortValue = req.body.sortValue;
+      var eventPosts;
+      if (sortBy == "date") {
+        if (sortValue == "desc" || sortValue == "asc") {
+          eventPosts = await db['Event']
+            .findAll({
+              where: {
+                status: "approved"
+              },
+              order: [['eventDate', sortValue]]
+            });
+        }
+      } else if (sortBy == "title") {
+        eventPosts = await db['Event']
+          .findAll({
+            where: {
+              status: "approved"
+            },
+            order: [['title', sortValue]]
+          });
+      }
+      if (eventPosts && eventPosts.length > 0) {
+        return res.status(200).json({
+          result: eventPosts,
+        });
+      } else {
+        return res.status(404).json({
+          result: [],
+          error: "No Event Posts found",
+        });
+      }
+    } catch (err) {
+      console.log(err)
+      return res.status(400).send({ message: " List of Events not got at this moment" });
+    }
+  }
 }

@@ -57,4 +57,14 @@ events.delete(
   EventsController.deleteEvent
 );
 
+events.get(
+  "/events/public/filter",
+  EventsController.getEventsFiltered
+);
+
+events.get(
+  "/events/public/sort",
+  EventsController.getEventsSorted
+);
+
 export default events;
