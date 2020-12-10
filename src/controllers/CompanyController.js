@@ -138,10 +138,6 @@ export default class CompanyController {
         },
         raw: true,
       });
-      if (!company)
-        return res.status(404).json({
-          error: "Sorry, Company not found",
-        });
       return company
         ? res.status(200).json({
             result: { company },

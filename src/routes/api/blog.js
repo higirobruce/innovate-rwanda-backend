@@ -21,7 +21,10 @@ blog.put(
   BlogController.approveOrDeclineBlogPost
 );
 
-blog.get("/blog/public", BlogController.getApprovedBlogsList);
+blog.get(
+  "/blog/public",
+  BlogController.getApprovedBlogsList
+);
 
 blog.get(
   "/blog/company/:companyId",
@@ -37,9 +40,16 @@ blog.get(
   BlogController.getBlogsList
 );
 
-blog.get("/blog/info/:blogId", BlogController.getBlogInfo);
+blog.get(
+  "/blog/info/:blogId",
+  BlogController.getBlogInfo
+);
 
-blog.patch("/blog/edit/:blogId", auth.verifyToken, BlogController.editBlogInfo);
+blog.patch(
+  "/blog/edit/:blogId",
+  auth.verifyToken,
+  BlogController.editBlogInfo
+);
 
 blog.delete(
   "/blog/delete/:blogId",

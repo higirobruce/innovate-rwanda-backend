@@ -21,7 +21,10 @@ job.put(
   JobController.approveOrDeclineJobPost
 );
 
-job.get("/jobs/public", JobController.getApprovedJobsList);
+job.get(
+  "/jobs/public",
+  JobController.getApprovedJobsList
+);
 
 job.get(
   "/jobs/company/:companyId",
@@ -37,9 +40,16 @@ job.get(
   JobController.getJobsList
 );
 
-job.get("/jobs/info/:jobId", JobController.getJobInfo);
+job.get(
+  "/jobs/info/:jobId",
+  JobController.getJobInfo
+);
 
-job.patch("/jobs/edit", auth.verifyToken, JobController.editJobInfo);
+job.patch(
+  "/jobs/edit",
+  auth.verifyToken,
+  JobController.editJobInfo
+);
 
 job.delete(
   "/jobs/delete",

@@ -7,7 +7,10 @@ import checkPermissions from "../../middlewares/checkPermissions";
 
 const message = Router();
 
-message.post("/message/post", MessageController.messagePost);
+message.post(
+  "/message/post",
+  MessageController.messagePost
+);
 
 message.get(
   "/message/company/:companyId",

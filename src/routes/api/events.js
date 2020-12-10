@@ -20,7 +20,10 @@ events.put(
   EventsController.approveOrDeclineEventPost
 );
 
-events.get("/events/public", EventsController.getApprovedEventsList);
+events.get(
+  "/events/public",
+  EventsController.getApprovedEventsList
+);
 
 events.get(
   "/events/company/:companyId",
@@ -36,9 +39,16 @@ events.get(
   EventsController.getEventsList
 );
 
-events.get("/events/info/:eventId", EventsController.getEventInfo);
+events.get(
+  "/events/info/:eventId",
+  EventsController.getEventInfo
+);
 
-events.patch("/events/edit", auth.verifyToken, EventsController.editEventInfo);
+events.patch(
+  "/events/edit",
+  auth.verifyToken,
+  EventsController.editEventInfo
+);
 
 events.delete(
   "/events/delete",
