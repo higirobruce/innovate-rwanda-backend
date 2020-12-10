@@ -14,21 +14,28 @@ export default class Generic {
                 pass: process.env.MAILER_PASSWORD
             }
         });
-        console.log(destination);
-        console.log(subject);
-        console.log(content);
+        content = "<img align='right' src='cid:emailTop' alt='Innovate Rwanda'><br><br><br><br><br><br>" +
+                  content +
+                  "<br><br>Regards,<br>Innovate Rwanda Team";
 
         var mailOptions = {
             from: process.env.MAILER_EMAIL,
             to: destination,
             subject: subject,
-            text: content
+            html: content,
+            attachments: [{
+                filename: 'emailTop.png',
+                path: 'images/emailTop.png',
+                cid: 'emailTop'
+            }]
         };
 
         transporter.sendMail(mailOptions, function (error, info) {
             if (error) {
+                console.log(error)
                 return error;
             } else {
+                console.log("email sent"+ info.response)
                 return 'Email sent: ' + info.response;
             }
         });

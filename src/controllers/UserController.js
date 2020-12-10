@@ -10,6 +10,7 @@ export default class UserController {
     db["User"]
       .findAll({
         attributes: [
+          "id",
           "firstName",
           "lastName",
           "email",
@@ -17,6 +18,7 @@ export default class UserController {
           "role",
           "companyId",
           "status",
+          "createdAt"
         ],
         order: [["createdAt", "DESC"]],
       })
@@ -34,72 +36,60 @@ export default class UserController {
   }
 
   static async register(req, res, next) {
-    await db["Company"]
-      .create({
-        coName: req.body.coName,
-        coType: req.body.coType,
-        coWebsite: req.body.coWebsite,
-        districtBasedIn: req.body.districtBasedIn,
-        areaOfInterest: req.body.areaOfInterest,
-        shortDescription: req.body.shortDescription,
-        slug: generic.generateSlug(req.body.coName),
-        contactEmail: req.body.email,
-        emailDisplay: false,
-        status: "pending",
-      })
-      .then((result) => {
-        bcrypt.hash(
-          req.body.password,
-          saltRounds,
-          function (err, hashPassword) {
-            db["User"]
-              .create({
-                firstName: req.body.firstName,
-                lastName: req.body.lastName,
-                email: req.body.email,
-                jobTitle: req.body.jobTitle,
-                password: hashPassword,
-                role: req.body.role,
-                companyId: result.id,
-                status: "active",
-              })
-              .then((result) => {
-                return res.status(200).send({
-                  message: "Account Created",
-                });
-              })
-              .catch((err) => {
-                if (err instanceof UniqueConstraintError) {
-                  return res.status(409).send({
-                    error:
-                      "Company potentially already on the system, Please check your email or company name",
-                    field: err.errors[0].path,
-                    //err: err
-                  });
-                }
-                return res.status(401).send({
-                  message: "Something went wrong - User Account",
-                  //err: err
-                });
-              });
-          }
-        );
-      })
-      .catch((error) => {
-        if (error instanceof UniqueConstraintError) {
-          return res.status(409).send({
-            error:
-              "Company potentially already on the system, Please check your email or company name",
-            field: error.errors[0].path,
-            //err: err
-          });
-        }
-        return res.status(401).send({
-          message:
-            "Company potentially already on the system, Please confirm then try again",
-          //error: error
+    try {
+      const response = await db.sequelize.transaction(async (t) => {
+        const company = await db["Company"].create({
+          coName: req.body.coName,
+          coType: req.body.coType,
+          coWebsite: req.body.coWebsite,
+          districtBasedIn: req.body.districtBasedIn,
+          areaOfInterest: req.body.areaOfInterest,
+          shortDescription: req.body.shortDescription,
+          slug: generic.generateSlug(req.body.coName),
+          contactEmail: req.body.email,
+          emailDisplay: false,
+          status: "pending"
+        }, { transaction: t });
+
+        const hashPassword = bcrypt.hashSync(req.body.password, saltRounds);
+        const token = jwt.sign({ _id: req.body.email }, process.env.ACCOUNT_ACTIVATION_KEY, {
+          expiresIn: '1h',
         });
+
+        const user = await db["User"].create({
+          firstName: req.body.firstName,
+          lastName: req.body.lastName,
+          email: req.body.email,
+          jobTitle: req.body.jobTitle,
+          password: hashPassword,
+          role: req.body.role,
+          resetLink: token,
+          companyId: company.id,
+          status: "pending"
+        }, { transaction: t });
+
+        const subject = "We’re almost there let's verify your email";
+        const content = "Dear <b>" + req.body.firstName + " " + req.body.lastName + "</b>,<br><br>" +
+          "Please verify your email in order to access your account. <br>" +
+          " Click on the URL below or copy and paste it in your browser to activate your account, It will expire in 1h.<br>" +
+          `${process.env.APP_URL}/activate-account/${token}`;
+        generic.sendEmail(req.body.email, subject, content);
+        return res.status(200).json({ message: "An email is sent to your email, Check your email to activate your account." });
       });
+    } catch (error) {
+      console.log(error)
+      if (error instanceof UniqueConstraintError) {
+        return res.status(409).send({
+          error:
+            "Company potentially already on the system or Your email used, Please check your email or company name",
+          field: error.errors[0].path,
+        });
+      }
+      return res.status(401).send({
+        message:
+          "Please confirm you provided all required info then try again",
+      });
+    }
   }
 
   static async login(req, res, next) {
@@ -229,6 +219,7 @@ export default class UserController {
       }
     }
   }
+
   static async resetPassword(req, res) {
     const { resetLink, newPassword } = req.body;
     if (resetLink) {
@@ -295,10 +286,55 @@ export default class UserController {
         })
         : res.status(404).json({
           error: "Sorry, deactivation failed..Try again"
-        });  
+        });
     } catch (err) {
       console.log(err)
       return res.status(400).send({ message: "Sorry, Action failed" });
+    }
+  }
+
+  static async activateAccount(req, res) {
+    const { activationLink } = req.params;
+    const user = await db["User"]
+    .findOne({
+      where: {
+        resetLink: activationLink,
+      }
+    });
+    if (activationLink) {
+      jwt.verify(activationLink, process.env.ACCOUNT_ACTIVATION_KEY, (error, decoded) => {
+        if (error) {
+          return res.status(401).send({
+            message: "Incorrect link or The link expired",
+          });
+        } else {
+
+          if (!user) {
+            return res.status(400).json({ error: "Account with that link does not exist" });
+          } else {
+            const response = db['User'].update(
+              { status: "active" },
+              {
+                where: {
+                  resetLink: activationLink
+                },
+              }
+            );
+            if (response)
+            {
+              console.log(user)
+              const subject = "Let’s dive right in";
+              const content = "Welcome to the innovate Rwanda community";
+              generic.sendEmail(user.email, subject, content);
+              return res.status(200).json({ message: "Account Activated. A confirmation is sent to your email" });
+            } else {
+              return res.status(200).json({ error: "Sorry, activation failed." });
+            }
+          }
+        }
+      });
+    } else {
+      return res.status(401).json({ error: "Activation Error" });
     }
   }
 }

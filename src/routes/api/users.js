@@ -7,10 +7,14 @@ import checkPermissions from "../../middlewares/checkPermissions";
 
 const users = Router();
 
-// register
 users.post(
   "/register",
   userController.register
+);
+
+users.get(
+  "/activate-account/:activationLink",
+  userController.activateAccount
 );
 
 users.post(
