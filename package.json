@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Innovate Rwanda",
   "main": "src/app.js",
+  "type": "module",
   "scripts": {
     "start": "concurrently \"npm run db:migrate && npm run db:seed\" \"babel-node src/app.js\"",
     "dev": "nodemon src/app.js --exec babel-node --presets @babel/preset-env",

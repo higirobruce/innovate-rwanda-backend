@@ -1,5 +1,3 @@
-import http from 'http';
-import path from 'path';
 import createError from 'http-errors';
 import express from 'express';
 import logger from 'morgan';
@@ -8,7 +6,6 @@ import cors from 'cors';
 import routes from './routes';
 
 const app = express();
-const server = http.createServer(app);
 
 dotenv.config();
 
