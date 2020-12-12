@@ -1,6 +1,5 @@
 const checkPermissions = (actions) => {
   return async (req, res, next) => {
-    console.log("continue", req.user)
     try {
       if (actions.includes(req.user.role) || req.user.role === "super-admin") {
         next();

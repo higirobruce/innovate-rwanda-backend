@@ -7,6 +7,7 @@ import job from "./job";
 import blog from "./blog";
 import subscribe from "./subscribe";
 import messages from "./messages";
+import businessActivities from "./businessActivities";
 
 const router = express.Router();
 
@@ -18,5 +19,6 @@ router.use("/", job);
 router.use("/", blog);
 router.use("/", subscribe);
 router.use("/", messages);
+router.use("/", businessActivities);
 
 export default router;

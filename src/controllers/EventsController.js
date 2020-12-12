@@ -2,6 +2,7 @@ import db from "../models";
 
 export default class EvenController {
   static async eventPost(req, res) {
+    console.log(req.body)
     try {
       const response = await db['Event'].create(req.body);
       if (response) {
