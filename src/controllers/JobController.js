@@ -40,6 +40,11 @@ export default class JobController {
         where: {
           status: "approved",
         },
+        include: [
+          {
+            model: db["Company"], attributes: ["logo", "coName"]
+          }
+        ],
         order: [['createdAt', 'DESC']],
         raw: true,
       });
@@ -61,12 +66,14 @@ export default class JobController {
 
   static async getJobsListPerCompany(req, res) {
     try {
-      // companyId is slug
       const jobPosts = await db['Job']
         .findAll({
           where: {
             companyId: req.params.companyId,
           },
+          include: [
+            { model: db["Company"], attributes: ["logo", "coName"] }
+          ],
           order: [['createdAt', 'DESC']]
         });
       if (jobPosts && jobPosts.length > 0) {
@@ -91,6 +98,9 @@ export default class JobController {
       if (req.params.status == "all") {
         jobPosts = await db['Job']
           .findAll({
+            include: [
+              { model: db["Company"], attributes: ["logo", "coName"] }
+            ],
             order: [['createdAt', 'DESC']]
           });
       } else {
@@ -99,6 +109,9 @@ export default class JobController {
             where: {
               status: req.params.status,
             },
+            include: [
+              { model: db["Company"], attributes: ["logo", "coName"] }
+            ],
             order: [['createdAt', 'DESC']]
           });
       }
@@ -125,6 +138,9 @@ export default class JobController {
           where: {
             id: req.params.jobId,
           },
+          include: [
+            { model: db["Company"], attributes: ["logo", "coName"] }
+          ],
           raw: true,
         });
       return job
@@ -196,6 +212,9 @@ export default class JobController {
               companyId: filterValue,
               status: "approved"
             },
+            include: [
+              { model: db["Company"], attributes: ["logo", "coName"] }
+            ],
             order: [['deadlineDate', 'DESC']]
           });
       } else if (filterBy == "topic") {
@@ -208,6 +227,9 @@ export default class JobController {
                 [likeOp]: "%" + filterValue + "%"
               }
             },
+            include: [
+              { model: db["Company"], attributes: ["logo", "coName"] }
+            ],
             order: [['deadlineDate', 'DESC']]
           });
       } else if (filterBy == "year") {
@@ -218,6 +240,9 @@ export default class JobController {
               status: "approved",
               [andOp]: db.sequelize.where(db.sequelize.literal('EXTRACT(YEAR FROM "Job"."deadlineDate")'), filterValue)
             },
+            include: [
+              { model: db["Company"], attributes: ["logo", "coName"] }
+            ],
             order: [['updatedAt', 'DESC']]
           });
       }
@@ -249,6 +274,9 @@ export default class JobController {
               where: {
                 status: "approved"
               },
+              include: [
+                { model: db["Company"], attributes: ["logo", "coName"] }
+              ],
               order: [['deadlineDate', sortValue]]
             });
         }
@@ -258,6 +286,9 @@ export default class JobController {
             where: {
               status: "approved"
             },
+            include: [
+              { model: db["Company"], attributes: ["logo", "coName"] }
+            ],
             order: [['title', sortValue]]
           });
       }

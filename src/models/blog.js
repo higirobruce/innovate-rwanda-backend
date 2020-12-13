@@ -11,16 +11,26 @@ module.exports = (sequelize, DataTypes) => {
     content: DataTypes.TEXT,
     category: DataTypes.STRING,
     tags: DataTypes.STRING,
-    companyId: DataTypes.STRING,
-    author: DataTypes.STRING,
+    companyId: DataTypes.INTEGER,
+    author: DataTypes.INTEGER,
     image: DataTypes.STRING,
     status: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'Blog',
   });
-  blog.associate = function (models) {
-    // associations can be defined here
+
+  blog.associate = models => {
+    blog.belongsTo(models.Company, {
+      foreignKey: 'companyId',
+      onDelete: 'CASCADE',
+      onUpdate: 'CASCADE'
+    });
+    blog.belongsTo(models.User, {
+      foreignKey: 'author',
+      onDelete: 'CASCADE',
+      onUpdate: 'CASCADE'
+    });
   };
   return blog;
 };

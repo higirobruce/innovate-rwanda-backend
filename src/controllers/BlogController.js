@@ -41,8 +41,11 @@ export default class BlogController {
         where: {
           status: "approved",
         },
+        include: [
+          { model: db["User"], attributes: ["firstName", "lastName"] }
+        ],
         order: [['createdAt', 'DESC']],
-        raw: true,
+        raw: true   
       });
       if (blogPosts && blogPosts.length > 0) {
         return res.status(200).json({
@@ -54,6 +57,7 @@ export default class BlogController {
         error: "No blog posts found at this moment",
       });
     } catch (err) {
+      console.log(err)
       return res
         .status(400)
         .send({ message: "No blogs found at this moment" });
@@ -62,7 +66,6 @@ export default class BlogController {
 
   static async getBlogsListPerCompany(req, res) {
     try {
-      // companyId is slug
       const blogPosts = await db['Blog']
         .findAll({
           where: {
@@ -71,6 +74,9 @@ export default class BlogController {
               [db.Op.not]: 'deleted'
             }
           },
+          include: [
+            { model: db["User"], attributes: ["firstName", "lastName"] }
+          ],
           order: [['createdAt', 'DESC']]
         });
       if (blogPosts && blogPosts.length > 0) {
@@ -94,6 +100,9 @@ export default class BlogController {
       if (req.params.status == "all") {
         blogPosts = await db['Blog']
           .findAll({
+            include: [
+              { model: db["User"], attributes: ["firstName", "lastName"] }
+            ],
             order: [['createdAt', 'DESC']]
           });
       } else {
@@ -102,6 +111,9 @@ export default class BlogController {
             where: {
               status: req.params.status,
             },
+            include: [
+              { model: db["User"], attributes: ["firstName", "lastName"] }
+            ],
             order: [['createdAt', 'DESC']]
           });
       }
@@ -128,6 +140,9 @@ export default class BlogController {
           where: {
             id: req.params.blogId,
           },
+          include: [
+            { model: db["User"], attributes: ["firstName", "lastName"] }
+          ],
           raw: true,
         });
       return blog
@@ -198,6 +213,9 @@ export default class BlogController {
               companyId: filterValue,
               status: "approved"
             },
+            include: [
+              { model: db["User"], attributes: ["firstName", "lastName"] }
+            ],
             order: [['createdAt', 'DESC']]
           });
       } else if (filterBy == "topic") {
@@ -210,6 +228,9 @@ export default class BlogController {
                 [likeOp]: "%" + filterValue + "%"
               }
             },
+            include: [
+              { model: db["User"], attributes: ["firstName", "lastName"] }
+            ],
             order: [['createdAt', 'DESC']]
           });
       } else if (filterBy == "year") {
@@ -220,6 +241,9 @@ export default class BlogController {
               status: "approved",
               andOp: db.sequelize.where(db.sequelize.literal('EXTRACT(YEAR FROM "Blog"."updatedAt")'), filterValue)
             },
+            include: [
+              { model: db["User"], attributes: ["firstName", "lastName"] }
+            ],
             order: [['updatedAt', 'DESC']]
           });
       }
@@ -251,6 +275,9 @@ export default class BlogController {
               where: {
                 status: "approved"
               },
+              include: [
+                { model: db["User"], attributes: ["firstName", "lastName"] }
+              ],
               order: [['updatedAt', sortValue]]
             });
         }
@@ -260,6 +287,9 @@ export default class BlogController {
             where: {
               status: "approved"
             },
+            include: [
+              { model: db["User"], attributes: ["firstName", "lastName"] }
+            ],
             order: [['title', sortValue]]
           });
       }

@@ -14,15 +14,24 @@ module.exports = (sequelize, DataTypes) => {
     flyer: DataTypes.STRING,
     eventDate: DataTypes.DATE,
     eventTime: DataTypes.TIME,
-    companyId: DataTypes.STRING,
-    author: DataTypes.STRING,
+    companyId: DataTypes.INTEGER,
+    author: DataTypes.INTEGER,
     status: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'Event',
   });
-  event.associate = function (models) {
-    // associations can be defined here
+  event.associate = models => {
+    event.belongsTo(models.Company, {
+      foreignKey: 'companyId',
+      onDelete: 'CASCADE',
+      onUpdate: 'CASCADE'
+    });
+    event.belongsTo(models.User, {
+      foreignKey: 'author',
+      onDelete: 'CASCADE',
+      onUpdate: 'CASCADE'
+    });
   };
   return event;
 };

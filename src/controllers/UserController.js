@@ -95,12 +95,12 @@ export default class UserController {
 
   static async createUser(req, res) {
     try {
-      const hashPassword = bcrypt.hashSync(req.body.password, saltRounds);
+      const hashPassword = bcrypt.hashSync(req.body.password.trim(), saltRounds);
 
       const user = await db["User"].create({
         firstName: req.body.firstName,
         lastName: req.body.lastName,
-        email: req.body.email,
+        email: req.body.email.trim(),
         password: hashPassword,
         role: req.body.role,
         status: "active"
@@ -131,7 +131,7 @@ export default class UserController {
     await db["User"]
       .findOne({
         where: {
-          email: req.body.email,
+          email: req.body.email.trim(),
           status: "active"
         },
       })

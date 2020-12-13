@@ -9,7 +9,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     title: DataTypes.STRING,
     description: DataTypes.TEXT,
-    companyId: DataTypes.STRING,
+    companyId: DataTypes.INTEGER,
     category: DataTypes.STRING,
     tags: DataTypes.STRING,
     deadlineDate: DataTypes.DATE,
@@ -20,8 +20,12 @@ module.exports = (sequelize, DataTypes) => {
     sequelize,
     modelName: 'Job',
   });
-  job.associate = function (models) {
-    // associations can be defined here
+  job.associate = models => {
+    job.belongsTo(models.Company, {
+      foreignKey: 'companyId',
+      onDelete: 'CASCADE',
+      onUpdate: 'CASCADE'
+    });
   };
   return job;
 };
