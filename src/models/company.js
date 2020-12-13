@@ -1,6 +1,12 @@
 'use strict';
 module.exports = (sequelize, DataTypes) => {
   const company = sequelize.define('Company', {
+    id: {
+      allowNull: false,
+      autoIncrement: true,
+      primaryKey: true,
+      type: DataTypes.INTEGER
+    },
     coName: DataTypes.STRING,
     coType: DataTypes.STRING,
     coWebsite: DataTypes.STRING,

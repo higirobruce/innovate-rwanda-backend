@@ -18,6 +18,13 @@ users.get(
 );
 
 users.post(
+  "/users/create",
+   auth.verifyToken,
+   checkPermissions("admin-user"),
+  userController.createUser
+);
+
+users.post(
   "/login",
   userController.login,
   auth.getToken
@@ -28,6 +35,13 @@ users.get(
   auth.verifyToken,
   checkPermissions("admin-user"),
   userController.getUsersList
+);
+
+users.put(
+  "/users/change-role/:userId",
+  auth.verifyToken,
+  checkPermissions("admin-user"),
+  userController.changeRole
 );
 
 // Normal change of password
@@ -45,7 +59,7 @@ users.put(
 
 // Get token that was sent on email
 users.put(
-  "/reset-password",
+  "/reset-password/:resetLink",
   userController.resetPassword
 );
 

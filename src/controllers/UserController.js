@@ -18,6 +18,7 @@ export default class UserController {
           "role",
           "companyId",
           "status",
+          "lastActivity",
           "createdAt"
         ],
         order: [["createdAt", "DESC"]],
@@ -92,6 +93,40 @@ export default class UserController {
     }
   }
 
+  static async createUser(req, res) {
+    try {
+      const hashPassword = bcrypt.hashSync(req.body.password, saltRounds);
+
+      const user = await db["User"].create({
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
+        email: req.body.email,
+        password: hashPassword,
+        role: req.body.role,
+        status: "active"
+      });
+
+      const subject = "Account Creation";
+      const content = "Dear " + user.firstName + " " + user.lastName + ", <br><br>" +
+        "An account has been created for you on Innovate Rwanda System. Please find below details of the account.<br><br>" +
+        "<b>Email</b>: " + user.email + "<br>" +
+        "<b>Password</b>: " + req.body.password + "<br>" +
+        "<br>Change this default password as soon as possible.";
+      generic.sendEmail(req.body.email, subject, content);
+      return res.status(200).json({ message: "User Account created successfully." });
+    } catch (error) {
+      console.log(error)
+      if (error instanceof UniqueConstraintError) {
+        return res.status(409).send({
+          error:
+            "User with this email already exists",
+          field: error.errors[0].path,
+        });
+      }
+      return res.status(400).send({ message: "Error occurred, Please try again later" });
+    }
+  }
+
   static async login(req, res, next) {
     await db["User"]
       .findOne({
@@ -103,9 +138,10 @@ export default class UserController {
       .then((user) => {
         if (!user) {
           return res.status(403).send({
-            message: "Invalid email, password or company information",
+            message: "Invalid email, password or company information or Account not activated, check your email",
           });
         }
+        user.update({ lastActivity: db.sequelize.fn('NOW') });
         bcrypt.compare(
           req.body.password,
           user.password,
@@ -116,7 +152,7 @@ export default class UserController {
                   where: { id: user.companyId },
                 })
                 .then((company) => {
-                  delete user.password;
+                  delete user.dataValues.password;
                   res.locals.user = user;
                   if (!company) {
                     res.locals.companyInfo = "Company info not there";
@@ -135,6 +171,7 @@ export default class UserController {
                 message: "Wrong Password",
               });
             } else if (err) {
+              console.log(err)
               res.status(403).send({
                 message: "Error occurred -- checking password",
               });
@@ -221,7 +258,8 @@ export default class UserController {
   }
 
   static async resetPassword(req, res) {
-    const { resetLink, newPassword } = req.body;
+    const { resetLink } = req.params;
+    const { newPassword } = req.body;
     if (resetLink) {
       jwt.verify(resetLink, process.env.RESET_PASSWORD_KEY, (error, decoded) => {
         if (error) {
@@ -296,11 +334,11 @@ export default class UserController {
   static async activateAccount(req, res) {
     const { activationLink } = req.params;
     const user = await db["User"]
-    .findOne({
-      where: {
-        resetLink: activationLink,
-      }
-    });
+      .findOne({
+        where: {
+          resetLink: activationLink,
+        }
+      });
     if (activationLink) {
       jwt.verify(activationLink, process.env.ACCOUNT_ACTIVATION_KEY, (error, decoded) => {
         if (error) {
@@ -320,8 +358,7 @@ export default class UserController {
                 },
               }
             );
-            if (response)
-            {
+            if (response) {
               console.log(user)
               const subject = "Let’s dive right in";
               const content = "Welcome to the innovate Rwanda community";
@@ -335,6 +372,30 @@ export default class UserController {
       });
     } else {
       return res.status(401).json({ error: "Activation Error" });
+    }
+  }
+
+  static async changeRole(req, res) {
+    try {
+      const response = await db['User']
+        .update(
+          { role: req.body.role },
+          {
+            where: {
+              id: req.params.userId,
+            },
+          }
+        );
+      return response
+        ? res.status(200).json({
+          message: "User's role changed successfully"
+        })
+        : res.status(404).json({
+          error: "Sorry, role change failed..Try again"
+        });
+    } catch (err) {
+      console.log(err)
+      return res.status(400).send({ message: "Sorry, role change failed..Try again" });
     }
   }
 }
