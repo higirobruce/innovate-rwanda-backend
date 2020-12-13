@@ -4,7 +4,7 @@
   "description": "Innovate Rwanda",
   "main": "src/app.js",
   "scripts": {
-    "start": "concurrently \"npm run db:migrate && npm run db:seed\" \"babel-node src/app.js\"",
+    "start": "concurrently \"npm run migrate\" \"babel-node src/app.js\"",
     "dev": "nodemon src/app.js --exec babel-node --presets @babel/preset-env",
     "migrate": "./node_modules/.bin/sequelize db:migrate"
   },
