@@ -67,13 +67,13 @@ module.exports = {
         { name: "Defense", createdAt: new Date(), updatedAt: new Date() },
         { name: "Virtualization", createdAt: new Date(), updatedAt: new Date() },
         {
-          name: "Networking and wirelesss",
+          name: "Networking and wireless",
           createdAt: new Date(),
           updatedAt: new Date(),
         },
         { name: "Data center", createdAt: new Date(), updatedAt: new Date() },
         {
-          name: "Infrastructure as a service (IaaS",
+          name: "Infrastructure as a service (IaaS)",
           createdAt: new Date(),
           updatedAt: new Date(),
         },
