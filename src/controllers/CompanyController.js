@@ -89,7 +89,7 @@ export default class CompanyController {
 
   static async approveOrDeclineCompany(req, res) {
     try {
-      const { decision } = req.body.decision;
+      const decision = req.body.decision;
       const response = await db["Company"]
         .update(
           { status: decision },
@@ -101,10 +101,11 @@ export default class CompanyController {
         )
       if (response) {
         return res.status(200).json({
-          message: "Company" + decision
+          message: "Company " + decision
         })
       }
     } catch (err) {
+      console.log(err)
       return res
         .status(400)
         .send({ message: "Decision not set at this moment" });
@@ -193,6 +194,7 @@ export default class CompanyController {
         ]
       });
       delete owner.password;
+      console.log(company)
       return company
         ? res.status(200).json({
           result: { company, owner },
