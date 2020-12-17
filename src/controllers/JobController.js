@@ -45,8 +45,7 @@ export default class JobController {
             model: db["Company"], attributes: ["logo", "coName"]
           }
         ],
-        order: [['createdAt', 'DESC']],
-        raw: true,
+        order: [['createdAt', 'DESC']]
       });
       if (jobPosts && jobPosts.length > 0) {
         return res.status(200).json({
@@ -140,8 +139,7 @@ export default class JobController {
           },
           include: [
             { model: db["Company"], attributes: ["logo", "coName"] }
-          ],
-          raw: true,
+          ]
         });
       return job
         ? res.status(200).json({

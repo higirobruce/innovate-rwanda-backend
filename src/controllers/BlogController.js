@@ -44,8 +44,7 @@ export default class BlogController {
         include: [
           { model: db["User"], attributes: ["firstName", "lastName"] }
         ],
-        order: [['createdAt', 'DESC']],
-        raw: true   
+        order: [['createdAt', 'DESC']]  
       });
       if (blogPosts && blogPosts.length > 0) {
         return res.status(200).json({
@@ -142,8 +141,7 @@ export default class BlogController {
           },
           include: [
             { model: db["User"], attributes: ["firstName", "lastName"] }
-          ],
-          raw: true,
+          ]
         });
       return blog
         ? res.status(200).json({

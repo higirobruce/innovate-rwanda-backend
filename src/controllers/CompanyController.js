@@ -5,7 +5,11 @@ export default class CompanyController {
     try {
       const companies = await db["Company"].findAll({
         order: [["createdAt", "DESC"]],
-        raw: true,
+        include: [
+          {
+            model: db["BusinessActivities"],
+          },
+        ]
       });
       if (companies && companies.length > 0) {
         return res.status(200).json({
@@ -30,7 +34,11 @@ export default class CompanyController {
           status: "approved",
         },
         order: [["createdAt", "DESC"]],
-        raw: true,
+        include: [
+          {
+            model: db["BusinessActivities"],
+          },
+        ]
       });
       if (companies && companies.length > 0) {
         return res.status(200).json({
@@ -56,7 +64,11 @@ export default class CompanyController {
           coType: req.params.type,
         },
         order: [["createdAt", "DESC"]],
-        raw: true,
+        include: [
+          {
+            model: db["BusinessActivities"],
+          },
+        ]
       });
       if (companies && companies.length > 0) {
         return res.status(200).json({
@@ -105,7 +117,11 @@ export default class CompanyController {
         where: {
           id: req.params.companyId,
         },
-        raw: true,
+        include: [
+          {
+            model: db["BusinessActivities"],
+          },
+        ]
       });
       const owner = await db["User"].findOne({
         where: {
@@ -136,7 +152,11 @@ export default class CompanyController {
         attributes: {
           exclude: ["createdAt", "updatedAt"],
         },
-        raw: true,
+        include: [
+          {
+            model: db["BusinessActivities"],
+          },
+        ]
       });
       return company
         ? res.status(200).json({
@@ -166,7 +186,11 @@ export default class CompanyController {
         attributes: {
           exclude: ["createdAt", "updatedAt"],
         },
-        raw: true,
+        include: [
+          {
+            model: db["BusinessActivities"],
+          },
+        ]
       });
       delete owner.password;
       return company
@@ -183,7 +207,7 @@ export default class CompanyController {
   static async editCompanyInfo(req, res) {
     try {
       const response = await db["Company"]
-        .update((req.body), {
+        .update(req.body, {
           where: {
             id: req.body.id
           },

@@ -3,6 +3,12 @@ module.exports = (sequelize, DataTypes) => {
   const BusinessActivities = sequelize.define(
     "BusinessActivities",
     {
+      id: {
+        allowNull: false,
+        autoIncrement: true,
+        primaryKey: true,
+        type: DataTypes.INTEGER,
+      },
       name: DataTypes.STRING,
     },
     {
@@ -11,7 +17,7 @@ module.exports = (sequelize, DataTypes) => {
     }
   );
   BusinessActivities.associate = function (models) {
-    // associations can be defined here
+    // associations
   };
   return BusinessActivities;
 };

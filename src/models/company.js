@@ -11,13 +11,20 @@ module.exports = (sequelize, DataTypes) => {
     coType: DataTypes.STRING,
     coWebsite: DataTypes.STRING,
     districtBasedIn: DataTypes.STRING,
-    areaOfInterest: DataTypes.STRING,
+    businessActivityId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: "BusinessActivities",
+        key: "id",
+      },
+    },
     shortDescription: DataTypes.TEXT,
     logo: DataTypes.STRING,
     yearFounded: DataTypes.INTEGER,
     contactEmail: DataTypes.STRING,
     contactPhone: DataTypes.STRING,
-    mainAreaOfInterest: DataTypes.STRING,
+    businessActivities: DataTypes.STRING,
     customerBase: DataTypes.STRING,
     socialMedia: DataTypes.STRING,
     emailDisplay: DataTypes.BOOLEAN,
@@ -44,6 +51,10 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: 'companyId',
       onDelete: 'CASCADE',
       onUpdate: 'CASCADE'
+    });
+    company.hasOne(models.BusinessActivities, {
+      foreignKey: 'id',
+      sourceKey: 'businessActivityId'
     });
   };
   return company;

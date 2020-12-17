@@ -44,7 +44,7 @@ export default class UserController {
           coType: req.body.coType,
           coWebsite: req.body.coWebsite,
           districtBasedIn: req.body.districtBasedIn,
-          areaOfInterest: req.body.areaOfInterest,
+          businessActivityId: req.body.businessActivityId,
           shortDescription: req.body.shortDescription,
           slug: generic.generateSlug(req.body.coName),
           contactEmail: req.body.email,
@@ -70,12 +70,15 @@ export default class UserController {
         }, { transaction: t });
 
         const subject = "We’re almost there let's verify your email";
-        const content = "Dear <b>" + req.body.firstName + " " + req.body.lastName + "</b>,<br><br>" +
-          "Please verify your email in order to access your account. <br>" +
-          " Click on the URL below or copy and paste it in your browser to activate your account, It will expire in 1h.<br>" +
-          `${process.env.APP_URL}/activate-account/${token}`;
+        const content = `Dear ${req.body.firstName} ${req.body.lastName},<br><br> 
+        Please verify your email in order to access your account. <br>
+        Click on the button below or open it in your browser to activate your account, It will expire in 1h.<br><br><br>
+        <a style="margin:35px 0;padding:15px 35px;background:#00AEEF;color:#ffffff;clear:both;border-radius:2px;text-decoration:none"
+        href="${process.env.APP_URL}/activate-account/${token}">Activate account</a><br><br><br>`;
         generic.sendEmail(req.body.email, subject, content);
-        return res.status(200).json({ message: "An email is sent to your email, Check your email to activate your account." });
+        return res.status(200).json({
+          message: "An email is sent to your email, Check your email to activate your account." 
+        });
       });
     } catch (error) {
       console.log(error)
@@ -141,7 +144,7 @@ export default class UserController {
             message: "Invalid email, password or company information or Account not activated, check your email",
           });
         }
-        user.update({ lastActivity: db.sequelize.fn('NOW') });
+        user.update({ lastActivity: db.sequelize.fn("NOW") });
         bcrypt.compare(
           req.body.password,
           user.password,
@@ -230,7 +233,7 @@ export default class UserController {
       return res.status(400).json({ error: "User with this email does not exist" });
     } else {
       const token = jwt.sign({ _id: user.id }, process.env.RESET_PASSWORD_KEY, {
-        expiresIn: '1h',
+        expiresIn: "1h",
       });
       if (token) {
         db["User"].update(
@@ -242,9 +245,11 @@ export default class UserController {
           }).then(result => {
             if (result) {
               const subject = "[Innovate Rwanda] Please reset your password";
-              const content = "Please use the following link to reset your password: " +
-                `${process.env.APP_URL}/resetPassword/${token}` +
-                "  It will expire in 1h.";
+              const content = `
+                Please use the following link to reset your password: <br><br><br>
+                <a style="margin:35px 0;padding:15px 35px;background:#00AEEF;color:#ffffff;clear:both;border-radius:2px;text-decoration:none"
+          href="${process.env.APP_URL}/reset-password/${token}">Reset password</a> <br><br><br>
+                This link  will expire in 1h.`;
               generic.sendEmail(req.body.email, subject, content);
               return res.status(200).json({ message: "Email is sent, Check your email for the link" });
             }
