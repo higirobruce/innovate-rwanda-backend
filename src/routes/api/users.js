@@ -19,8 +19,8 @@ users.get(
 
 users.post(
   "/users/create",
-   auth.verifyToken,
-   checkPermissions("admin-user"),
+  auth.verifyToken,
+  checkPermissions("admin-user"),
   userController.createUser
 );
 
@@ -58,16 +58,23 @@ users.put(
 );
 
 // Get token that was sent on email
-users.put(
+users.get(
   "/reset-password/:resetLink",
   userController.resetPassword
 );
 
 users.delete(
-  "/users/deactivate",
+  "/users/deactivate/:email",
   auth.verifyToken,
   checkPermissions("admin-user"),
   userController.deactivateUser
+);
+
+users.put(
+  "/users/activate/:email",
+  auth.verifyToken,
+  checkPermissions("admin-user"),
+  userController.activateUser
 );
 
 export default users;

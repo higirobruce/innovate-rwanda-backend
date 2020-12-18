@@ -319,7 +319,7 @@ export default class UserController {
           { status: "inactive" },
           {
             where: {
-              email: req.body.email,
+              email: req.params.email,
             },
           }
         );
@@ -329,6 +329,30 @@ export default class UserController {
         })
         : res.status(404).json({
           error: "Sorry, deactivation failed..Try again"
+        });
+    } catch (err) {
+      console.log(err)
+      return res.status(400).send({ message: "Sorry, Action failed" });
+    }
+  }
+
+  static async activateUser(req, res) {
+    try {
+      const response = await db['User']
+        .update(
+          { status: "active" },
+          {
+            where: {
+              email: req.params.email,
+            },
+          }
+        );
+      return response
+        ? res.status(200).json({
+          message: "User Account activated successfully"
+        })
+        : res.status(404).json({
+          error: "Sorry, activation failed..Try again"
         });
     } catch (err) {
       console.log(err)

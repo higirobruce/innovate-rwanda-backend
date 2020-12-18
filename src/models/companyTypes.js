@@ -3,8 +3,16 @@ module.exports = (sequelize, DataTypes) => {
   const CompanyTypes = sequelize.define(
     "CompanyTypes",
     {
-      name: DataTypes.STRING,
-      slug: DataTypes.STRING,
+      name: {
+        allowNull: false,
+        unique: true,
+        type: DataTypes.STRING
+      },
+      slug: {
+        allowNull: false,
+        unique: true,
+        type: DataTypes.STRING
+      },
       createdAt: DataTypes.DATE,
       updatedAt: DataTypes.DATE,
     },
