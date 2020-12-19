@@ -58,7 +58,7 @@ users.put(
 );
 
 // Get token that was sent on email
-users.get(
+users.put(
   "/reset-password/:resetLink",
   userController.resetPassword
 );
