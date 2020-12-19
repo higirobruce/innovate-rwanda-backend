@@ -9,6 +9,7 @@ import subscribe from "./subscribe";
 import messages from "./messages";
 import businessActivities from "./businessActivities";
 import companyTypes from "./companyTypes";
+import activitiesOfCompany from "./activitiesOfCompany";
 
 const router = express.Router();
 
@@ -22,5 +23,6 @@ router.use("/", subscribe);
 router.use("/", messages);
 router.use("/", businessActivities);
 router.use("/", companyTypes);
+router.use("/", activitiesOfCompany);
 
 export default router;

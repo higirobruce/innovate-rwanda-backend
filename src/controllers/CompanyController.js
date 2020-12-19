@@ -1,15 +1,40 @@
 import db from "../models";
+import { UniqueConstraintError } from "sequelize";
 
 export default class CompanyController {
   static async getCompaniesList(req, res) {
     try {
       const companies = await db["Company"].findAll({
+
         order: [["createdAt", "DESC"]],
         include: [
           {
             model: db["BusinessActivities"],
           },
-        ]
+          {
+            model: db["ActivitiesOfCompany"],
+            attributes: ["companyId", "activityId"],
+            on: {
+              [db.Op.and]: [
+                db.sequelize.where(
+                  db.sequelize.col('ActivitiesOfCompanies.companyId'),
+                  db.Op.eq,
+                  db.sequelize.col('Company.id')
+                ),],
+            },
+            include: [
+              {
+                model: db["BusinessActivities"],
+                on: {
+                  [db.Op.and]: [
+                    db.sequelize.where(
+                      db.sequelize.col('ActivitiesOfCompanies.activityId'),
+                      db.Op.eq,
+                      db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id')
+                    ),],
+                },
+              },]
+          }],
       });
       if (companies && companies.length > 0) {
         return res.status(200).json({
@@ -21,6 +46,7 @@ export default class CompanyController {
         error: "No companies found at this moment",
       });
     } catch (err) {
+      console.log(err)
       return res
         .status(400)
         .send({ message: "No companies found at this moment" });
@@ -38,7 +64,30 @@ export default class CompanyController {
           {
             model: db["BusinessActivities"],
           },
-        ]
+          {
+            model: db["ActivitiesOfCompany"],
+            attributes: ["companyId", "activityId"],
+            on: {
+              [db.Op.and]: [
+                db.sequelize.where(
+                  db.sequelize.col('ActivitiesOfCompanies.companyId'),
+                  db.Op.eq,
+                  db.sequelize.col('Company.id')
+                ),],
+            },
+            include: [
+              {
+                model: db["BusinessActivities"],
+                on: {
+                  [db.Op.and]: [
+                    db.sequelize.where(
+                      db.sequelize.col('ActivitiesOfCompanies.activityId'),
+                      db.Op.eq,
+                      db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id')
+                    ),],
+                },
+              },]
+          }],
       });
       if (companies && companies.length > 0) {
         return res.status(200).json({
@@ -50,6 +99,7 @@ export default class CompanyController {
         error: "No companies found at this moment",
       });
     } catch (err) {
+      console.log(err)
       return res
         .status(400)
         .send({ message: "No companies found at this moment" });
@@ -68,7 +118,30 @@ export default class CompanyController {
           {
             model: db["BusinessActivities"],
           },
-        ]
+          {
+            model: db["ActivitiesOfCompany"],
+            attributes: ["companyId", "activityId"],
+            on: {
+              [db.Op.and]: [
+                db.sequelize.where(
+                  db.sequelize.col('ActivitiesOfCompanies.companyId'),
+                  db.Op.eq,
+                  db.sequelize.col('Company.id')
+                ),],
+            },
+            include: [
+              {
+                model: db["BusinessActivities"],
+                on: {
+                  [db.Op.and]: [
+                    db.sequelize.where(
+                      db.sequelize.col('ActivitiesOfCompanies.activityId'),
+                      db.Op.eq,
+                      db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id')
+                    ),],
+                },
+              },]
+          }],
       });
       if (companies && companies.length > 0) {
         return res.status(200).json({
@@ -122,7 +195,30 @@ export default class CompanyController {
           {
             model: db["BusinessActivities"],
           },
-        ]
+          {
+            model: db["ActivitiesOfCompany"],
+            attributes: ["companyId", "activityId"],
+            on: {
+              [db.Op.and]: [
+                db.sequelize.where(
+                  db.sequelize.col('ActivitiesOfCompanies.companyId'),
+                  db.Op.eq,
+                  db.sequelize.col('Company.id')
+                ),],
+            },
+            include: [
+              {
+                model: db["BusinessActivities"],
+                on: {
+                  [db.Op.and]: [
+                    db.sequelize.where(
+                      db.sequelize.col('ActivitiesOfCompanies.activityId'),
+                      db.Op.eq,
+                      db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id')
+                    ),],
+                },
+              },]
+          }],
       });
       const owner = await db["User"].findOne({
         where: {
@@ -157,15 +253,38 @@ export default class CompanyController {
           {
             model: db["BusinessActivities"],
           },
-        ]
+          {
+            model: db["ActivitiesOfCompany"],
+            attributes: ["companyId", "activityId"],
+            on: {
+              [db.Op.and]: [
+                db.sequelize.where(
+                  db.sequelize.col('ActivitiesOfCompanies.companyId'),
+                  db.Op.eq,
+                  db.sequelize.col('Company.id')
+                ),],
+            },
+            include: [
+              {
+                model: db["BusinessActivities"],
+                on: {
+                  [db.Op.and]: [
+                    db.sequelize.where(
+                      db.sequelize.col('ActivitiesOfCompanies.activityId'),
+                      db.Op.eq,
+                      db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id')
+                    ),],
+                },
+              },]
+          }],
       });
       return company
         ? res.status(200).json({
-            result: { company },
-          })
+          result: { company },
+        })
         : res.status(404).json({
-            error: "Sorry, Company not found",
-          });
+          error: "Sorry, Company not found",
+        });
     } catch (err) {
       console.log("err", err)
       return res.status(400).send({ message: "Sorry, Company not found" });
@@ -191,7 +310,30 @@ export default class CompanyController {
           {
             model: db["BusinessActivities"],
           },
-        ]
+          {
+            model: db["ActivitiesOfCompany"],
+            attributes: ["companyId", "activityId"],
+            on: {
+              [db.Op.and]: [
+                db.sequelize.where(
+                  db.sequelize.col('ActivitiesOfCompanies.companyId'),
+                  db.Op.eq,
+                  db.sequelize.col('Company.id')
+                ),],
+            },
+            include: [
+              {
+                model: db["BusinessActivities"],
+                on: {
+                  [db.Op.and]: [
+                    db.sequelize.where(
+                      db.sequelize.col('ActivitiesOfCompanies.activityId'),
+                      db.Op.eq,
+                      db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id')
+                    ),],
+                },
+              },]
+          }],
       });
       delete owner.password;
       console.log(company)
@@ -251,7 +393,7 @@ export default class CompanyController {
                 companyId: req.body.companyId,
               },
             }
-          ) 
+          )
         response = await db["Job"]
           .update(
             { status: "inactive" },
@@ -260,7 +402,7 @@ export default class CompanyController {
                 companyId: req.body.companyId,
               },
             }
-          )   
+          )
         response = await db["Event"]
           .update(
             { status: "inactive" },
@@ -269,8 +411,8 @@ export default class CompanyController {
                 companyId: req.body.companyId,
               },
             }
-          )   
-      }        
+          )
+      }
       return response
         ? res.status(200).json({
           message: "Deleted Successfully"
@@ -283,5 +425,50 @@ export default class CompanyController {
         .status(400)
         .send({ message: "Decision not set at this moment" });
     }
+  }
+
+  static async addActivity(req, res) {
+    try {
+      const response = await db['ActivitiesOfCompany'].create(req.body);
+      return res.status(200).send({
+        message: response,
+      });
+    } catch (error) {
+      if (error instanceof UniqueConstraintError) {
+        return res.status(409).send({
+          error:
+            "Activity already added for the company",
+          field: error.errors[0].path,
+        });
+      }
+      console.log(err)
+      return res.status(400).send({
+        message: "Activity not added at this moment"
+      });
+    }
+  }
+
+  static async removeActivity(req, res) {
+    const response = await db["ActivitiesOfCompany"]
+      .destroy({
+        where: {
+          companyId: req.body.companyId,
+          activityId: req.body.activityId
+        },
+      })
+    if (response) {
+      return res.status(200).json({
+        message: "Activity Removed"
+      })
+    } else {
+      return res.status(200).json({
+        message: "Activity not yet added"
+      })
+    }
+  } catch(err) {
+    console.log(err)
+    return res
+      .status(400)
+      .send({ message: "Activity not removed..Try again later" });
   }
 }

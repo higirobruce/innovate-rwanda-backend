@@ -24,7 +24,6 @@ module.exports = (sequelize, DataTypes) => {
     yearFounded: DataTypes.INTEGER,
     contactEmail: DataTypes.STRING,
     contactPhone: DataTypes.STRING,
-    businessActivities: DataTypes.STRING,
     customerBase: DataTypes.STRING,
     socialMedia: DataTypes.STRING,
     emailDisplay: DataTypes.BOOLEAN,
@@ -56,6 +55,9 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: 'id',
       sourceKey: 'businessActivityId'
     });
+
+    company.hasMany(models.ActivitiesOfCompany);
+    
   };
   return company;
 };

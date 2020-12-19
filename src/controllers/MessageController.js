@@ -5,6 +5,9 @@ export default class MessageController {
     try {
       const response = await db['Message'].create(req.body);
       if (response) {
+        const subject = "Thanks for contacting us";
+        const content = "The email is checked regularly during business hours. We’ll get back to you as soon as possible.";
+        generic.sendEmail(req.body.email, subject, content);
         return res.status(200).send({
           message: "Message Sent",
         });
