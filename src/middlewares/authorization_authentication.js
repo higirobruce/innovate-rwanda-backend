@@ -26,7 +26,7 @@ const getToken = (req, res) => {
 };
 
 const verifyToken = (req, res, next) => {
-  let token = req.headers['x-access-token'] || req.headers['authorization'];
+  var token = req.headers['x-access-token'] || req.headers['authorization'];
   if (!token) {
     return res.status(401).send({ error: "Unauthorized access" });
   }
