@@ -453,8 +453,8 @@ export default class CompanyController {
     const response = await db["ActivitiesOfCompany"]
       .destroy({
         where: {
-          companyId: req.body.companyId,
-          activityId: req.body.activityId
+          companyId: req.params.company,
+          activityId: req.params.activity
         },
       })
     if (response) {
