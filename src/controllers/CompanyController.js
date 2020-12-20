@@ -449,6 +449,7 @@ export default class CompanyController {
   }
 
   static async removeActivity(req, res) {
+    try {
     const response = await db["ActivitiesOfCompany"]
       .destroy({
         where: {
@@ -471,4 +472,5 @@ export default class CompanyController {
       .status(400)
       .send({ message: "Activity not removed..Try again later" });
   }
+}
 }

@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const getToken = (req, res) => {
+
   const token = jwt.sign({ user: res.locals.user }, process.env.SECRETKEY, {
     expiresIn: "1d",
   });
@@ -25,11 +26,12 @@ const getToken = (req, res) => {
 };
 
 const verifyToken = (req, res, next) => {
-  const token = req.headers.authorization;
+  let token = req.headers['x-access-token'] || req.headers['authorization'];
   if (!token) {
     return res.status(401).send({ error: "Unauthorized access" });
   }
   try {
+    token = token.replace(/^Bearer\s+/, "");
     jwt.verify(token, process.env.SECRETKEY, (err, decoded) => {
       if (err) {
         return res.status(403).send({

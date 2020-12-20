@@ -20,7 +20,6 @@ export default class MessageController {
 
   static async getMessagesListPerCompany(req, res) {
     try {
-      // companyId is slug
       const messages = await db['Message']
         .findAll({
           where: {
