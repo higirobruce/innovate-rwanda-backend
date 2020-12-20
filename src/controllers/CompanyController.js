@@ -437,8 +437,7 @@ export default class CompanyController {
       if (error instanceof UniqueConstraintError) {
         return res.status(409).send({
           error:
-            "Activity already added for the company",
-          field: error.errors[0].path,
+            "Activity already added for the company"
         });
       }
       console.log(err)
@@ -453,8 +452,8 @@ export default class CompanyController {
     const response = await db["ActivitiesOfCompany"]
       .destroy({
         where: {
-          companyId: req.params.company,
-          activityId: req.params.activity
+          companyId: req.query.company,
+          activityId: req.query.activity
         },
       })
     if (response) {

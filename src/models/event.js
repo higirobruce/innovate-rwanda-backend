@@ -10,7 +10,6 @@ module.exports = (sequelize, DataTypes) => {
     title: DataTypes.STRING,
     description: DataTypes.TEXT,
     category: DataTypes.STRING,
-    tags: DataTypes.STRING,
     flyer: DataTypes.STRING,
     eventDate: DataTypes.DATE,
     eventTime: DataTypes.TIME,
@@ -32,6 +31,7 @@ module.exports = (sequelize, DataTypes) => {
       onDelete: 'CASCADE',
       onUpdate: 'CASCADE'
     });
+    event.hasMany(models.AudienceForPost, { constraints: false });
   };
   return event;
 };

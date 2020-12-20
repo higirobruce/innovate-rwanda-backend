@@ -10,7 +10,6 @@ module.exports = (sequelize, DataTypes) => {
     title: DataTypes.STRING,
     content: DataTypes.TEXT,
     category: DataTypes.STRING,
-    tags: DataTypes.STRING,
     companyId: DataTypes.INTEGER,
     author: DataTypes.INTEGER,
     image: DataTypes.STRING,
@@ -31,6 +30,7 @@ module.exports = (sequelize, DataTypes) => {
       onDelete: 'CASCADE',
       onUpdate: 'CASCADE'
     });
+    blog.hasMany(models.AudienceForPost, { constraints: false });
   };
   return blog;
 };

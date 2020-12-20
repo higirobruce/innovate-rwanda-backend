@@ -1,4 +1,5 @@
 import db from "../models";
+import { UniqueConstraintError } from "sequelize";
 
 export default class genericController {
   static async getCounts(req, res) {
@@ -58,6 +59,57 @@ export default class genericController {
     } catch (err) {
       console.log(err)
       return res.status(400).send({ message: "Sorry, Counts not found" });
+    }
+  }
+
+  static async addPostActivity(req, res) {
+    try {
+      const response = await db['AudienceForPost'].create({
+        typeOfPost: req.body.type,
+        postId: req.body.post,
+        activityId: req.body.activity
+      });
+      return res.status(200).send({
+        message: response,
+      });
+    } catch (error) {
+      if (error instanceof UniqueConstraintError) {
+        return res.status(409).send({
+          error:
+            "Activity already added"
+        });
+      }
+      console.log(err)
+      return res.status(400).send({
+        message: "Activity not added at this moment"
+      });
+    }
+  }
+
+  static async removePostActivity(req, res) {
+    try {
+      const response = await db["AudienceForPost"]
+        .destroy({
+          where: {
+            typeOfPost: req.query.type,
+            postId: req.query.post,
+            activityId: req.query.activity
+          },
+        })
+      if (response) {
+        return res.status(200).json({
+          message: "Activity Removed"
+        })
+      } else {
+        return res.status(200).json({
+          message: "Activity not yet added"
+        })
+      }
+    } catch (err) {
+      console.log(err)
+      return res
+        .status(400)
+        .send({ message: "Activity not removed..Try again later" });
     }
   }
 }

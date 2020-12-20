@@ -11,7 +11,6 @@ module.exports = (sequelize, DataTypes) => {
     description: DataTypes.TEXT,
     companyId: DataTypes.INTEGER,
     category: DataTypes.STRING,
-    tags: DataTypes.STRING,
     deadlineDate: DataTypes.DATE,
     deadlineTime: DataTypes.TIME,
     jobDetailsDocument: DataTypes.STRING,
@@ -26,6 +25,7 @@ module.exports = (sequelize, DataTypes) => {
       onDelete: 'CASCADE',
       onUpdate: 'CASCADE'
     });
+    job.hasMany(models.AudienceForPost, { constraints: false });
   };
   return job;
 };
