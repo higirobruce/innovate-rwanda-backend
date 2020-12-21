@@ -52,6 +52,11 @@ export default class UserController {
           status: "pending"
         }, { transaction: t });
 
+        const activity = await db["ActivitiesOfCompany"].create({
+          activityId: req.body.businessActivityId,
+          companyId: company.id
+        }, { transaction: t });
+
         const hashPassword = bcrypt.hashSync(req.body.password, saltRounds);
         const token = jwt.sign({ _id: req.body.email }, process.env.ACCOUNT_ACTIVATION_KEY, {
           expiresIn: '1h',

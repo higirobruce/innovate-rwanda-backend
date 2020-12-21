@@ -471,6 +471,51 @@ export default class CompanyController {
             ],
             order: [['createdAt', 'DESC']]
           });
+      } else if (filterBy == "activities") {
+
+        const inOp = db.Op.in;
+        directory = await db['ActivitiesOfCompany']
+          .findAll({
+            attributes: [ "companyId", "activityId"] ,
+            where: {
+              activityId: {
+                [inOp]: filterValue
+              }
+            },
+            order: [['activityId', 'ASC']],
+            attributes: ["activityId"],
+            include: [
+              {
+                model: db["Company"],
+                on: {
+                  [db.Op.and]: [
+                    db.sequelize.where(
+                      db.sequelize.col('ActivitiesOfCompany.companyId'),
+                      db.Op.eq,
+                      db.sequelize.col('Company.id')
+                    ),
+                     db.sequelize.where(
+                       db.sequelize.col('Company.status'),
+                       db.Op.eq,
+                       'approved'
+                     ),
+                  ],
+                }
+              },
+                {
+                 model: db["BusinessActivities"],
+                 attributes: ["name"],
+                 on: {
+                  [db.Op.and]: [
+                    db.sequelize.where(
+                      db.sequelize.col('Company.businessActivityId'),
+                      db.Op.eq,
+                      db.sequelize.col('BusinessActivity.id')
+                    ),],
+                },
+              }
+            ],
+          });      
       } else if (filterBy == "year-founded") {
         const andOp = db.Op.and;
         directory = await db['Company']
