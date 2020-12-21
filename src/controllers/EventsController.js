@@ -425,6 +425,11 @@ export default class EvenController {
                       db.Op.eq,
                       db.sequelize.col('Event.id')
                     ),
+                    db.sequelize.where(
+                      db.sequelize.col('Event.status'),
+                      db.Op.eq,
+                      'approved'
+                    ),
                   ],
                 },
                 include: [

@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import CompanyController from "../../controllers/CompanyController";
+import GenericController from "../../controllers/GenericController";
 
 import auth from "../../middlewares/authorization_authentication.js";
 import checkPermissions from "../../middlewares/checkPermissions";
@@ -11,14 +11,14 @@ activityOfCompany.post(
   "/activities/add-activity",
   auth.verifyToken,
   checkPermissions("normal"),
-  CompanyController.addActivity
+  GenericController.addCompanyActivity
 );
 
 activityOfCompany.delete(
   "/activities/remove-activity",
   auth.verifyToken,
   checkPermissions("normal"),
-  CompanyController.removeActivity
+  GenericController.removeCompanyActivity
 );
 
 export default activityOfCompany;

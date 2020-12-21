@@ -429,6 +429,11 @@ export default class BlogController {
                       db.Op.eq,
                       db.sequelize.col('Blog.id')
                     ),
+                    db.sequelize.where(
+                      db.sequelize.col('Blog.status'),
+                      db.Op.eq,
+                      'approved'
+                    ),
                   ],
                 },
                 include: [

@@ -61,4 +61,26 @@ company.delete(
   CompanyController.deleteCompany
 );
 
+/* 
+ * Filters
+ * Require (request body) filterBy ---   location       | activities            | year-founded
+ *                        filterValue--  the district   | array of activity ids | a year-eg.2005 
+ * Returns Directory filtered
+ */
+company.get(
+  "/directory/filter",
+  CompanyController.getDirectoryFiltered
+);
+
+/* 
+ * Sort
+ * Require (request body) sortBy ---    year-founded or name (company names)
+ *                        sortValue--   desc or asc
+ * Returns Directory sorted
+ */
+company.get(
+  "/directory/sort",
+  CompanyController.getDirectorySorted
+);
+
 export default company;

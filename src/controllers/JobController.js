@@ -437,6 +437,11 @@ export default class JobController {
                       db.Op.eq,
                       db.sequelize.col('Job.id')
                     ),
+                    db.sequelize.where(
+                      db.sequelize.col('Job.status'),
+                      db.Op.eq,
+                      'approved'
+                    ),
                   ],
                 },
                 include: [

@@ -62,6 +62,52 @@ export default class genericController {
     }
   }
 
+  static async addCompanyActivity(req, res) {
+    try {
+      const response = await db['ActivitiesOfCompany'].create(req.body);
+      return res.status(200).send({
+        message: response,
+      });
+    } catch (error) {
+      if (error instanceof UniqueConstraintError) {
+        return res.status(409).send({
+          error:
+            "Activity already added for the company"
+        });
+      }
+      console.log(err)
+      return res.status(400).send({
+        message: "Activity not added at this moment"
+      });
+    }
+  }
+
+  static async removeCompanyActivity(req, res) {
+    try {
+      const response = await db["ActivitiesOfCompany"]
+        .destroy({
+          where: {
+            companyId: req.query.company,
+            activityId: req.query.activity
+          },
+        })
+      if (response) {
+        return res.status(200).json({
+          message: "Activity Removed"
+        })
+      } else {
+        return res.status(200).json({
+          message: "Activity not yet added"
+        })
+      }
+    } catch (err) {
+      console.log(err)
+      return res
+        .status(400)
+        .send({ message: "Activity not removed..Try again later" });
+    }
+  }
+
   static async addPostActivity(req, res) {
     try {
       const response = await db['AudienceForPost'].create({

@@ -427,49 +427,206 @@ export default class CompanyController {
     }
   }
 
-  static async addActivity(req, res) {
+  static async getDirectoryFiltered(req, res) {//location       | activities            | year-founded
     try {
-      const response = await db['ActivitiesOfCompany'].create(req.body);
-      return res.status(200).send({
-        message: response,
-      });
-    } catch (error) {
-      if (error instanceof UniqueConstraintError) {
-        return res.status(409).send({
-          error:
-            "Activity already added for the company"
+      const filterBy = req.body.filterBy;
+      const filterValue = req.body.filterValue;
+      var directory;
+      if (filterBy == "location") {
+        directory = await db['Company']
+          .findAll({
+            where: {
+              districtBasedIn: filterValue,
+              status: "approved"
+            },
+            include: [
+              {
+                model: db["BusinessActivities"],
+              },
+              {
+                model: db["ActivitiesOfCompany"],
+                attributes: ["activityId"],
+                on: {
+                  [db.Op.and]: [
+                    db.sequelize.where(
+                      db.sequelize.col('ActivitiesOfCompanies.companyId'),
+                      db.Op.eq,
+                      db.sequelize.col('Company.id')
+                    )
+                  ],
+                },
+                include: [{
+                  model: db["BusinessActivities"],
+                  attributes: ["name"],
+                  on: {
+                    [db.Op.and]: [
+                      db.sequelize.where(
+                        db.sequelize.col('ActivitiesOfCompanies.activityId'),
+                        db.Op.eq,
+                        db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id')
+                      ),],
+                  },
+                }]
+              }
+            ],
+            order: [['createdAt', 'DESC']]
+          });
+      } else if (filterBy == "year-founded") {
+        const andOp = db.Op.and;
+        directory = await db['Company']
+          .findAll({
+            where: {
+              yearFounded: filterValue,
+              status: "approved"
+            },
+            include: [
+              {
+                model: db["BusinessActivities"],
+              },
+              {
+                model: db["ActivitiesOfCompany"],
+                attributes: ["activityId"],
+                on: {
+                  [db.Op.and]: [
+                    db.sequelize.where(
+                      db.sequelize.col('ActivitiesOfCompanies.companyId'),
+                      db.Op.eq,
+                      db.sequelize.col('Company.id')
+                    )
+                  ],
+                },
+                include: [{
+                  model: db["BusinessActivities"],
+                  attributes: ["name"],
+                  on: {
+                    [db.Op.and]: [
+                      db.sequelize.where(
+                        db.sequelize.col('ActivitiesOfCompanies.activityId'),
+                        db.Op.eq,
+                        db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id')
+                      ),],
+                  },
+                }]
+              }
+            ],
+            order: [['createdAt', 'DESC']]
+          });
+        }
+      if (directory && directory.length > 0) {
+        return res.status(200).json({
+          result: directory,
+        });
+      } else {
+        return res.status(404).json({
+          result: [],
+          error: "No Company found",
         });
       }
-      console.log(err)
-      return res.status(400).send({
-        message: "Activity not added at this moment"
-      });
+    } catch (err) {
+      console.log(err);
+      return res.status(400).send({ message: " Directory not got at this moment" });
     }
   }
 
-  static async removeActivity(req, res) {
+  static async getDirectorySorted(req, res) {//year-founded or names
     try {
-    const response = await db["ActivitiesOfCompany"]
-      .destroy({
-        where: {
-          companyId: req.query.company,
-          activityId: req.query.activity
-        },
-      })
-    if (response) {
-      return res.status(200).json({
-        message: "Activity Removed"
-      })
-    } else {
-      return res.status(200).json({
-        message: "Activity not yet added"
-      })
+      const sortBy = req.body.sortBy;
+      const sortValue = req.body.sortValue;
+      var directory;
+      if (sortBy == "date") {
+        if (sortValue == "desc" || sortValue == "asc") {
+          directory = await db['Company']
+          .findAll({
+            where: {
+              status: "approved"
+            },
+            include: [
+              {
+                model: db["BusinessActivities"],
+              },
+              {
+                model: db["ActivitiesOfCompany"],
+                attributes: ["activityId"],
+                on: {
+                  [db.Op.and]: [
+                    db.sequelize.where(
+                      db.sequelize.col('ActivitiesOfCompanies.companyId'),
+                      db.Op.eq,
+                      db.sequelize.col('Company.id')
+                    )
+                  ],
+                },
+                include: [{
+                  model: db["BusinessActivities"],
+                  attributes: ["name"],
+                  on: {
+                    [db.Op.and]: [
+                      db.sequelize.where(
+                        db.sequelize.col('ActivitiesOfCompanies.activityId'),
+                        db.Op.eq,
+                        db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id')
+                      ),],
+                  },
+                }]
+              }
+            ],
+            order: [['yearFounded', sortValue]]
+          });
+        }
+      } else if (sortBy == "name") {
+        if (sortValue == "desc" || sortValue == "asc") {
+          directory = await db['Company']
+          .findAll({
+            where: {
+              status: "approved"
+            },
+            include: [
+              {
+                model: db["BusinessActivities"],
+              },
+              {
+                model: db["ActivitiesOfCompany"],
+                attributes: ["activityId"],
+                on: {
+                  [db.Op.and]: [
+                    db.sequelize.where(
+                      db.sequelize.col('ActivitiesOfCompanies.companyId'),
+                      db.Op.eq,
+                      db.sequelize.col('Company.id')
+                    )
+                  ],
+                },
+                include: [{
+                  model: db["BusinessActivities"],
+                  attributes: ["name"],
+                  on: {
+                    [db.Op.and]: [
+                      db.sequelize.where(
+                        db.sequelize.col('ActivitiesOfCompanies.activityId'),
+                        db.Op.eq,
+                        db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id')
+                      ),],
+                  },
+                }]
+              }
+            ],
+            order: [['coName', sortValue]]
+          });
+        }
+      }
+      if (directory && directory.length > 0) {
+        return res.status(200).json({
+          result: directory,
+        });
+      } else {
+        return res.status(404).json({
+          result: [],
+          error: "No Company found",
+        });
+      }
+    } catch (err) {
+      console.log(err)
+      return res.status(400).send({ message: " Directory not got at this moment" });
     }
-  } catch(err) {
-    console.log(err)
-    return res
-      .status(400)
-      .send({ message: "Activity not removed..Try again later" });
   }
-}
 }
