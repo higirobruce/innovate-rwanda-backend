@@ -52,7 +52,7 @@ export default class BlogController {
           { model: db["User"], attributes: ["firstName", "lastName"] },
           {
             model: db["AudienceForPost"],
-            attributes: [["activityId","activity"]],
+            attributes: [["activityId", "activity"]],
             on: {
               [db.Op.and]: [
                 db.sequelize.where(
@@ -115,7 +115,7 @@ export default class BlogController {
             { model: db["User"], attributes: ["firstName", "lastName"] },
             {
               model: db["AudienceForPost"],
-              attributes: [["activityId","activity"]],
+              attributes: [["activityId", "activity"]],
               on: {
                 [db.Op.and]: [
                   db.sequelize.where(
@@ -172,7 +172,7 @@ export default class BlogController {
               { model: db["User"], attributes: ["firstName", "lastName"] },
               {
                 model: db["AudienceForPost"],
-                attributes: [["activityId","activity"]],
+                attributes: [["activityId", "activity"]],
                 on: {
                   [db.Op.and]: [
                     db.sequelize.where(
@@ -214,7 +214,7 @@ export default class BlogController {
               { model: db["User"], attributes: ["firstName", "lastName"] },
               {
                 model: db["AudienceForPost"],
-                attributes: [["activityId","activity"]],
+                attributes: [["activityId", "activity"]],
                 on: {
                   [db.Op.and]: [
                     db.sequelize.where(
@@ -274,7 +274,7 @@ export default class BlogController {
             { model: db["User"], attributes: ["firstName", "lastName"] },
             {
               model: db["AudienceForPost"],
-              attributes: [["activityId","activity"]],
+              attributes: [["activityId", "activity"]],
               on: {
                 [db.Op.and]: [
                   db.sequelize.where(
@@ -377,7 +377,7 @@ export default class BlogController {
               { model: db["User"], attributes: ["firstName", "lastName"] },
               {
                 model: db["AudienceForPost"],
-                attributes: [["activityId","activity"]],
+                attributes: [["activityId", "activity"]],
                 on: {
                   [db.Op.and]: [
                     db.sequelize.where(
@@ -409,50 +409,45 @@ export default class BlogController {
             order: [['createdAt', 'DESC']]
           });
       } else if (filterBy == "topic") {
-        let likeOp = db.Op.like;
-        blogPosts = await db['Blog']
+        const inOp = db.Op.in;
+        blogPosts = await db['AudienceForPost']
           .findAll({
+            attributes: [["typeOfPost", "PostType"], ["postId", "post"], ["activityId", "activity"]],
             where: {
-              status: "approved",
-              tags: {
-                [likeOp]: "%" + filterValue + "%"
+              typeOfPost: "blog",
+              activityId: {
+                [inOp]: filterValue
               }
             },
             include: [
-              { model: db["Company"], attributes: [["coName", "companyName"]] },
-              { model: db["User"], attributes: ["firstName", "lastName"] },
               {
-                model: db["AudienceForPost"],
-                attributes: [["activityId","activity"]],
+                model: db["Blog"],
                 on: {
                   [db.Op.and]: [
                     db.sequelize.where(
-                      db.sequelize.col('Blog.id'),
+                      db.sequelize.col('AudienceForPost.postId'),
                       db.Op.eq,
-                      db.sequelize.col('AudienceForPosts.postId')
+                      db.sequelize.col('Blog.id')
                     ),
-                    db.sequelize.where(
-                      db.sequelize.col('AudienceForPosts.typeOfPost'),
-                      db.Op.eq,
-                      'blog'
-                    )
                   ],
                 },
-                include: [{
-                  model: db["BusinessActivities"],
-                  attributes: ["name"],
-                  on: {
-                    [db.Op.and]: [
-                      db.sequelize.where(
-                        db.sequelize.col('AudienceForPosts.activityId'),
-                        db.Op.eq,
-                        db.sequelize.col('AudienceForPosts->BusinessActivity.id')
-                      ),],
-                  },
-                }]
-              }
-            ],
-            order: [['createdAt', 'DESC']]
+                include: [
+                  { model: db["Company"], attributes: [["coName", "companyName"]] },
+                  { model: db["User"], attributes: ["firstName", "lastName"] },
+                ],
+                order: [['updatedAt', 'DESC']]
+              }, {
+                model: db["BusinessActivities"],
+                attributes: ["name"],
+                on: {
+                  [db.Op.and]: [
+                    db.sequelize.where(
+                      db.sequelize.col('AudienceForPost.activityId'),
+                      db.Op.eq,
+                      db.sequelize.col('BusinessActivity.id')
+                    ),],
+                },
+              }]
           });
       } else if (filterBy == "year") {
         const andOp = db.Op.and;
@@ -467,7 +462,7 @@ export default class BlogController {
               { model: db["User"], attributes: ["firstName", "lastName"] },
               {
                 model: db["AudienceForPost"],
-                attributes: [["activityId","activity"]],
+                attributes: [["activityId", "activity"]],
                 on: {
                   [db.Op.and]: [
                     db.sequelize.where(
@@ -532,7 +527,7 @@ export default class BlogController {
                 { model: db["User"], attributes: ["firstName", "lastName"] },
                 {
                   model: db["AudienceForPost"],
-                  attributes: [["activityId","activity"]],
+                  attributes: [["activityId", "activity"]],
                   on: {
                     [db.Op.and]: [
                       db.sequelize.where(
@@ -565,47 +560,49 @@ export default class BlogController {
             });
         }
       } else if (sortBy == "title") {
-        blogPosts = await db['Blog']
-          .findAll({
-            where: {
-              status: "approved"
-            },
-            include: [
-              { model: db["Company"], attributes: [["coName", "companyName"]] },
-              { model: db["User"], attributes: ["firstName", "lastName"] },
-              {
-                model: db["AudienceForPost"],
-                attributes: [["activityId","activity"]],
-                on: {
-                  [db.Op.and]: [
-                    db.sequelize.where(
-                      db.sequelize.col('Blog.id'),
-                      db.Op.eq,
-                      db.sequelize.col('AudienceForPosts.postId')
-                    ),
-                    db.sequelize.where(
-                      db.sequelize.col('AudienceForPosts.typeOfPost'),
-                      db.Op.eq,
-                      'blog'
-                    )
-                  ],
-                },
-                include: [{
-                  model: db["BusinessActivities"],
-                  attributes: ["name"],
+        if (sortValue == "desc" || sortValue == "asc") {
+          blogPosts = await db['Blog']
+            .findAll({
+              where: {
+                status: "approved"
+              },
+              include: [
+                { model: db["Company"], attributes: [["coName", "companyName"]] },
+                { model: db["User"], attributes: ["firstName", "lastName"] },
+                {
+                  model: db["AudienceForPost"],
+                  attributes: [["activityId", "activity"]],
                   on: {
                     [db.Op.and]: [
                       db.sequelize.where(
-                        db.sequelize.col('AudienceForPosts.activityId'),
+                        db.sequelize.col('Blog.id'),
                         db.Op.eq,
-                        db.sequelize.col('AudienceForPosts->BusinessActivity.id')
-                      ),],
+                        db.sequelize.col('AudienceForPosts.postId')
+                      ),
+                      db.sequelize.where(
+                        db.sequelize.col('AudienceForPosts.typeOfPost'),
+                        db.Op.eq,
+                        'blog'
+                      )
+                    ],
                   },
-                }]
-              }
-            ],
-            order: [['title', sortValue]]
-          });
+                  include: [{
+                    model: db["BusinessActivities"],
+                    attributes: ["name"],
+                    on: {
+                      [db.Op.and]: [
+                        db.sequelize.where(
+                          db.sequelize.col('AudienceForPosts.activityId'),
+                          db.Op.eq,
+                          db.sequelize.col('AudienceForPosts->BusinessActivity.id')
+                        ),],
+                    },
+                  }]
+                }
+              ],
+              order: [['title', sortValue]]
+            });
+        }
       }
       if (blogPosts && blogPosts.length > 0) {
         return res.status(200).json({

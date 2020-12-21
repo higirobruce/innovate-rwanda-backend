@@ -46,39 +46,39 @@ export default class JobController {
           status: "approved",
         },
         include: [
-            {
-              model: db["Company"], 
-              attributes: ["logo", ["coName","companyName"]]
+          {
+            model: db["Company"],
+            attributes: ["logo", ["coName", "companyName"]]
+          },
+          {
+            model: db["AudienceForPost"],
+            attributes: [["activityId", "activity"]],
+            on: {
+              [db.Op.and]: [
+                db.sequelize.where(
+                  db.sequelize.col('Job.id'),
+                  db.Op.eq,
+                  db.sequelize.col('AudienceForPosts.postId')
+                ),
+                db.sequelize.where(
+                  db.sequelize.col('AudienceForPosts.typeOfPost'),
+                  db.Op.eq,
+                  'job'
+                )
+              ],
             },
-            {
-              model: db["AudienceForPost"],
-              attributes: [["activityId","activity"]],
+            include: [{
+              model: db["BusinessActivities"],
+              attributes: ["name"],
               on: {
                 [db.Op.and]: [
                   db.sequelize.where(
-                    db.sequelize.col('Job.id'),
+                    db.sequelize.col('AudienceForPosts.activityId'),
                     db.Op.eq,
-                    db.sequelize.col('AudienceForPosts.postId')
-                  ),
-                  db.sequelize.where(
-                    db.sequelize.col('AudienceForPosts.typeOfPost'),
-                    db.Op.eq,
-                    'job'
-                  )
-                ],
+                    db.sequelize.col('AudienceForPosts->BusinessActivity.id')
+                  ),],
               },
-              include: [{
-                model: db["BusinessActivities"],
-                attributes: ["name"],
-                on: {
-                  [db.Op.and]: [
-                    db.sequelize.where(
-                      db.sequelize.col('AudienceForPosts.activityId'),
-                      db.Op.eq,
-                      db.sequelize.col('AudienceForPosts->BusinessActivity.id')
-                    ),],
-                },
-              }]
+            }]
           },
         ],
         order: [['createdAt', 'DESC']]
@@ -108,12 +108,12 @@ export default class JobController {
           },
           include: [
             {
-              model: db["Company"], 
-              attributes: ["logo", ["coName","companyName"]]
+              model: db["Company"],
+              attributes: ["logo", ["coName", "companyName"]]
             },
             {
               model: db["AudienceForPost"],
-              attributes: [["activityId","activity"]],
+              attributes: [["activityId", "activity"]],
               on: {
                 [db.Op.and]: [
                   db.sequelize.where(
@@ -140,7 +140,7 @@ export default class JobController {
                     ),],
                 },
               }]
-          },
+            },
           ],
           order: [['createdAt', 'DESC']]
         });
@@ -168,12 +168,12 @@ export default class JobController {
           .findAll({
             include: [
               {
-                model: db["Company"], 
-                attributes: ["logo", ["coName","companyName"]]
+                model: db["Company"],
+                attributes: ["logo", ["coName", "companyName"]]
               },
               {
                 model: db["AudienceForPost"],
-                attributes: [["activityId","activity"]],
+                attributes: [["activityId", "activity"]],
                 on: {
                   [db.Op.and]: [
                     db.sequelize.where(
@@ -200,7 +200,7 @@ export default class JobController {
                       ),],
                   },
                 }]
-            },
+              },
             ],
             order: [['createdAt', 'DESC']]
           });
@@ -212,12 +212,12 @@ export default class JobController {
             },
             include: [
               {
-                model: db["Company"], 
-                attributes: ["logo", ["coName","companyName"]]
+                model: db["Company"],
+                attributes: ["logo", ["coName", "companyName"]]
               },
               {
                 model: db["AudienceForPost"],
-                attributes: [["activityId","activity"]],
+                attributes: [["activityId", "activity"]],
                 on: {
                   [db.Op.and]: [
                     db.sequelize.where(
@@ -244,7 +244,7 @@ export default class JobController {
                       ),],
                   },
                 }]
-            },
+              },
             ],
             order: [['createdAt', 'DESC']]
           });
@@ -274,12 +274,12 @@ export default class JobController {
           },
           include: [
             {
-              model: db["Company"], 
-              attributes: ["logo", ["coName","companyName"]]
+              model: db["Company"],
+              attributes: ["logo", ["coName", "companyName"]]
             },
             {
               model: db["AudienceForPost"],
-              attributes: [["activityId","activity"]],
+              attributes: [["activityId", "activity"]],
               on: {
                 [db.Op.and]: [
                   db.sequelize.where(
@@ -306,7 +306,7 @@ export default class JobController {
                     ),],
                 },
               }]
-          },
+            },
           ]
         });
       return job
@@ -380,12 +380,12 @@ export default class JobController {
             },
             include: [
               {
-                model: db["Company"], 
-                attributes: ["logo", ["coName","companyName"]]
+                model: db["Company"],
+                attributes: ["logo", ["coName", "companyName"]]
               },
               {
                 model: db["AudienceForPost"],
-                attributes: [["activityId","activity"]],
+                attributes: [["activityId", "activity"]],
                 on: {
                   [db.Op.and]: [
                     db.sequelize.where(
@@ -412,57 +412,49 @@ export default class JobController {
                       ),],
                   },
                 }]
-            },
+              },
             ],
             order: [['deadlineDate', 'DESC']]
           });
       } else if (filterBy == "topic") {
-        let likeOp = db.Op.like;
-        jobPosts = await db['Job']
+        const inOp = db.Op.in;
+        jobPosts = await db['AudienceForPost']
           .findAll({
+            attributes: [["typeOfPost", "PostType"], ["postId", "post"], ["activityId", "activity"]],
             where: {
-              status: "approved",
-              tags: {
-                [likeOp]: "%" + filterValue + "%"
+              typeOfPost: "job",
+              activityId: {
+                [inOp]: filterValue
               }
             },
             include: [
               {
-                model: db["Company"], 
-                attributes: ["logo", ["coName","companyName"]]
-              },
-              {
-                model: db["AudienceForPost"],
-                attributes: [["activityId","activity"]],
+                model: db["Job"],
                 on: {
                   [db.Op.and]: [
                     db.sequelize.where(
-                      db.sequelize.col('Job.id'),
+                      db.sequelize.col('AudienceForPost.postId'),
                       db.Op.eq,
-                      db.sequelize.col('AudienceForPosts.postId')
+                      db.sequelize.col('Job.id')
                     ),
-                    db.sequelize.where(
-                      db.sequelize.col('AudienceForPosts.typeOfPost'),
-                      db.Op.eq,
-                      'job'
-                    )
                   ],
                 },
-                include: [{
-                  model: db["BusinessActivities"],
-                  attributes: ["name"],
-                  on: {
-                    [db.Op.and]: [
-                      db.sequelize.where(
-                        db.sequelize.col('AudienceForPosts.activityId'),
-                        db.Op.eq,
-                        db.sequelize.col('AudienceForPosts->BusinessActivity.id')
-                      ),],
-                  },
-                }]
-            },
-            ],
-            order: [['deadlineDate', 'DESC']]
+                include: [
+                  { model: db["Company"], attributes: [["coName", "companyName"]] }
+                ],
+                order: [['deadlineDate', 'DESC']]
+              }, {
+                model: db["BusinessActivities"],
+                attributes: ["name"],
+                on: {
+                  [db.Op.and]: [
+                    db.sequelize.where(
+                      db.sequelize.col('AudienceForPost.activityId'),
+                      db.Op.eq,
+                      db.sequelize.col('BusinessActivity.id')
+                    ),],
+                },
+              }]
           });
       } else if (filterBy == "year") {
         let andOp = db.Op.and;
@@ -474,12 +466,12 @@ export default class JobController {
             },
             include: [
               {
-                model: db["Company"], 
-                attributes: ["logo", ["coName","companyName"]]
+                model: db["Company"],
+                attributes: ["logo", ["coName", "companyName"]]
               },
               {
                 model: db["AudienceForPost"],
-                attributes: [["activityId","activity"]],
+                attributes: [["activityId", "activity"]],
                 on: {
                   [db.Op.and]: [
                     db.sequelize.where(
@@ -506,7 +498,7 @@ export default class JobController {
                       ),],
                   },
                 }]
-            },
+              },
             ],
             order: [['updatedAt', 'DESC']]
           });
@@ -521,6 +513,7 @@ export default class JobController {
         error: "No job found at this moment",
       });
     } catch (err) {
+      console.log(err)
       return res
         .status(400)
         .send({ message: "No jobs found at this moment" });
@@ -541,12 +534,12 @@ export default class JobController {
               },
               include: [
                 {
-                  model: db["Company"], 
-                  attributes: ["logo", ["coName","companyName"]]
+                  model: db["Company"],
+                  attributes: ["logo", ["coName", "companyName"]]
                 },
                 {
                   model: db["AudienceForPost"],
-                  attributes: [["activityId","activity"]],
+                  attributes: [["activityId", "activity"]],
                   on: {
                     [db.Op.and]: [
                       db.sequelize.where(
@@ -573,55 +566,57 @@ export default class JobController {
                         ),],
                     },
                   }]
-              },
+                },
               ],
               order: [['deadlineDate', sortValue]]
             });
         }
       } else if (sortBy == "title") {
-        jobPosts = await db['Job']
-          .findAll({
-            where: {
-              status: "approved"
-            },
-            include: [
-              {
-                model: db["Company"], 
-                attributes: ["logo", ["coName","companyName"]]
+        if (sortValue == "desc" || sortValue == "asc") {
+          jobPosts = await db['Job']
+            .findAll({
+              where: {
+                status: "approved"
               },
-              {
-                model: db["AudienceForPost"],
-                attributes: [["activityId","activity"]],
-                on: {
-                  [db.Op.and]: [
-                    db.sequelize.where(
-                      db.sequelize.col('Job.id'),
-                      db.Op.eq,
-                      db.sequelize.col('AudienceForPosts.postId')
-                    ),
-                    db.sequelize.where(
-                      db.sequelize.col('AudienceForPosts.typeOfPost'),
-                      db.Op.eq,
-                      'job'
-                    )
-                  ],
+              include: [
+                {
+                  model: db["Company"],
+                  attributes: ["logo", ["coName", "companyName"]]
                 },
-                include: [{
-                  model: db["BusinessActivities"],
-                  attributes: ["name"],
+                {
+                  model: db["AudienceForPost"],
+                  attributes: [["activityId", "activity"]],
                   on: {
                     [db.Op.and]: [
                       db.sequelize.where(
-                        db.sequelize.col('AudienceForPosts.activityId'),
+                        db.sequelize.col('Job.id'),
                         db.Op.eq,
-                        db.sequelize.col('AudienceForPosts->BusinessActivity.id')
-                      ),],
+                        db.sequelize.col('AudienceForPosts.postId')
+                      ),
+                      db.sequelize.where(
+                        db.sequelize.col('AudienceForPosts.typeOfPost'),
+                        db.Op.eq,
+                        'job'
+                      )
+                    ],
                   },
-                }]
-            },
-            ],
-            order: [['title', sortValue]]
-          });
+                  include: [{
+                    model: db["BusinessActivities"],
+                    attributes: ["name"],
+                    on: {
+                      [db.Op.and]: [
+                        db.sequelize.where(
+                          db.sequelize.col('AudienceForPosts.activityId'),
+                          db.Op.eq,
+                          db.sequelize.col('AudienceForPosts->BusinessActivity.id')
+                        ),],
+                    },
+                  }]
+                },
+              ],
+              order: [['title', sortValue]]
+            });
+        }
       }
       if (jobPosts && jobPosts.length > 0) {
         return res.status(200).json({

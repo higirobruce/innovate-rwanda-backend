@@ -7,10 +7,9 @@ const generic = Router();
 
 /* 
  * For getting statistics for admins on the system
- * Returns Companies counts per status, 
- *         Total number of companies,
- *         Users counts per status
+ * Returns Number of approved companies,
  *         Total number of users
+ *         Number of pending comapnies' requests,
  */
 generic.get(
     "/counters",
@@ -21,11 +20,8 @@ generic.get(
 
 /* 
  * For getting statistics for registered Company
- * Returns Jobs counts per status, 
- *         Total number of jobs,
- *         Blogs counts per status
+ * Returns Total number of jobs,
  *         Total number of blogs
- *         Events counts per status
  *         Total number of events
  */
 generic.get(
