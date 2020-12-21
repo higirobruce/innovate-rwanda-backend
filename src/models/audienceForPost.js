@@ -25,7 +25,7 @@ module.exports = (sequelize, DataTypes) => {
 
   audienceForPost.associate = models => {
     audienceForPost.belongsTo(models.Blog, { 
-      foreignKey: 'postId', constraints: false 
+      foreignKey: 'postId'
     });
     audienceForPost.belongsTo(models.Event, { 
       foreignKey: 'postId', constraints: false 
