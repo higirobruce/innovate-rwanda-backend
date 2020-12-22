@@ -3,10 +3,35 @@ import db from "../models";
 export default class JobController {
   static async jobPost(req, res) {
     try {
-      const response = await db['Job'].create(req.body);
-      return res.status(200).send({
-        message: response,
+      const activities = req.body.activities;
+      const fields = req.body;
+      const author = req.user;
+      const job = await db['Job'].create({
+        title: fields.title,
+        description: fields.description,
+        companyId: author.companyId,
+        category: fields.category,
+        deadlineDate: fields.deadlineDate,
+        deadlineTime: fields.deadlineTime,
+        jobDetailsDocument: fields.jobDocument,
+        status: fields.status,
       });
+      if (job) {
+        var activitiesToLoad =  new Array();
+        for (var i = 0; i < activities.length; i++) {
+          activitiesToLoad.push({ typeOfPost: 'job', postId: job.id, activityId:activities[i]});
+        }
+        if (activitiesToLoad.length > 0) {
+          await db['AudienceForPost'].bulkCreate(activitiesToLoad);
+        }
+        return res.status(200).send({
+          message: "Job post saved"
+        });
+      } else {
+        return res.status(404).send({
+          message: "Job posting failed"
+        });
+      }
     } catch (err) {
       console.log(err)
       return res.status(400).send({ message: "Job not posted at this moment" });

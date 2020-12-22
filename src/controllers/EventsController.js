@@ -2,14 +2,37 @@ import db from "../models";
 
 export default class EvenController {
   static async eventPost(req, res) {
-    console.log(req.body)
     try {
-      const response = await db['Event'].create(req.body);
-      if (response) {
-        return res.status(200).send({
-          message: "Event submitted",
-        });
+    const activities = req.body.activities;
+    const fields = req.body;
+    const author = req.user;
+    const event = await db['Event'].create({
+      title: fields.title,
+      description: fields.description,
+      companyId: author.companyId,
+      author: author.id,
+      category: fields.category,
+      eventDate: fields.eventDate,
+      eventTime: fields.eventTime,
+      flyer: fields.flyer,
+      status: fields.status
+    });
+    if (event) {
+      var activitiesToLoad =  new Array();
+      for (var i = 0; i < activities.length; i++) {
+        activitiesToLoad.push({ typeOfPost: 'event', postId: event.id, activityId:activities[i]});
       }
+      if (activitiesToLoad.length > 0) {
+        await db['AudienceForPost'].bulkCreate(activitiesToLoad);
+      }
+      return res.status(200).send({
+        message: "Event post saved"
+      });
+    } else {
+      return res.status(404).send({
+        message: "Event posting failed"
+      });
+    }
     } catch (err) {
       console.log(err)
       return res.status(400).send({ message: " Event not submitted at this moment" });

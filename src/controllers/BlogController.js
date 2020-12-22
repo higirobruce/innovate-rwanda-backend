@@ -3,10 +3,32 @@ import db from "../models";
 export default class BlogController {
   static async blogPost(req, res) {
     try {
-      const response = await db['Blog'].create(req.body);
-      if (response) {
+      const activities = req.body.activities;
+      const fields = req.body;
+      const author = req.user;
+      const blog = await db['Blog'].create({
+        title: fields.title,
+        content: fields.content,
+        category: fields.category,
+        companyId: author.companyId,
+        author: author.id,
+        image: fields.image,
+        status: fields.status,
+      });
+      if (blog) {
+        var activitiesToLoad =  new Array();
+        for (var i = 0; i < activities.length; i++) {
+          activitiesToLoad.push({ typeOfPost: 'blog', postId: blog.id, activityId:activities[i]});
+        }
+        if (activitiesToLoad.length > 0) {
+          await db['AudienceForPost'].bulkCreate(activitiesToLoad);
+        }
         return res.status(200).send({
-          message: "Blog Submitted",
+          message: "Blog saved"
+        });
+      } else {
+        return res.status(404).send({
+          message: "Blog posting failed"
         });
       }
     } catch (err) {
