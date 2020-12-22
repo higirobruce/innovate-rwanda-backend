@@ -393,8 +393,8 @@ export default class JobController {
 
   static async getJobsFiltered(req, res) {
     try {
-      const filterBy = req.body.filterBy;
-      const filterValue = req.body.filterValue;
+      const filterBy = req.query.filterBy;
+      const filterValue = req.query.filterValue.trim();
       var jobPosts;
       if (filterBy == "company") {
         jobPosts = await db['Job']
@@ -552,8 +552,8 @@ export default class JobController {
 
   static async getJobsSorted(req, res) {
     try {
-      const sortBy = req.body.sortBy;
-      const sortValue = req.body.sortValue;
+      const sortBy = req.query.sortBy;
+      const sortValue = req.query.sortValue.trim();
       var jobPosts;
       if (sortBy == "date") {
         if (sortValue == "desc" || sortValue == "asc") {
@@ -667,7 +667,7 @@ export default class JobController {
   static async searchForJobs(req, res) {
     try {
       const likeOp = db.Op.iLike;
-      const searchValue = req.body.searchValue.trim();
+      const searchValue = req.query.searchValue.trim();
 
       const jobs = await db['Job']
         .findAll({

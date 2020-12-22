@@ -381,8 +381,8 @@ export default class EvenController {
 
   static async getEventsFiltered(req, res) {
     try {
-      const filterBy = req.body.filterBy;
-      const filterValue = req.body.filterValue;
+      const filterBy = req.query.filterBy;
+      const filterValue = req.query.filterValue.trim();
       var eventPosts;
       if (filterBy == "company") {
         eventPosts = await db['Event']
@@ -536,8 +536,8 @@ export default class EvenController {
 
   static async getEventsSorted(req, res) {
     try {
-      const sortBy = req.body.sortBy;
-      const sortValue = req.body.sortValue;
+      const sortBy = req.query.sortBy;
+      const sortValue = req.query.sortValue.trim();
       var eventPosts;
       if (sortBy == "date") {
         if (sortValue == "desc" || sortValue == "asc") {
@@ -647,7 +647,7 @@ export default class EvenController {
   static async searchForEvents(req, res) {
     try {
       const likeOp = db.Op.iLike;
-      const searchValue = req.body.searchValue.trim(); 
+      const searchValue = req.query.searchValue.trim(); 
 
       const events = await db['Event']
         .findAll({

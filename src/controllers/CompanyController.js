@@ -487,8 +487,8 @@ export default class CompanyController {
 
   static async getDirectoryFiltered(req, res) {//location       | activities            | year-founded
     try {
-      const filterBy = req.body.filterBy;
-      const filterValue = req.body.filterValue;
+      const filterBy = req.query.filterBy;
+      const filterValue = req.query.filterValue.trim();
       var directory;
       if (filterBy == "location") {
         directory = await db['Company']
@@ -635,8 +635,8 @@ export default class CompanyController {
 
   static async getDirectorySorted(req, res) {//year-founded or names
     try {
-      const sortBy = req.body.sortBy;
-      const sortValue = req.body.sortValue;
+      const sortBy = req.query.sortBy;
+      const sortValue = req.query.sortValue.trim();
       var directory;
       if (sortBy == "date") {
         if (sortValue == "desc" || sortValue == "asc") {
@@ -740,7 +740,7 @@ export default class CompanyController {
   static async searchDirectory(req, res) {
     try {
       const likeOp = db.Op.iLike;
-      const searchValue = req.body.searchValue.trim();
+      const searchValue = req.query.searchValue.trim();
 
       const directory = await db['Company']
         .findAll({

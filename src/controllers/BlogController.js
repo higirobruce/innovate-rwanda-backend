@@ -384,8 +384,8 @@ export default class BlogController {
 
   static async getBlogsFiltered(req, res) {
     try {
-      const filterBy = req.body.filterBy;
-      const filterValue = req.body.filterValue;
+      const filterBy = req.query.filterBy;
+      const filterValue = req.query.filterValue.trim();
       var blogPosts;
       if (filterBy == "company") {
         blogPosts = await db['Blog']
@@ -539,8 +539,8 @@ export default class BlogController {
 
   static async getBlogsSorted(req, res) {
     try {
-      const sortBy = req.body.sortBy;
-      const sortValue = req.body.sortValue;
+      const sortBy = req.query.sortBy;
+      const sortValue = req.query.sortValue.trim();
       var blogPosts;
       if (sortBy == "date") {
         if (sortValue == "desc" || sortValue == "asc") {
@@ -649,7 +649,7 @@ export default class BlogController {
   static async searchForBlogs(req, res) {
     try {
       const likeOp = db.Op.iLike;
-      const searchValue = req.body.searchValue.trim();
+      const searchValue = req.query.searchValue.trim();
 
       const blogs = await db['Blog']
         .findAll({

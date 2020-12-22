@@ -68,7 +68,7 @@ export default class MessageController {
   static async searchForMessages(req, res) {
     try {
       const likeOp = db.Op.iLike;
-      const searchValue = req.body.searchValue.trim();
+      const searchValue = req.query.searchValue.trim();
 
       const messages = await db['Message']
         .findAll({
