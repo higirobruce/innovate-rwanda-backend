@@ -315,6 +315,7 @@ export default class CompanyController {
             include: [
               {
                 model: db["Company"],
+                attributes: [["coName","companyName"], "logo","slug"],
                 on: {
                   [db.Op.and]: [
                     db.sequelize.where(
@@ -329,18 +330,6 @@ export default class CompanyController {
                     ),
                   ],
                 }
-              },
-              {
-                model: db["BusinessActivities"],
-                attributes: ["name"],
-                on: {
-                  [db.Op.and]: [
-                    db.sequelize.where(
-                      db.sequelize.col('Company.businessActivityId'),
-                      db.Op.eq,
-                      db.sequelize.col('BusinessActivity.id')
-                    ),],
-                },
               }
             ],
           });
