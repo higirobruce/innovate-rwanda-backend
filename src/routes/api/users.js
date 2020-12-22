@@ -77,4 +77,12 @@ users.put(
   userController.activateUser
 );
 
+// Search in Names, Emails, Job Titles and user role
+users.get(
+  "/users/search",
+  auth.verifyToken,
+  checkPermissions("admin-user"),
+  userController.searchForUsers
+);
+
 export default users;

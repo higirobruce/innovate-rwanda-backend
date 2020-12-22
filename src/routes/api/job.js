@@ -80,4 +80,10 @@ job.get(
   JobController.getJobsSorted
 );
 
+// Search in Title, Description and Category
+job.get(
+  "/jobs/public/search",
+  JobController.searchForJobs
+);
+
 export default job;

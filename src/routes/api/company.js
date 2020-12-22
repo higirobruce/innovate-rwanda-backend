@@ -83,4 +83,10 @@ company.get(
   CompanyController.getDirectorySorted
 );
 
+// Search in names, company types, website,description, district based in, customer base and, Office Address
+company.get(
+  "/directory/search",
+  CompanyController.searchDirectory
+);
+
 export default company;

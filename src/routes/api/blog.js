@@ -80,4 +80,10 @@ blog.get(
   BlogController.getBlogsSorted
 );
 
+// Search in Title, Description and Category
+blog.get(
+  "/blogs/search",
+  BlogController.searchForBlogs
+);
+
 export default blog;

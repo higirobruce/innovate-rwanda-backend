@@ -638,4 +638,74 @@ export default class JobController {
         .send({ message: "No jobs found at this moment" });
     }
   }
+
+  static async searchForJobs(req, res) {
+    try {
+      const likeOp = db.Op.iLike;
+      const searchValue = req.body.searchValue.trim();
+
+      const jobs = await db['Job']
+        .findAll({
+          where: {
+            [db.Op.or]: [
+              { title: { [likeOp]: "%" + searchValue + "%" } },
+              { description: { [likeOp]: "%" + searchValue + "%" } },
+              { category: { [likeOp]: "%" + searchValue + "%" } },
+            ],
+            status: "approved",
+          },
+          include: [
+            {
+              model: db["Company"],
+              attributes: ["logo", ["coName", "companyName"]]
+            },
+            {
+              model: db["AudienceForPost"],
+              attributes: [["activityId", "activity"]],
+              on: {
+                [db.Op.and]: [
+                  db.sequelize.where(
+                    db.sequelize.col('Job.id'),
+                    db.Op.eq,
+                    db.sequelize.col('AudienceForPosts.postId')
+                  ),
+                  db.sequelize.where(
+                    db.sequelize.col('AudienceForPosts.typeOfPost'),
+                    db.Op.eq,
+                    'job'
+                  )
+                ],
+              },
+              include: [{
+                model: db["BusinessActivities"],
+                attributes: ["name"],
+                on: {
+                  [db.Op.and]: [
+                    db.sequelize.where(
+                      db.sequelize.col('AudienceForPosts.activityId'),
+                      db.Op.eq,
+                      db.sequelize.col('AudienceForPosts->BusinessActivity.id')
+                    ),],
+                },
+              }]
+            },
+          ],
+          limit: 10,
+          order: [['title', 'ASC']]
+        });
+      if (jobs && jobs.length > 0) {
+        return res.status(200).json({
+          result: jobs,
+        });
+      } else {
+        return res.status(404).json({
+          result: [],
+          error: "No Job found",
+        });
+      }
+    } catch (err) {
+      console.log(err)
+      return res.status(400).send({ message: " List of Jobs not got at this moment" });
+    }
+  }
 }

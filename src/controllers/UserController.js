@@ -432,4 +432,43 @@ export default class UserController {
       return res.status(400).send({ message: "Sorry, role change failed..Try again" });
     }
   }
+
+  static async searchForUsers(req, res) {
+    try {
+      const likeOp = db.Op.iLike;
+      const searchValue = req.body.searchValue.trim();
+
+      const messages = await db['User']
+        .findAll({
+          where: {
+            [db.Op.or]: [
+              { firstName: { [likeOp]: "%" + searchValue + "%" } },
+              { lastName: { [likeOp]: "%" + searchValue + "%" } },
+              { email: { [likeOp]: "%" + searchValue + "%" } },
+              { jobTitle: { [likeOp]: "%" + searchValue + "%" } },
+              { role: { [likeOp]: "%" + searchValue + "%" } }
+            ],
+          },
+          attributes: {
+            exclude: ["password", "resetLink"],
+          },
+          limit: 10,
+          order: [['createdAt', 'DESC']]
+        });
+        
+      if (messages && messages.length > 0) {
+        return res.status(200).json({
+          result: messages,
+        });
+      } else {
+        return res.status(404).json({
+          result: [],
+          error: "No Message found",
+        });
+      }
+    } catch (err) {
+      console.log(err)
+      return res.status(400).send({ message: " List of Messages not got at this moment" });
+    }
+  }
 }

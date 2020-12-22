@@ -26,4 +26,12 @@ message.get(
   MessageController.getMessageInfo
 );
 
+// Search in Sender email and Message
+message.get(
+  "/message/search",
+  auth.verifyToken,
+  checkPermissions("normal"),
+  MessageController.searchForMessages
+);
+
 export default message;

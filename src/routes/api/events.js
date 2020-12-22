@@ -79,4 +79,10 @@ events.get(
   EventsController.getEventsSorted
 );
 
+// Search in title, description and category
+events.get(
+  "/events/public/search",
+  EventsController.searchForEvents
+);
+
 export default events;
