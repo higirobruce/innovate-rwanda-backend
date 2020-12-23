@@ -62,10 +62,8 @@ company.delete(
 );
 
 /* 
- * Filters
- * Require (request body) filterBy ---   location       | activities            | year-founded
- *                        filterValue--  the district   | array of activity ids | a year-eg.2005 
- * Returns Directory filtered
+ * filterBy ---   location       | activities            | year-founded
+ * filterValue--  the district   | array of activity ids | a year-eg.2005 
  */
 company.get(
   "/directory/filter",
@@ -73,10 +71,8 @@ company.get(
 );
 
 /* 
- * Sort
- * Require (request body) sortBy ---    year-founded or name (company names)
- *                        sortValue--   desc or asc
- * Returns Directory sorted
+ * sortBy ---    year-founded or name (company names)
+ * sortValue--   desc or asc
  */
 company.get(
   "/directory/sort",
@@ -87,6 +83,33 @@ company.get(
 company.get(
   "/directory/search",
   CompanyController.searchDirectory
+);
+
+/* 
+ * filterBy ---   location       | activities            | year-founded
+ * filterValue--  the district   | array of activity ids | a year-eg.2005 
+ * type can be enabler or Tech Company or other depending on types set for companies
+ */
+company.get(
+  "/directory/filter/:type",
+  CompanyController.getDirectoryFilteredByType
+);
+
+/* 
+ * sortBy ---    year-founded or name (company names)
+ * sortValue--   desc or asc
+ * type can be enabler or Tech Company or other depending on types set for companies
+ */
+company.get(
+  "/directory/sort/:type",
+  CompanyController.getDirectorySortedByType
+);
+
+// Search in names, company types, website,description, district based in, customer base and, Office Address
+// type can be enabler or Tech Company or other depending on types set for companies
+company.get(
+  "/directory/search/:type",
+  CompanyController.searchDirectoryByType
 );
 
 export default company;
