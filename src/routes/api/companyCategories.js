@@ -1,33 +1,33 @@
 import { Router } from "express";
-import BusinessActivities from "../../controllers/BusinessActivities";
+import CompanyCategories from "../../controllers/CompanyCategories";
 import auth from "../../middlewares/authorization_authentication.js";
 import checkPermissions from "../../middlewares/checkPermissions";
 
-const activities = Router();
+const categories = Router();
 
-activities.get(
-    "/business-activities",
-    BusinessActivities.getBusinessActivities);
+categories.get(
+    "/company-categories",
+    CompanyCategories.getCompanyCategories);
 
-activities.post(
-    "/business-activities/add-activity",
+categories.post(
+    "/company-categories/add-category",
     auth.verifyToken,
     checkPermissions(["admin-company", "admin-job", "admin-event", "admin-blog", "admin-user"]),
-    BusinessActivities.addActivity
+    CompanyCategories.addCategory
 );
 
-activities.patch(
-    "/business-activities/edit-activity",
+categories.patch(
+    "/company-categories/edit-category",
     auth.verifyToken,
     checkPermissions(["admin-company", "admin-job", "admin-event", "admin-blog", "admin-user"]),
-    BusinessActivities.editActivity
+    CompanyCategories.editCategory
 );
 
-activities.delete(
-    "/business-activities/remove-activity",
+categories.delete(
+    "/company-categories/remove-category",
     auth.verifyToken,
     checkPermissions(["admin-company", "admin-job", "admin-event", "admin-blog", "admin-user"]),
-    BusinessActivities.removeActivity
+    CompanyCategories.removeCategory
 );
 
-export default activities;
+export default categories;
