@@ -130,6 +130,9 @@ export default class JobController {
         .findAll({
           where: {
             companyId: req.params.companyId,
+            status: {
+              [db.Op.not]: "deleted"
+            },
           },
           include: [
             {
@@ -374,7 +377,7 @@ export default class JobController {
           { status: "deleted" },
           {
             where: {
-              id: req.body.jobId,
+              id: req.query.jobId,
             },
           }
         );

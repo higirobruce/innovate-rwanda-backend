@@ -59,10 +59,8 @@ blog.delete(
 );
 
 /* 
- * Filters
- * Require (request body) filterBy ---   company       | topic                 | year
- *                        filterValue--  id of company | array of activity ids | a year-eg.2020 
- * Returns List of jobs filtered
+ * FilterBy ---   company       | topic                 | year
+ * FilterValue--  id of company | array of activity ids | a year-eg.2020 
  */
 blog.get(
   "/blogs/public/filter",
@@ -70,10 +68,8 @@ blog.get(
 );
 
 /* 
- * Sort
- * Require (request body) sortBy ---    date or  title
- *                        sortValue--   desc or asc
- * Returns List of jobs sorted
+ * SortBy ---    date or  title
+ * SortValue--   desc or asc
  */
 blog.get(
   "/blogs/public/sort",

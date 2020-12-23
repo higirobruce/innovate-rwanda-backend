@@ -128,6 +128,9 @@ export default class EvenController {
         .findAll({
           where: {
             companyId: req.params.companyId,
+            status: {
+              [db.Op.not]: "deleted"
+            },
           },
           include: [
             { model: db["Company"], attributes: [["coName", "companyName"]] },
@@ -341,7 +344,7 @@ export default class EvenController {
       const update = await db["Event"]
         .update((req.body), {
           where: {
-            id: req.body.eventId
+            id: req.body.id
           },
         });
       return update
@@ -363,7 +366,7 @@ export default class EvenController {
           { status: "deleted" },
           {
             where: {
-              id: req.body.eventId,
+              id: req.query.eventId,
             },
           }
         );
