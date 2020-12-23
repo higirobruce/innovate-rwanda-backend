@@ -354,7 +354,7 @@ export default class JobController {
       const update = await db["Job"]
         .update((req.body), {
           where: {
-            id: req.body.jobId
+            id: req.body.id
           },
         });
       return update
