@@ -1,23 +1,21 @@
 
 import db from "../models";
 import generic from "../helpers/Generic";
+import notification from "../helpers/Notification";
 import { UniqueConstraintError } from "sequelize";
 
 export default class SubscribeController {
-  static async subscribeToNotification(req, res) {
-    db['Subscription'].create({
-      email: req.body.email,
-      status: "active",
-    })
-      .then((result) => {
-        const subject = "Let’s keep in touch";
-        const content = "Thank you for choosing to receive updated info from our community.";
-        generic.sendEmail(req.body.email, subject, content);
-        return res.status(200).send({
-          message: "Subscribed",
+  static async subscribeToNotification(req, res) 
+  {
+    db['Subscription'].create({ email: req.body.email, status: "active" }).then((subscription) => {
+      if (subscription) {
+        notification.notify("subscribe", { email: subscription.email }, function (response) {
+          return res.status(200).json({ message: response });
         });
-      })
-      .catch((error) => {
+      } else {
+        return res.status(401).json({ message: "Sorry, subscription failed, try later" })
+      }
+      }).catch((error) => {
         console.log(error)
         if (error instanceof UniqueConstraintError) {
           return res.status(409).send({

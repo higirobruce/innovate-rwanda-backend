@@ -1,17 +1,17 @@
 import db from "../models";
-import generic from "../helpers/Generic";
+import notification from "../helpers/Notification";
 
 export default class MessageController {
-  static async messagePost(req, res) {
+  static async messagePost(req, res) 
+  {
     try {
-      const response = await db['Message'].create(req.body);
-      if (response) {
-        const subject = "Thanks for contacting us";
-        const content = "The email is checked regularly during business hours. We’ll get back to you as soon as possible.";
-        generic.sendEmail(req.body.email, subject, content);
-        return res.status(200).send({
-          message: "Message Sent",
-        });
+      const message = await db['Message'].create(req.body);
+      if (message) {
+        notification.notify("message post",
+          { email: message.email, companyId: message.companyId, message: message.message },
+          function (response) {
+            return res.status(200).json({ message: response });
+          });
       }
     } catch (err) {
       console.log(err)

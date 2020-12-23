@@ -1,6 +1,7 @@
 import { Router } from "express";
 
 import MessageController from "../../controllers/MessageController";
+import NotificationController from "../../controllers/NotificationController";
 
 import auth from "../../middlewares/authorization_authentication.js";
 import checkPermissions from "../../middlewares/checkPermissions";
@@ -17,6 +18,13 @@ message.get(
   auth.verifyToken,
   checkPermissions("normal"),
   MessageController.getMessagesListPerCompany
+);
+
+message.get(
+  "/notification/company",
+  auth.verifyToken,
+  checkPermissions("normal"),
+  NotificationController.getNotificationsForCompany
 );
 
 message.get(

@@ -408,15 +408,12 @@ export default class CompanyController {
   }
   static async editCompanyInfo(req, res) {
     try {
-      const response = await db["Company"]
-        .update(req.body, {
-          where: {
-            id: req.body.id
-          },
-        })
-      return res.status(200).json({
-        message: response
-      })
+      const response = await db["Company"].update(req.body, {
+          where: { id: req.body.id }
+        });
+        return response
+        ? res.status(200).json({ message: "Recent change is updated successfully" })
+        : res.status(404).json({ message: "Sorry, No record edited" });
     } catch (err) {
       return res.status(400).send({ message: "Sorry, Company not found" });
     }

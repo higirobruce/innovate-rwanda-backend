@@ -1,4 +1,5 @@
 import db from "../models";
+import notification from "../helpers/Notification";
 
 export default class JobController {
   static async jobPost(req, res) {
@@ -39,25 +40,20 @@ export default class JobController {
   }
 
   static async approveOrDeclineJobPost(req, res) {
-    // To do: Do more here, once approved send notifications right away or?
-    const decision = req.body.decision;
     try {
-      const response = await db['Job']
-        .update(
-          { status: decision },
-          {
-            where: {
-              id: req.body.jobId,
-            },
-          }
-        );
-      return response
-        ? res.status(200).json({
-          message: "Job " + decision
-        })
-        : res.status(404).json({
-          message: "Action Failed"
-        });
+      const decision = req.body.decision;
+      const response = await db['Job'].update({ status: decision }, { where: { id: req.body.jobId } });
+
+      if (response) {
+        // if (decision == "approved") {
+        //   notification.notify("job post approval", { jobId: req.body.jobId }, function (response) {
+        //     return res.status(200).json({ message: response });
+        //   });
+        // }
+        res.status(200).json({ message: "Job " + decision })
+      } else {
+        res.status(404).json({ message: "Action Failed" });
+      }
     } catch (err) {
       console.log(err)
       return res.status(400).send({ message: "Sorry, Action failed" });
