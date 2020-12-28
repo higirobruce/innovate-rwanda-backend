@@ -4,7 +4,34 @@ import generic from "../helpers/Generic";
 export default class NotificationController {
   static async notificationPost(mail) {
     try {
-      await db['Notification'].create(mail);
+      for (var i = 0; i < mail.length; i++) {
+        switch (mail[i].format) {
+          case "Event":
+          case "Blog":
+          case "Job":
+            if (mail[i].co_ids && mail[i].co_ids.length > 0) {
+              for (var j = 0; j < mail[i].co_ids.length; j++) {
+                await db['Notification'].create({
+                  companyId: mail[i].co_ids[j],
+                  subject: mail[i].subject,
+                  content: mail[i].content,
+                });
+              }
+            }
+            await db['Notification'].create({
+              companyId: mail[i].companyId,
+              subject: mail[i].format+" Published: " + mail[i].subject,
+              content: mail[i].content,
+            });
+            break;
+          default:
+            await db['Notification'].create({
+              companyId: mail[i].companyId,
+              subject: mail[i].subject,
+              content: mail[i].content,
+            });
+        }
+      }
     } catch (error) {
       console.log(error)
     }
@@ -14,10 +41,10 @@ export default class NotificationController {
     try {
       const user = req.user;
       const notifications = await db['Notification'].findAll({
-          where: { companyId: user.companyId, },
-          attributes:["subject","content"],
-          order: [['createdAt', 'DESC']]
-        });
+        where: { companyId: user.companyId, },
+        attributes: ["subject", "content"],
+        order: [['createdAt', 'DESC']]
+      });
       if (notifications && notifications.length > 0) {
         return res.status(200).json({
           result: notifications,

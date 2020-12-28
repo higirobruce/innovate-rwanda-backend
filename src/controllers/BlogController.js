@@ -1,4 +1,5 @@
 import db from "../models";
+import notification from "../helpers/Notification";
 
 export default class BlogController {
   static async blogPost(req, res) {
@@ -38,29 +39,31 @@ export default class BlogController {
   }
 
   static async approveOrDeclineBlogPost(req, res) {
-    // To do: Do more here, once approved send notifications right away or?
-    try {
       const decision = req.body.decision;
-      const response = await db['Blog']
-        .update(
-          { status: decision },
-          {
-            where: {
-              id: req.body.blogId,
-            },
+      await db["Blog"].findOne({ where: { id: req.body.blogId, status: { [db.Op.not]: decision} }, attributes: ["id","title", "content","image","companyId"]})
+      .then((blog) => {
+        if (blog) {
+          console.log(blog)
+          const response = blog.update({ status: decision });
+          if (response) {
+            if (decision == "approved") {
+              const parameters = { id: req.body.blogId, title: blog.title, description: blog.content, file_name: blog.image, format: "Blog", companyId: blog.companyId };
+              notification.notify("post approval", parameters, function (resp) {
+                return res.status(200).json({ message: resp });
+              });
+            } else {
+              res.status(200).json({ message: "Blog " + decision })
+            }
+          } else {
+            res.status(404).json({ message: "Action Failed" });
           }
-        );
-      return response
-        ? res.status(200).json({
-          message: "Blog " + decision
-        })
-        : res.status(404).json({
-          message: "Action Failed"
-        });
-    } catch (err) {
-      console.log(err)
-      return res.status(400).send({ message: "Sorry, Action failed" });
-    }
+        } else {
+          res.status(404).json({ message: "Blog  could have been already treated" });
+        }
+      }).catch((err) => {
+        console.log(err)
+        return res.status(400).send({ message: "Sorry, Action failed" });
+      })
   }
 
   static async getApprovedBlogsList(req, res) {

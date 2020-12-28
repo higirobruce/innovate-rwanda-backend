@@ -109,22 +109,30 @@ async function messagePost(parameters) {
   return mails;
 }
 
-async function jobApproval(parameters) {
+async function postApproval(parameters) {
   var activities;
-  await generic.getJobActivities(parameters.jobId, function (rcvMail) {
-    console.log("activities found:")
-    var activities = rcvMail.map(activity => activity.activity);
-    console.log(activities)
+  await generic.getActivities(parameters.id,parameters.format.toLowerCase(), function (theActivities) {
+    activities = theActivities.map(activity => activity.activity);
   })
-  await Mail_Destination.subscriber_dirPerActivity(activities, function (destination) {
-    if (destination != -1) {
-      return {
-        destination: destination,
-        subject: "New Post",
-        content: "A new post has just been uploaded, check on it on the system"
+
+  const destination = await Mail_Destination.subscriber_dirPerActivity(activities)
+  if (destination != -1) {
+    if (parameters.description.length > 250)
+      parameters.description = parameters.description.substr(0, 250)
+      console.log(destination.notifList)
+    return {
+        destination: destination.notifList,
+        subject: parameters.title,
+        content: `${parameters.description} <a href="${process.env.APP_URL}/blog/info/${parameters.id}">read more</a>`,
+        title:parameters.title,
+        file_name:parameters.file_name,
+        format:parameters.format,
+        companyId: parameters.companyId,
+        co_ids: destination.co_ids
       }
+    } else {
+      return {}
     }
-  });
 }
 
 module.exports = {
@@ -135,5 +143,5 @@ module.exports = {
   forgotPassword: forgotPassword,
   subscription: subscription,
   messagePost: messagePost,
-  jobApproval:jobApproval
+  postApproval:postApproval
 };

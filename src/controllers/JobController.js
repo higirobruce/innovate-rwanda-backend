@@ -18,9 +18,9 @@ export default class JobController {
         status: fields.status,
       });
       if (job) {
-        var activitiesToLoad =  new Array();
+        var activitiesToLoad = new Array();
         for (var i = 0; i < activities.length; i++) {
-          activitiesToLoad.push({ typeOfPost: 'job', postId: job.id, activityId:activities[i]});
+          activitiesToLoad.push({ typeOfPost: 'job', postId: job.id, activityId: activities[i] });
         }
         if (activitiesToLoad.length > 0) {
           await db['AudienceForPost'].bulkCreate(activitiesToLoad);
@@ -40,24 +40,30 @@ export default class JobController {
   }
 
   static async approveOrDeclineJobPost(req, res) {
-    try {
-      const decision = req.body.decision;
-      const response = await db['Job'].update({ status: decision }, { where: { id: req.body.jobId } });
-
-      if (response) {
-        // if (decision == "approved") {
-        //   notification.notify("job post approval", { jobId: req.body.jobId }, function (response) {
-        //     return res.status(200).json({ message: response });
-        //   });
-        // }
-        res.status(200).json({ message: "Job " + decision })
-      } else {
-        res.status(404).json({ message: "Action Failed" });
-      }
-    } catch (err) {
-      console.log(err)
-      return res.status(400).send({ message: "Sorry, Action failed" });
-    }
+    const decision = req.body.decision;
+    await db["Job"].findOne({ where: { id: req.body.jobId, status: { [db.Op.not]: decision} }, attributes: ["id","title", "description","companyId"]})
+      .then((job) => {
+        if (job) {
+          const response = job.update({ status: decision });
+          if (response) {
+            if (decision == "approved") {
+              const parameters = { id: req.body.jobId, title: job.title, description: job.description, file_name: "", format: "Job", companyId: job.companyId };
+              notification.notify("post approval", parameters, function (resp) {
+                return res.status(200).json({ message: resp });
+              });
+            } else {
+              res.status(200).json({ message: "Job " + decision })
+            }
+          } else {
+            res.status(404).json({ message: "Action Failed" });
+          }
+        } else {
+          res.status(404).json({ message: "Job could have been already treated" });
+        }
+      }).catch((err) => {
+        console.log(err)
+        return res.status(400).send({ message: "Sorry, Action failed" });
+      })
   }
 
   static async getApprovedJobsList(req, res) {

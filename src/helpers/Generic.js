@@ -19,9 +19,9 @@ async function getCompanyEmail(company_id, callback) {
     })
 }
 
-async function getJobActivities(job_id, callback) {
+async function getActivities(post_id, postType, callback) {
     await db["AudienceForPost"].findAll({
-        where: { typeOfPost: "job", postId: job_id }, attributes: [["activityId", "activity"]], raw: true
+        where: { typeOfPost: postType, postId: post_id }, attributes: [["activityId", "activity"]], raw: true
     }).then((activities) => {
         console.log(activities)
         callback(activities);
@@ -34,5 +34,5 @@ async function getJobActivities(job_id, callback) {
 module.exports = {
     generateSlug: generateSlug,
     getCompanyEmail: getCompanyEmail,
-    getJobActivities: getJobActivities
+    getActivities: getActivities
 };

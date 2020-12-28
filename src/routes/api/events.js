@@ -17,6 +17,7 @@ events.post(
 events.put(
   "/events/approve-decline",
   auth.verifyToken,
+  checkPermissions(["admin-event"]),
   EventsController.approveOrDeclineEventPost
 );
 
