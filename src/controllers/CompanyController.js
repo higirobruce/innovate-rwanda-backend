@@ -528,18 +528,12 @@ export default class CompanyController {
             order: [['createdAt', 'DESC']]
           });
       } else if (filterBy == "activities") {
-
-        const inOp = db.Op.in;
         directory = await db['ActivitiesOfCompany']
           .findAll({
             attributes: ["companyId", "activityId"],
             where: {
-              activityId: {
-                [inOp]: filterValue
-              }
+              activityId: filterValue
             },
-            order: [['activityId', 'ASC']],
-            attributes: ["activityId"],
             include: [
               {
                 model: db["Company"],
@@ -852,18 +846,12 @@ export default class CompanyController {
             order: [['createdAt', 'DESC']]
           });
       } else if (filterBy == "activities") {
-
-        const inOp = db.Op.in;
         directory = await db['ActivitiesOfCompany']
           .findAll({
             attributes: ["companyId", "activityId"],
             where: {
-              activityId: {
-                [inOp]: filterValue
-              }
+              activityId: filterValue
             },
-            order: [['activityId', 'ASC']],
-            attributes: ["activityId"],
             include: [
               {
                 model: db["Company"],
