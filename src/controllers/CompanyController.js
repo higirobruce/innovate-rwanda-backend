@@ -1,6 +1,8 @@
 import db from "../models";
 import generic from "../helpers/Generic";
-import { UniqueConstraintError } from "sequelize";
+import jwt from "jsonwebtoken";
+import notification from "../helpers/Notification";
+var encryptor = require('simple-encryptor')(process.env.COMPANY_DEL_KEY);
 
 export default class CompanyController {
   static async getCompaniesList(req, res) {
@@ -480,6 +482,89 @@ export default class CompanyController {
       return res
         .status(400)
         .send({ message: "Decision not set at this moment" });
+    }
+  }
+
+  static async deleteOwnCo(req, res) {
+    try {
+      const companyData = await db["Company"].findOne({
+        where: { id: req.user.companyId },
+        include: [
+          {
+            model: db["User"],
+            on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('User.companyId'), db.Op.eq, db.sequelize.col('Company.id'))] }
+          },
+          {
+            model: db["ActivitiesOfCompany"], attributes: ["companyId", "activityId", "createdAt", "updatedAt"],
+            on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('ActivitiesOfCompanies.companyId'), db.Op.eq, db.sequelize.col('Company.id'))] }
+          },
+          {
+            model: db["Blog"],
+            on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('Blogs.companyId'), db.Op.eq, db.sequelize.col('Company.id'))] },
+            include: [{
+              model: db["AudienceForPost"], attributes: ["typeOfPost", "postId", "activityId", "createdAt", "updatedAt"],
+              on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('Blogs.id'), db.Op.eq, db.sequelize.col('Blogs->AudienceForPosts.postId')), db.sequelize.where(db.sequelize.col('Blogs->AudienceForPosts.typeOfPost'), db.Op.eq, 'blog')] }
+            }]
+          },
+          {
+            model: db["Job"],
+            on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('Jobs.companyId'), db.Op.eq, db.sequelize.col('Company.id'))] },
+            include: [{
+              model: db["AudienceForPost"], attributes: ["typeOfPost", "postId", "activityId", "createdAt", "updatedAt"],
+              on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('Jobs.id'), db.Op.eq, db.sequelize.col('Jobs->AudienceForPosts.postId')), db.sequelize.where(db.sequelize.col('Jobs->AudienceForPosts.typeOfPost'), db.Op.eq, 'job')] }
+            }]
+          },
+          {
+            model: db["Event"],
+            on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('Events.companyId'), db.Op.eq, db.sequelize.col('Company.id'))] },
+            include: [{
+              model: db["AudienceForPost"], attributes: ["typeOfPost", "postId", "activityId", "createdAt", "updatedAt"],
+              on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('Events.id'), db.Op.eq, db.sequelize.col('Events->AudienceForPosts.postId')), db.sequelize.where(db.sequelize.col('Events->AudienceForPosts.typeOfPost'), db.Op.eq, 'event')] }
+            }]
+          },
+          {
+            model: db["Message"],
+            on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('Messages.companyId'), db.Op.eq, db.sequelize.col('Company.id'))] }
+          },
+          {
+            model: db["Notification"],
+            on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('Notifications.companyId'), db.Op.eq, db.sequelize.col('Company.id'))] }
+          },
+        ],
+      });
+      if (companyData) {
+        const encryptedCompanyData = encryptor.encrypt(companyData);
+        const token = jwt.sign({ _id: companyData.coName }, process.env.COMPANY_DEL_KEY, {
+          expiresIn: '1m',
+        });
+        if (token && encryptedCompanyData) {
+          await db["DeletedCompany"].create({ data: encryptedCompanyData, recoveryToken: token }).then(result => {
+            if (result) {
+              generic.deleteCompany(companyData,function (response) {
+                if (response != -1) {
+                  notification.notify("delete own company", { email: companyData.contactEmail,companyName:companyData.coName, token: token }, function (response) {
+                    return res.status(200).json({ message: response });
+                  });
+                } else {
+                  return res.status(404).json({ message: "Could not delete all, try again later" });
+                }
+              })
+            } else {
+              return res.status(404).send({ message: "Please try again later" });
+            }
+          }).catch((error) => {
+            console.log(error)
+            return res.status(400).json({ error: "Failed to complete the task, please try later" });
+          });
+        } else {
+          return res.status(400).json({ error: "Please try again later" });
+        }
+      } else {
+        return res.status(404).json({ message: "You are not allowed to delete this company" });
+      }
+    } catch (err) {
+      console.log(err)
+      return res.status(400).send({ message: "Action Fail at this moment, try later" });
     }
   }
 

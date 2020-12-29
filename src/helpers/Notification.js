@@ -4,8 +4,7 @@ const Mail = require('./Mail.js');
 import NotificationController from "../controllers/NotificationController";
 
 export default class Notification {
-    static async notify(notification_type, parameters, callback) 
-    {
+    static async notify(notification_type, parameters, callback) {
         try {
             var mail = new Array(), response, send = true, notifCo = false;
 
@@ -35,35 +34,30 @@ export default class Notification {
                 notifCo = true;
                 mail[0] = await Mail.postApproval(parameters)
                 response = "Post Approved, Emails sent to those in related activities and subscribers";
+            } else if (notification_type === "delete own company") {
+                mail[0] = await Mail.deleteCompanyByOwner(parameters)
+                response = "Company deleted successfully, a confirmation email just got sent to you about that";
             }
 
             if (notifCo == true) {
                 NotificationController.notificationPost(mail);
             }
             if (send == true && mail && mail.length > 0) {
-                console.log(mail.length)
                 for (var i = 0; i < mail.length; i++) {
-                    console.log(mail[i])
                     if (mail[i] && mail[i].destination) {
                         Notification.sendEmail(mail[i], function (resp) {
                             if (resp == -1 || resp == 0) {
-                                //console.log("Error: Could not send email")
                                 callback("Error: Could not send email")
-
                             } else if (resp == 1 && i == mail.length) {
-                                //console.log(response)
                                 callback(response)
-
                             }
                         });
                     }
                 }
             } else {
-                //console.log("No email to send to found, no email sent");
                 callback("No email to send to found, no email sent");
             }
-        } catch (exception) {
-            //console.log(exception)
+        } catch (error) {
             callback(-2)
         }
     }
@@ -79,26 +73,25 @@ export default class Notification {
                     pass: process.env.MAILER_PASSWORD
                 }
             });
-           
+
             switch (mail.format) {
                 case "Event":
                 case "Blog":
-                    content = `
-                        <div style="background:#F0F2F8;width:100%;">
-                            <div style="margin: 20px auto;text-align:left;padding:35px 10px 35px 12%;background:#150D4C1A;font-size:34px">
-                                <b>Innovate Rwanda </b> New ${mail.format} Published
-                            </div>
-                            <div style="padding:3%;text-align:left;font-size:34px">
-                                <img style="margin: 20px auto;display: block;" src='cid:post-image' alt='Innovate Rwanda, Post image'>
-                            </div>
-                            <div style="margin: 20px;text-align:left;padding-left:10%;padding-right:10%">
-                                <div style="font-size:28px">
-                                    <b>${mail.title}</b>
-                                </div>
-                                <div>${mail.content}</div>
-                            </div>
-                            <div style="padding:35px 10px;text-align:center;background:#150D4C1A;">${footer}</div>
-                        </div>`;
+                    content = `<div style="background:#F0F2F8;width:100%;">
+                                    <div style="margin: 20px auto;text-align:left;padding:35px 10px 35px 12%;background:#150D4C1A;font-size:34px">
+                                        <b>Innovate Rwanda </b> New ${mail.format} Published
+                                    </div>
+                                    <div style="padding:3%;text-align:left;font-size:34px">
+                                        <img style="margin: 20px auto;display: block;" src='cid:post-image' alt='Innovate Rwanda, Post image'>
+                                    </div>
+                                    <div style="margin: 20px;text-align:left;padding-left:10%;padding-right:10%">
+                                        <div style="font-size:28px">
+                                            <b>${mail.title}</b>
+                                        </div>
+                                        <div>${mail.content}</div>
+                                    </div>
+                                    <div style="padding:35px 10px;text-align:center;background:#150D4C1A;">${footer}</div>
+                                </div>`;
                     mailOptions = {
                         from: process.env.MAILER_EMAIL,
                         bcc: mail.destination,
@@ -112,19 +105,18 @@ export default class Notification {
                     };
                     break;
                 case "Job":
-                    content = `
-                        <div style="background:#F0F2F8;width:100%;">
-                            <div style="margin: 20px auto;text-align:left;padding:35px 10px 35px 12%;background:#150D4C1A;font-size:34px">
-                                <b>Innovate Rwanda </b> New ${mail.format} Published
-                            </div>
-                            <div style="margin: 20px;text-align:left;padding-left:10%;padding-right:10%">
-                                <div style="font-size:28px">
-                                    <b>${mail.title}</b>
-                                </div>
-                                <div>${mail.content}</div>
-                            </div>
-                            <div style="padding:35px 10px;text-align:center;background:#150D4C1A;">${footer}</div>
-                        </div>`;
+                    content = `<div style="background:#F0F2F8;width:100%;">
+                                    <div style="margin: 20px auto;text-align:left;padding:35px 10px 35px 12%;background:#150D4C1A;font-size:34px">
+                                        <b>Innovate Rwanda </b> New ${mail.format} Published
+                                    </div>
+                                    <div style="margin: 20px;text-align:left;padding-left:10%;padding-right:10%">
+                                        <div style="font-size:28px">
+                                            <b>${mail.title}</b>
+                                        </div>
+                                        <div>${mail.content}</div>
+                                    </div>
+                                    <div style="padding:35px 10px;text-align:center;background:#150D4C1A;">${footer}</div>
+                                </div>`;
                     mailOptions = {
                         from: process.env.MAILER_EMAIL,
                         bcc: mail.destination,
@@ -133,18 +125,17 @@ export default class Notification {
                     };
                     break;
                 default:
-                    content = `
-                        <div style="background:#F0F2F8;width:100%;padding:20px 0;">
-                            <div style="max-width:400px;margin:0 auto;background:#ffffff">
-                                <div style="background:#150D4C1A;padding:10px;color:#ffffff;text-align:center;font-size:34px">
-                                    <img style="margin: 20px auto;display: block;width: 80px" src='cid:emailTop' alt='Innovate Rwanda'>
-                                </div>
-                                <div style="padding:20px;text-align:left;">
-                                    ${mail.content} 
-                                </div>
-                            </div>
-                            <div style="padding:35px 10px;text-align:center;">${footer}</div>
-                        </div>`;
+                    content = `<div style="background:#F0F2F8;width:100%;padding:20px 0;">
+                                    <div style="max-width:400px;margin:0 auto;background:#ffffff">
+                                        <div style="background:#150D4C1A;padding:10px;color:#ffffff;text-align:center;font-size:34px">
+                                            <img style="margin: 20px auto;display: block;width: 80px" src='cid:emailTop' alt='Innovate Rwanda'>
+                                        </div>
+                                        <div style="padding:20px;text-align:left;">
+                                            ${mail.content} 
+                                        </div>
+                                    </div>
+                                    <div style="padding:35px 10px;text-align:center;">${footer}</div>
+                                </div>`;
                     mailOptions = {
                         from: process.env.MAILER_EMAIL,
                         to: mail.destination,

@@ -4,10 +4,10 @@ const Mail_Destination = require('./Mail_Destination.js');
 function accountRegistration(parameters) {
   const subject = "We’re almost there let's verify your email",
     content = `Dear ${parameters.firstName} ${parameters.lastName},<br><br> 
-                  Please verify your email in order to access your account. <br>
-                  Click on the button below or open it in your browser to activate your account, It will expire in 1h.<br><br><br>
-                  <a style="margin:35px 0;padding:15px 35px;background:#00AEEF;color:#ffffff;clear:both;border-radius:2px;text-decoration:none"
-                  href="${process.env.APP_URL}/activate-account/${parameters.token}">Activate account</a><br><br><br>`;
+               Please verify your email in order to access your account. <br>
+               Click on the button below or open it in your browser to activate your account, It will expire in 1h.<br><br><br>
+               <a style="margin:35px 0;padding:15px 35px;background:#00AEEF;color:#ffffff;clear:both;border-radius:2px;text-decoration:none"
+               href="${process.env.APP_URL}/activate-account/${parameters.token}">Activate account</a><br><br><br>`;
   return {
     subject: subject,
     content: content,
@@ -38,10 +38,10 @@ function firstLogin(parameters) {
 function adminAccountCreation(parameters) {
   const subject = "Account Creation",
     content = "Dear " + parameters.firstName + " " + parameters.lastName + ", <br><br>" +
-      "An account has been created for you on Innovate Rwanda System. Please find below details of the account.<br><br>" +
-      "<b>Email</b>: " + parameters.email + "<br>" +
-      "<b>Password</b>: " + parameters.password + "<br>" +
-      "<br>Change this default password as soon as possible.";
+              "An account has been created for you on Innovate Rwanda System. Please find below details of the account.<br><br>" +
+              "<b>Email</b>: " + parameters.email + "<br>" +
+              "<b>Password</b>: " + parameters.password + "<br>" +
+              "<br>Change this default password as soon as possible.";
   return {
     destination: parameters.email,
     subject: subject,
@@ -52,9 +52,9 @@ function adminAccountCreation(parameters) {
 function forgotPassword(parameters) {
   const subject = "[Innovate Rwanda] Please reset your password",
     content = `Please use the following link to reset your password: <br><br><br>
-                  <a style="margin:35px 0;padding:15px 35px;background:#00AEEF;color:#ffffff;clear:both;border-radius:2px;text-decoration:none"
-                  href="${process.env.APP_URL}/reset-password/${parameters.token}">Reset password</a> <br><br><br>
-                  This link  will expire in 1h.`;
+               <a style="margin:35px 0;padding:15px 35px;background:#00AEEF;color:#ffffff;clear:both;border-radius:2px;text-decoration:none"
+               href="${process.env.APP_URL}/reset-password/${parameters.token}">Reset password</a> <br><br><br>
+               This link  will expire in 1h.`;
   return {
     destination: parameters.email,
     subject: subject,
@@ -84,7 +84,6 @@ function emailToSender(parameters) {
 
 async function emailToReceiver(parameters, callback) {
   await generic.getCompanyEmail(parameters.companyId, function (resp) {
-    console.log(resp)
     if (resp != -1 || resp != 0) {
       callback({
         destination: resp,
@@ -111,7 +110,7 @@ async function messagePost(parameters) {
 
 async function postApproval(parameters) {
   var activities;
-  await generic.getActivities(parameters.id,parameters.format.toLowerCase(), function (theActivities) {
+  await generic.getActivities(parameters.id, parameters.format.toLowerCase(), function (theActivities) {
     activities = theActivities.map(activity => activity.activity);
   })
 
@@ -119,20 +118,32 @@ async function postApproval(parameters) {
   if (destination != -1) {
     if (parameters.description.length > 250)
       parameters.description = parameters.description.substr(0, 250)
-      console.log(destination.notifList)
     return {
-        destination: destination.notifList,
-        subject: parameters.title,
-        content: `${parameters.description} <a href="${process.env.APP_URL}/blog/info/${parameters.id}">read more</a>`,
-        title:parameters.title,
-        file_name:parameters.file_name,
-        format:parameters.format,
-        companyId: parameters.companyId,
-        co_ids: destination.co_ids
-      }
-    } else {
-      return {}
+      destination: destination.notifList,
+      subject: parameters.title,
+      content: `${parameters.description} <a href="${process.env.APP_URL}/blog/info/${parameters.id}">read more</a>`,
+      title: parameters.title,
+      file_name: parameters.file_name,
+      format: parameters.format,
+      companyId: parameters.companyId,
+      co_ids: destination.co_ids
     }
+  } else {
+    return {}
+  }
+}
+
+function deleteCompanyByOwner(parameters) {
+  const subject = "Company Deletion",
+    content = `You just deleted company "${parameters.companyName}" from the system.<br><br>
+               In case you would want to recover it, click on below link within a month from now. <br><br><br>
+               <a style="margin:35px 0;padding:15px 35px;background:#00AEEF;color:#ffffff;clear:both;border-radius:2px;text-decoration:none"
+               href="${process.env.APP_URL}/recover-company/emaillink/${parameters.token}">Recover Company</a> <br><br>`;
+  return {
+    destination: parameters.email,
+    subject: subject,
+    content: content
+  }
 }
 
 module.exports = {
@@ -143,5 +154,6 @@ module.exports = {
   forgotPassword: forgotPassword,
   subscription: subscription,
   messagePost: messagePost,
-  postApproval:postApproval
+  postApproval: postApproval,
+  deleteCompanyByOwner: deleteCompanyByOwner
 };

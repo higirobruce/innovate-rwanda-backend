@@ -57,6 +57,18 @@ module.exports = (sequelize, DataTypes) => {
     });
 
     company.hasMany(models.ActivitiesOfCompany);
+
+    company.hasOne(models.User, {
+      foreignKey: 'companyId'
+    });
+
+    company.hasMany(models.Message, {
+      foreignKey: 'companyId'
+    });
+
+    company.hasMany(models.Notification, {
+      foreignKey: 'companyId'
+    });
     
   };
   return company;

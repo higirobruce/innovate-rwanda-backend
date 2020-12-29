@@ -28,7 +28,8 @@ module.exports = (sequelize, DataTypes) => {
 
   activitiesOfCompany.associate = models => {
     activitiesOfCompany.belongsTo(models.Company, {
-      foreignKey: 'companyId'
+      foreignKey: 'companyId',
+      onDelete: 'CASCADE'
     });
     activitiesOfCompany.belongsTo(models.BusinessActivities, {
       foreignKey: 'activityId'

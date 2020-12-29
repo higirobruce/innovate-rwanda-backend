@@ -61,6 +61,18 @@ company.delete(
   CompanyController.deleteCompany
 );
 
+company.delete(
+  "/company/delete-company",
+  auth.verifyToken,
+  checkPermissions("normal"),
+  CompanyController.deleteOwnCo
+);
+
+// company.put(
+//   "/recover-company/emaillink/:recoverLink",
+//   CompanyController.recoverOwnCo
+// );
+
 /* 
  * filterBy ---   location       | activities            | year-founded
  * filterValue--  the district   | activity id           | a year-eg.2005 
