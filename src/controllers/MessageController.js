@@ -98,4 +98,22 @@ export default class MessageController {
       return res.status(400).send({ message: " List of Messages not got at this moment" });
     }
   }
+
+  static async setRead(req, res) {
+    try {
+      const messagesId = req.body.messages.split(',').map(Number);
+      const response = await db["Message"].update(
+        { firstread: db.sequelize.fn("NOW") },
+        { where: { id: { [db.Op.in]: messagesId } } }
+      );
+      if (response) {
+        return res.status(200).send()
+      } else {
+        return res.status(404).send()
+      }
+    } catch (error) {
+      console.log(error)
+      return res.status(400).send({ message: "Sorry, Failed at moment" });
+    }
+  }
 }

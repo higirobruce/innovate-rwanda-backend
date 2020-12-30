@@ -60,4 +60,22 @@ export default class NotificationController {
       return res.status(400).send({ message: " List of notifications not got at this moment" });
     }
   }
+
+  static async setRead(req, res) {
+    try {
+      const notificationsId = req.body.notifications.split(',').map(Number);
+      const response = await db["Notification"].update(
+        { firstread: db.sequelize.fn("NOW") },
+        { where: { id: { [db.Op.in]: notificationsId } } }
+      );
+      if (response) {
+        return res.status(200).send()
+      } else {
+        return res.status(404).send()
+      }
+    } catch (error) {
+      console.log(error)
+      return res.status(400).send({ message: "Sorry, Failed at moment" });
+    }
+  }
 }

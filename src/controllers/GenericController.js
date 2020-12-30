@@ -29,6 +29,23 @@ export default class genericController {
     }
   }
 
+  //gives counts for new messages and notifications
+  static async getCountsNew(req, res) {
+    try {
+      const newNotifications = await db['Notification'].count({
+        where: { firstread: { $eq: null } }
+      });
+
+      const newMessages= await db['Message'].count({
+        where: { firstread: { $eq: null } }
+      });
+      return res.status(200).json({ result: { newNotifications, newMessages } })
+    } catch (err) {
+      console.log(err)
+      return res.status(400).send({ message: "Sorry, Counts not found" });
+    }
+  }
+
   static async getCountsCo(req, res) {
     try {
       const companyId = req.user.companyId;

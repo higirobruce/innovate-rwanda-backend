@@ -31,4 +31,11 @@ generic.get(
     GenericController.getCountsCo
 );
 
+generic.get(
+    "/countsNew",
+    auth.verifyToken,
+    checkPermissions(["normal","admin-company", "admin-job", "admin-event", "admin-blog", "admin-user"]),
+    GenericController.getCountsNew
+);
+
 export default generic;

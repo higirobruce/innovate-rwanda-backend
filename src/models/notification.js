@@ -16,6 +16,9 @@ module.exports = (sequelize, DataTypes) => {
     content: {
       type: DataTypes.TEXT
     },
+    firstread: {
+      type: DataTypes.DATE
+    },
     createdAt: {
       allowNull: false,
       type: DataTypes.DATE

@@ -20,12 +20,7 @@ message.get(
   MessageController.getMessagesListPerCompany
 );
 
-message.get(
-  "/notification/company",
-  auth.verifyToken,
-  checkPermissions("normal"),
-  NotificationController.getNotificationsForCompany
-);
+
 
 message.get(
   "/message/info/:messageId",
@@ -40,6 +35,30 @@ message.get(
   auth.verifyToken,
   checkPermissions("normal"),
   MessageController.searchForMessages
+);
+
+message.put(
+  "/message/read",
+  auth.verifyToken,
+  checkPermissions(["normal","admin-company", "admin-job", "admin-event", "admin-blog", "admin-user"]),
+  MessageController.setRead
+);
+
+/*
+ * Notifications
+ */
+message.get(
+  "/notification/company",
+  auth.verifyToken,
+  checkPermissions("normal"),
+  NotificationController.getNotificationsForCompany
+);
+
+message.put(
+  "/notification/read",
+  auth.verifyToken,
+  checkPermissions(["normal","admin-company", "admin-job", "admin-event", "admin-blog", "admin-user"]),
+  NotificationController.setRead
 );
 
 export default message;
