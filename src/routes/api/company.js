@@ -68,10 +68,10 @@ company.delete(
   CompanyController.deleteOwnCo
 );
 
-// company.put(
-//   "/recover-company/emaillink/:recoverLink",
-//   CompanyController.recoverOwnCo
-// );
+company.get(
+  "/recover-company/emaillink/:recoveryToken",
+  CompanyController.recoverCompany
+);
 
 /* 
  * filterBy ---   location       | activities            | year-founded

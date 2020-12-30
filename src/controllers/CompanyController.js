@@ -535,14 +535,14 @@ export default class CompanyController {
       if (companyData) {
         const encryptedCompanyData = encryptor.encrypt(companyData);
         const token = jwt.sign({ _id: companyData.coName }, process.env.COMPANY_DEL_KEY, {
-          expiresIn: '1m',
+          expiresIn: '30d',
         });
         if (token && encryptedCompanyData) {
           await db["DeletedCompany"].create({ data: encryptedCompanyData, recoveryToken: token }).then(result => {
             if (result) {
-              generic.deleteCompany(companyData,function (response) {
+              generic.deleteCompany(companyData, function (response) {
                 if (response != -1) {
-                  notification.notify("delete own company", { email: companyData.contactEmail,companyName:companyData.coName, token: token }, function (response) {
+                  notification.notify("delete own company", { email: companyData.contactEmail, companyName: companyData.coName, token: token }, function (response) {
                     return res.status(200).json({ message: response });
                   });
                 } else {
@@ -565,6 +565,43 @@ export default class CompanyController {
     } catch (err) {
       console.log(err)
       return res.status(400).send({ message: "Action Fail at this moment, try later" });
+    }
+  }
+
+  static async recoverCompany(req, res) {
+    const { recoveryToken } = req.params;
+    // const { src } = req.query;
+    try {
+      if (recoveryToken) {
+        jwt.verify(recoveryToken, process.env.COMPANY_DEL_KEY, (error, decoded) => {
+          if (error) {
+            return res.status(401).send({ message: "Incorrect token or The link expired" });
+          } else {
+            db["DeletedCompany"].findOne({
+              where: { recoveryToken: recoveryToken }
+            }).then((encryptedCompanyData) => {
+              console.log(encryptedCompanyData.data)
+                if (!encryptedCompanyData) {
+                  return res.status(400).json({ error: "Deleted Company with that link does not exist" });
+                } else {
+                  var decryptedCompanyData = encryptor.decrypt(encryptedCompanyData.data);
+                  console.log(decryptedCompanyData)
+                  if (decryptedCompanyData) {
+                    return res.status(200).send({ result: decryptedCompanyData });
+                  } else {
+                    return res.status(404).send({ message: "Try again later" });
+                  }
+                }
+              }).catch((error) => {
+                return res.status(400).send({ error: "Failed to recover the company" });
+              })
+          }
+        });
+      } else {
+        return res.status(401).json({ error: "Authentication Error" });
+      }
+    } catch (error) {
+      return res.status(400).send({ error: "Failed to recover the company" });
     }
   }
 
