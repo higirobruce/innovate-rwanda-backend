@@ -1,4 +1,5 @@
 import db from "../models";
+import generic from "../helpers/Generic";
 import { UniqueConstraintError } from "sequelize";
 
 export default class CompanyController {
@@ -315,7 +316,7 @@ export default class CompanyController {
             include: [
               {
                 model: db["Company"],
-                attributes: [["coName","companyName"], "logo","slug"],
+                attributes: [["coName", "companyName"], "logo", "slug"],
                 on: {
                   [db.Op.and]: [
                     db.sequelize.where(
@@ -409,9 +410,9 @@ export default class CompanyController {
   static async editCompanyInfo(req, res) {
     try {
       const response = await db["Company"].update(req.body, {
-          where: { id: req.body.id }
-        });
-        return response
+        where: { id: req.body.id }
+      });
+      return response
         ? res.status(200).json({ message: "Recent change is updated successfully" })
         : res.status(404).json({ message: "Sorry, No record edited" });
     } catch (err) {
@@ -482,141 +483,70 @@ export default class CompanyController {
     }
   }
 
-  static async getDirectoryFiltered(req, res) {//location       | activities            | year-founded
+  static async getDirectoryFiltered(req, res) {//location       | activity           | year-founded
     try {
       const filterBy = req.query.filterBy;
       const filterValue = req.query.filterValue.trim();
       var directory;
+
       if (filterBy == "location") {
-        directory = await db['Company']
-          .findAll({
-            where: {
-              districtBasedIn: filterValue,
-              status: "approved"
-            },
-            include: [
-              {
-                model: db["BusinessActivities"],
-                attributes: ["name"]
-              },
-              {
-                model: db["ActivitiesOfCompany"],
-                attributes: ["activityId"],
-                on: {
-                  [db.Op.and]: [
-                    db.sequelize.where(
-                      db.sequelize.col('ActivitiesOfCompanies.companyId'),
-                      db.Op.eq,
-                      db.sequelize.col('Company.id')
-                    )
-                  ],
-                },
-                include: [{
-                  model: db["BusinessActivities"],
-                  attributes: ["name"],
-                  on: {
-                    [db.Op.and]: [
-                      db.sequelize.where(
-                        db.sequelize.col('ActivitiesOfCompanies.activityId'),
-                        db.Op.eq,
-                        db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id')
-                      ),],
-                  },
-                }]
-              }
-            ],
-            order: [['createdAt', 'DESC']]
-          });
+        directory = await db['Company'].findAll({
+          where: { districtBasedIn: filterValue, status: "approved" },
+          include: [
+            { model: db["BusinessActivities"], attributes: ["name"] },
+            {
+              model: db["ActivitiesOfCompany"], attributes: ["activityId"],
+              on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('ActivitiesOfCompanies.companyId'), db.Op.eq, db.sequelize.col('Company.id'))] },
+              include: [{
+                model: db["BusinessActivities"], attributes: ["name"],
+                on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('ActivitiesOfCompanies.activityId'), db.Op.eq, db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id'))] }
+              }]
+            }
+          ], order: [['createdAt', 'DESC']]
+        });
       } else if (filterBy == "activities") {
-        directory = await db['ActivitiesOfCompany']
-          .findAll({
-            attributes: ["companyId", "activityId"],
-            where: {
-              activityId: filterValue
+        var companiesId;
+        await generic.getCompaniesIdPerActivity(filterValue, function (thecompaniesId) {
+          companiesId = thecompaniesId.map(companyId => companyId.companyId);
+        });
+
+        directory = await db['Company'].findAll({
+          where: { id: { [db.Op.in]: companiesId } },
+          include: [
+            {
+              model: db["BusinessActivities"], attributes: ["name"]
             },
-            include: [
-              {
-                model: db["Company"],
-                on: {
-                  [db.Op.and]: [
-                    db.sequelize.where(
-                      db.sequelize.col('ActivitiesOfCompany.companyId'),
-                      db.Op.eq,
-                      db.sequelize.col('Company.id')
-                    ),
-                    db.sequelize.where(
-                      db.sequelize.col('Company.status'),
-                      db.Op.eq,
-                      'approved'
-                    ),
-                  ],
-                }
-              },
-              {
-                model: db["BusinessActivities"],
-                attributes: ["name"],
-                on: {
-                  [db.Op.and]: [
-                    db.sequelize.where(
-                      db.sequelize.col('Company.businessActivityId'),
-                      db.Op.eq,
-                      db.sequelize.col('BusinessActivity.id')
-                    ),],
-                },
-              }
-            ],
-          });
+            {
+              model: db["ActivitiesOfCompany"], attributes: ["activityId"],
+              on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('ActivitiesOfCompanies.companyId'), db.Op.eq, db.sequelize.col('Company.id'))] },
+              include: [{
+                model: db["BusinessActivities"], attributes: ["name"],
+                on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('ActivitiesOfCompanies.activityId'), db.Op.eq, db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id'))] },
+              }]
+            }
+          ], order: [['createdAt', 'DESC']]
+        });
       } else if (filterBy == "year-founded") {
-        const andOp = db.Op.and;
-        directory = await db['Company']
-          .findAll({
-            where: {
-              yearFounded: filterValue,
-              status: "approved"
-            },
-            include: [
-              {
-                model: db["BusinessActivities"],
-                attributes: ["name"]
-              },
-              {
-                model: db["ActivitiesOfCompany"],
-                attributes: ["activityId"],
-                on: {
-                  [db.Op.and]: [
-                    db.sequelize.where(
-                      db.sequelize.col('ActivitiesOfCompanies.companyId'),
-                      db.Op.eq,
-                      db.sequelize.col('Company.id')
-                    )
-                  ],
-                },
-                include: [{
-                  model: db["BusinessActivities"],
-                  attributes: ["name"],
-                  on: {
-                    [db.Op.and]: [
-                      db.sequelize.where(
-                        db.sequelize.col('ActivitiesOfCompanies.activityId'),
-                        db.Op.eq,
-                        db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id')
-                      ),],
-                  },
-                }]
-              }
-            ],
-            order: [['createdAt', 'DESC']]
-          });
+        directory = await db['Company'].findAll({
+          where: { yearFounded: filterValue, status: "approved" },
+          include: [
+            { model: db["BusinessActivities"], attributes: ["name"] },
+            {
+              model: db["ActivitiesOfCompany"], attributes: ["activityId"],
+              on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('ActivitiesOfCompanies.companyId'), db.Op.eq, db.sequelize.col('Company.id'))] },
+              include: [{
+                model: db["BusinessActivities"], attributes: ["name"],
+                on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('ActivitiesOfCompanies.activityId'), db.Op.eq, db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id'))] }
+              }]
+            }
+          ], order: [['createdAt', 'DESC']]
+        });
       }
+
       if (directory && directory.length > 0) {
-        return res.status(200).json({
-          result: directory,
-        });
+        return res.status(200).json({ result: directory });
       } else {
-        return res.status(404).json({
-          result: [],
-          error: "No Company found",
-        });
+        return res.status(404).json({ result: [], error: "No Company found" });
       }
     } catch (err) {
       console.log(err);
@@ -629,98 +559,44 @@ export default class CompanyController {
       const sortBy = req.query.sortBy;
       const sortValue = req.query.sortValue.trim();
       var directory;
-      if (sortBy == "date") {
-        if (sortValue == "desc" || sortValue == "asc") {
-          directory = await db['Company']
-            .findAll({
-              where: {
-                status: "approved"
-              },
-              include: [
-                {
-                  model: db["BusinessActivities"],
-                  attributes: ["name"]
-                },
-                {
-                  model: db["ActivitiesOfCompany"],
-                  attributes: ["activityId"],
-                  on: {
-                    [db.Op.and]: [
-                      db.sequelize.where(
-                        db.sequelize.col('ActivitiesOfCompanies.companyId'),
-                        db.Op.eq,
-                        db.sequelize.col('Company.id')
-                      )
-                    ],
-                  },
-                  include: [{
-                    model: db["BusinessActivities"],
-                    attributes: ["name"],
-                    on: {
-                      [db.Op.and]: [
-                        db.sequelize.where(
-                          db.sequelize.col('ActivitiesOfCompanies.activityId'),
-                          db.Op.eq,
-                          db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id')
-                        ),],
-                    },
-                  }]
-                }
-              ],
-              order: [['yearFounded', sortValue]]
-            });
-        }
-      } else if (sortBy == "name") {
-        if (sortValue == "desc" || sortValue == "asc") {
-          directory = await db['Company']
-            .findAll({
-              where: {
-                status: "approved"
-              },
-              include: [
-                {
-                  model: db["BusinessActivities"],
-                  attributes: ["name"]
-                },
-                {
-                  model: db["ActivitiesOfCompany"],
-                  attributes: ["activityId"],
-                  on: {
-                    [db.Op.and]: [
-                      db.sequelize.where(
-                        db.sequelize.col('ActivitiesOfCompanies.companyId'),
-                        db.Op.eq,
-                        db.sequelize.col('Company.id')
-                      )
-                    ],
-                  },
-                  include: [{
-                    model: db["BusinessActivities"],
-                    attributes: ["name"],
-                    on: {
-                      [db.Op.and]: [
-                        db.sequelize.where(
-                          db.sequelize.col('ActivitiesOfCompanies.activityId'),
-                          db.Op.eq,
-                          db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id')
-                        ),],
-                    },
-                  }]
-                }
-              ],
-              order: [['coName', sortValue]]
-            });
+
+      if (sortValue == "desc" || sortValue == "asc") {
+        if (sortBy == "date") {
+          directory = await db['Company'].findAll({
+            where: { status: "approved" },
+            include: [
+              { model: db["BusinessActivities"], attributes: ["name"] },
+              {
+                model: db["ActivitiesOfCompany"], attributes: ["activityId"],
+                on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('ActivitiesOfCompanies.companyId'), db.Op.eq, db.sequelize.col('Company.id'))] },
+                include: [{
+                  model: db["BusinessActivities"], attributes: ["name"],
+                  on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('ActivitiesOfCompanies.activityId'), db.Op.eq, db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id'))] }
+                }]
+              }
+            ], order: [['yearFounded', sortValue]]
+          });
+        } else if (sortBy == "name") {
+          directory = await db['Company'].findAll({
+            where: { status: "approved" },
+            include: [
+              { model: db["BusinessActivities"], attributes: ["name"] },
+              {
+                model: db["ActivitiesOfCompany"], attributes: ["activityId"],
+                on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('ActivitiesOfCompanies.companyId'), db.Op.eq, db.sequelize.col('Company.id'))] },
+                include: [{
+                  model: db["BusinessActivities"], attributes: ["name"],
+                  on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('ActivitiesOfCompanies.activityId'), db.Op.eq, db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id'))] }
+                }]
+              }
+            ], order: [['coName', sortValue]]
+          });
         }
       }
       if (directory && directory.length > 0) {
-        return res.status(200).json({
-          result: directory,
-        });
+        return res.status(200).json({ result: directory });
       } else {
-        return res.status(404).json({
-          result: [],
-          error: "No Company found",
-        });
+        return res.status(404).json({ result: [], error: "No Company found" });
       }
     } catch (err) {
       console.log(err)
@@ -733,64 +609,25 @@ export default class CompanyController {
       const likeOp = db.Op.iLike;
       const searchValue = req.query.searchValue.trim();
 
-      const directory = await db['Company']
-        .findAll({
-          where: {
-            [db.Op.or]: [
-              { coName: { [likeOp]: "%" + searchValue + "%" } },
-              { coType: { [likeOp]: "%" + searchValue + "%" } },
-              { coWebsite: { [likeOp]: "%" + searchValue + "%" } },
-              { shortDescription: { [likeOp]: "%" + searchValue + "%" } },
-              { districtBasedIn: { [likeOp]: "%" + searchValue + "%" } },
-              { customerBase: { [likeOp]: "%" + searchValue + "%" } },
-              { officeAddress: { [likeOp]: "%" + searchValue + "%" } }
-            ],
-            status: "approved"
-          },
-          include: [
-            {
-              model: db["BusinessActivities"],
-              attributes: ["name"]
-            },
-            {
-              model: db["ActivitiesOfCompany"],
-              attributes: ["activityId"],
-              on: {
-                [db.Op.and]: [
-                  db.sequelize.where(
-                    db.sequelize.col('ActivitiesOfCompanies.companyId'),
-                    db.Op.eq,
-                    db.sequelize.col('Company.id')
-                  )
-                ],
-              },
-              include: [{
-                model: db["BusinessActivities"],
-                attributes: ["name"],
-                on: {
-                  [db.Op.and]: [
-                    db.sequelize.where(
-                      db.sequelize.col('ActivitiesOfCompanies.activityId'),
-                      db.Op.eq,
-                      db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id')
-                    ),],
-                },
-              }]
-            }
-          ],
-          limit: 100,
-          order: [['yearFounded', 'ASC']]
-        });
+      const directory = await db['Company'].findAll({
+        where: { [db.Op.or]: [{ coName: { [likeOp]: "%" + searchValue + "%" } }, { coType: { [likeOp]: "%" + searchValue + "%" } }, { coWebsite: { [likeOp]: "%" + searchValue + "%" } }, { shortDescription: { [likeOp]: "%" + searchValue + "%" } }, { districtBasedIn: { [likeOp]: "%" + searchValue + "%" } }, { customerBase: { [likeOp]: "%" + searchValue + "%" } }, { officeAddress: { [likeOp]: "%" + searchValue + "%" } }], status: "approved" },
+        include: [
+          { model: db["BusinessActivities"], attributes: ["name"] },
+          {
+            model: db["ActivitiesOfCompany"], attributes: ["activityId"],
+            on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('ActivitiesOfCompanies.companyId'), db.Op.eq, db.sequelize.col('Company.id'))] },
+            include: [{
+              model: db["BusinessActivities"], attributes: ["name"],
+              on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('ActivitiesOfCompanies.activityId'), db.Op.eq, db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id'))] },
+            }]
+          }
+        ], limit: 100, order: [['yearFounded', 'ASC']]
+      });
 
       if (directory && directory.length > 0) {
-        return res.status(200).json({
-          result: directory,
-        });
+        return res.status(200).json({ result: directory });
       } else {
-        return res.status(404).json({
-          result: [],
-          error: "No Company found",
-        });
+        return res.status(404).json({ result: [], error: "No Company found" });
       }
     } catch (err) {
       console.log(err)
@@ -798,149 +635,68 @@ export default class CompanyController {
     }
   }
 
-  static async getDirectoryFilteredByType(req, res) {//location       | activities            | year-founded
+  static async getDirectoryFilteredByType(req, res) {//location       | activity            | year-founded
     try {
       const filterBy = req.query.filterBy;
       const filterValue = req.query.filterValue.trim();
       const companyType = req.params.type;
       var directory;
+
       if (filterBy == "location") {
-        directory = await db['Company']
-          .findAll({
-            where: {
-              districtBasedIn: filterValue,
-              status: "approved",
-              coType: companyType
-            },
-            include: [
-              {
-                model: db["BusinessActivities"],
-                attributes: ["name"]
-              },
-              {
-                model: db["ActivitiesOfCompany"],
-                attributes: ["activityId"],
-                on: {
-                  [db.Op.and]: [
-                    db.sequelize.where(
-                      db.sequelize.col('ActivitiesOfCompanies.companyId'),
-                      db.Op.eq,
-                      db.sequelize.col('Company.id')
-                    )
-                  ],
-                },
-                include: [{
-                  model: db["BusinessActivities"],
-                  attributes: ["name"],
-                  on: {
-                    [db.Op.and]: [
-                      db.sequelize.where(
-                        db.sequelize.col('ActivitiesOfCompanies.activityId'),
-                        db.Op.eq,
-                        db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id')
-                      ),],
-                  },
-                }]
-              }
-            ],
-            order: [['createdAt', 'DESC']]
-          });
+        directory = await db['Company'].findAll({
+          where: { districtBasedIn: filterValue, status: "approved", coType: companyType },
+          include: [
+            { model: db["BusinessActivities"], attributes: ["name"] },
+            {
+              model: db["ActivitiesOfCompany"], attributes: ["activityId"],
+              on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('ActivitiesOfCompanies.companyId'), db.Op.eq, db.sequelize.col('Company.id'))] },
+              include: [{
+                model: db["BusinessActivities"], attributes: ["name"],
+                on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('ActivitiesOfCompanies.activityId'), db.Op.eq, db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id'))] },
+              }]
+            }
+          ], order: [['createdAt', 'DESC']]
+        });
       } else if (filterBy == "activities") {
-        directory = await db['ActivitiesOfCompany']
-          .findAll({
-            attributes: ["companyId", "activityId"],
-            where: {
-              activityId: filterValue
-            },
-            include: [
-              {
-                model: db["Company"],
-                on: {
-                  [db.Op.and]: [
-                    db.sequelize.where(
-                      db.sequelize.col('ActivitiesOfCompany.companyId'),
-                      db.Op.eq,
-                      db.sequelize.col('Company.id')
-                    ),
-                    db.sequelize.where(
-                      db.sequelize.col('Company.status'),
-                      db.Op.eq,
-                      'approved'
-                    ),
-                    db.sequelize.where(
-                      db.sequelize.col('Company.coType'),
-                      db.Op.eq,
-                      companyType
-                    ),
-                  ],
-                }
-              },
-              {
-                model: db["BusinessActivities"],
-                attributes: ["name"],
-                on: {
-                  [db.Op.and]: [
-                    db.sequelize.where(
-                      db.sequelize.col('Company.businessActivityId'),
-                      db.Op.eq,
-                      db.sequelize.col('BusinessActivity.id')
-                    ),],
-                },
-              }
-            ],
-          });
+        var companiesId;
+        await generic.getCompaniesIdPerActivity(filterValue, function (thecompaniesId) {
+          companiesId = thecompaniesId.map(companyId => companyId.companyId);
+        })
+
+        directory = await db['Company'].findAll({
+          where: { id: { [db.Op.in]: companiesId }, status: 'approved', coType: companyType },
+          include: [
+            { model: db["BusinessActivities"], attributes: ["name"] },
+            {
+              model: db["ActivitiesOfCompany"], attributes: ["activityId"],
+              on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('ActivitiesOfCompanies.companyId'), db.Op.eq, db.sequelize.col('Company.id'))] },
+              include: [{
+                model: db["BusinessActivities"], attributes: ["name"],
+                on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('ActivitiesOfCompanies.activityId'), db.Op.eq, db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id'))] },
+              }]
+            }
+          ], order: [['createdAt', 'DESC']]
+        });
       } else if (filterBy == "year-founded") {
-        const andOp = db.Op.and;
-        directory = await db['Company']
-          .findAll({
-            where: {
-              yearFounded: filterValue,
-              status: "approved",
-              coType: companyType
-            },
-            include: [
-              {
-                model: db["BusinessActivities"],
-                attributes: ["name"]
-              },
-              {
-                model: db["ActivitiesOfCompany"],
-                attributes: ["activityId"],
-                on: {
-                  [db.Op.and]: [
-                    db.sequelize.where(
-                      db.sequelize.col('ActivitiesOfCompanies.companyId'),
-                      db.Op.eq,
-                      db.sequelize.col('Company.id')
-                    )
-                  ],
-                },
-                include: [{
-                  model: db["BusinessActivities"],
-                  attributes: ["name"],
-                  on: {
-                    [db.Op.and]: [
-                      db.sequelize.where(
-                        db.sequelize.col('ActivitiesOfCompanies.activityId'),
-                        db.Op.eq,
-                        db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id')
-                      ),],
-                  },
-                }]
-              }
-            ],
-            order: [['createdAt', 'DESC']]
-          });
+        directory = await db['Company'].findAll({
+          where: { yearFounded: filterValue, status: "approved", coType: companyType },
+          include: [
+            { model: db["BusinessActivities"], attributes: ["name"] },
+            {
+              model: db["ActivitiesOfCompany"], attributes: ["activityId"],
+              on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('ActivitiesOfCompanies.companyId'), db.Op.eq, db.sequelize.col('Company.id'))] },
+              include: [{
+                model: db["BusinessActivities"], attributes: ["name"],
+                on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('ActivitiesOfCompanies.activityId'), db.Op.eq, db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id'))] },
+              }]
+            }
+          ], order: [['createdAt', 'DESC']]
+        });
       }
       if (directory && directory.length > 0) {
-        return res.status(200).json({
-          result: directory,
-        });
+        return res.status(200).json({ result: directory });
       } else {
-        return res.status(404).json({
-          result: [],
-          error: "No Company found",
-        });
+        return res.status(404).json({ result: [], error: "No Company found" });
       }
     } catch (err) {
       console.log(err);
@@ -954,100 +710,44 @@ export default class CompanyController {
       const sortValue = req.query.sortValue.trim();
       const companyType = req.params.type.trim();
       var directory;
-      if (sortBy == "date") {
-        if (sortValue == "desc" || sortValue == "asc") {
-          directory = await db['Company']
-            .findAll({
-              where: {
-                status: "approved",
-                coType: companyType
-              },
-              include: [
-                {
-                  model: db["BusinessActivities"],
-                  attributes: ["name"]
-                },
-                {
-                  model: db["ActivitiesOfCompany"],
-                  attributes: ["activityId"],
-                  on: {
-                    [db.Op.and]: [
-                      db.sequelize.where(
-                        db.sequelize.col('ActivitiesOfCompanies.companyId'),
-                        db.Op.eq,
-                        db.sequelize.col('Company.id')
-                      )
-                    ],
-                  },
-                  include: [{
-                    model: db["BusinessActivities"],
-                    attributes: ["name"],
-                    on: {
-                      [db.Op.and]: [
-                        db.sequelize.where(
-                          db.sequelize.col('ActivitiesOfCompanies.activityId'),
-                          db.Op.eq,
-                          db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id')
-                        ),],
-                    },
-                  }]
-                }
-              ],
-              order: [['yearFounded', sortValue]]
-            });
-        }
-      } else if (sortBy == "name") {
-        if (sortValue == "desc" || sortValue == "asc") {
-          directory = await db['Company']
-            .findAll({
-              where: {
-                status: "approved",
-                coType: companyType
-              },
-              include: [
-                {
-                  model: db["BusinessActivities"],
-                  attributes: ["name"]
-                },
-                {
-                  model: db["ActivitiesOfCompany"],
-                  attributes: ["activityId"],
-                  on: {
-                    [db.Op.and]: [
-                      db.sequelize.where(
-                        db.sequelize.col('ActivitiesOfCompanies.companyId'),
-                        db.Op.eq,
-                        db.sequelize.col('Company.id')
-                      )
-                    ],
-                  },
-                  include: [{
-                    model: db["BusinessActivities"],
-                    attributes: ["name"],
-                    on: {
-                      [db.Op.and]: [
-                        db.sequelize.where(
-                          db.sequelize.col('ActivitiesOfCompanies.activityId'),
-                          db.Op.eq,
-                          db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id')
-                        ),],
-                    },
-                  }]
-                }
-              ],
-              order: [['coName', sortValue]]
-            });
+
+      if (sortValue == "desc" || sortValue == "asc") {
+        if (sortBy == "date") {
+          directory = await db['Company'].findAll({
+            where: { status: "approved", coType: companyType },
+            include: [
+              { model: db["BusinessActivities"], attributes: ["name"] },
+              {
+                model: db["ActivitiesOfCompany"], attributes: ["activityId"],
+                on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('ActivitiesOfCompanies.companyId'), db.Op.eq, db.sequelize.col('Company.id'))] },
+                include: [{
+                  model: db["BusinessActivities"], attributes: ["name"],
+                  on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('ActivitiesOfCompanies.activityId'), db.Op.eq, db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id'))] },
+                }]
+              }
+            ], order: [['yearFounded', sortValue]]
+          });
+        } else if (sortBy == "name") {
+          directory = await db['Company'].findAll({
+            where: { status: "approved", coType: companyType },
+            include: [
+              { model: db["BusinessActivities"], attributes: ["name"] },
+              {
+                model: db["ActivitiesOfCompany"], attributes: ["activityId"],
+                on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('ActivitiesOfCompanies.companyId'), db.Op.eq, db.sequelize.col('Company.id'))] },
+                include: [{
+                  model: db["BusinessActivities"], attributes: ["name"],
+                  on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('ActivitiesOfCompanies.activityId'), db.Op.eq, db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id'))] }
+                }]
+              }
+            ], order: [['coName', sortValue]]
+          });
         }
       }
       if (directory && directory.length > 0) {
-        return res.status(200).json({
-          result: directory,
-        });
+        return res.status(200).json({ result: directory });
       } else {
-        return res.status(404).json({
-          result: [],
-          error: "No Company found",
-        });
+        return res.status(404).json({ result: [], error: "No Company found" });
       }
     } catch (err) {
       console.log(err)
@@ -1061,65 +761,25 @@ export default class CompanyController {
       const searchValue = req.query.searchValue.trim();
       const companyType = req.params.type.trim();
 
-      const directory = await db['Company']
-        .findAll({
-          where: {
-            [db.Op.or]: [
-              { coName: { [likeOp]: "%" + searchValue + "%" } },
-              { coType: { [likeOp]: "%" + searchValue + "%" } },
-              { coWebsite: { [likeOp]: "%" + searchValue + "%" } },
-              { shortDescription: { [likeOp]: "%" + searchValue + "%" } },
-              { districtBasedIn: { [likeOp]: "%" + searchValue + "%" } },
-              { customerBase: { [likeOp]: "%" + searchValue + "%" } },
-              { officeAddress: { [likeOp]: "%" + searchValue + "%" } }
-            ],
-            status: "approved",
-            coType: companyType
-          },
-          include: [
-            {
-              model: db["BusinessActivities"],
-              attributes: ["name"]
-            },
-            {
-              model: db["ActivitiesOfCompany"],
-              attributes: ["activityId"],
-              on: {
-                [db.Op.and]: [
-                  db.sequelize.where(
-                    db.sequelize.col('ActivitiesOfCompanies.companyId'),
-                    db.Op.eq,
-                    db.sequelize.col('Company.id')
-                  )
-                ],
-              },
-              include: [{
-                model: db["BusinessActivities"],
-                attributes: ["name"],
-                on: {
-                  [db.Op.and]: [
-                    db.sequelize.where(
-                      db.sequelize.col('ActivitiesOfCompanies.activityId'),
-                      db.Op.eq,
-                      db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id')
-                    ),],
-                },
-              }]
-            }
-          ],
-          limit: 100,
-          order: [['yearFounded', 'ASC']]
-        });
+      const directory = await db['Company'].findAll({
+        where: { [db.Op.or]: [{ coName: { [likeOp]: "%" + searchValue + "%" } }, { coType: { [likeOp]: "%" + searchValue + "%" } }, { coWebsite: { [likeOp]: "%" + searchValue + "%" } }, { shortDescription: { [likeOp]: "%" + searchValue + "%" } }, { districtBasedIn: { [likeOp]: "%" + searchValue + "%" } }, { customerBase: { [likeOp]: "%" + searchValue + "%" } }, { officeAddress: { [likeOp]: "%" + searchValue + "%" } }], status: "approved", coType: companyType },
+        include: [
+          { model: db["BusinessActivities"], attributes: ["name"] },
+          {
+            model: db["ActivitiesOfCompany"], attributes: ["activityId"],
+            on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('ActivitiesOfCompanies.companyId'), db.Op.eq, db.sequelize.col('Company.id'))] },
+            include: [{
+              model: db["BusinessActivities"], attributes: ["name"],
+              on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('ActivitiesOfCompanies.activityId'), db.Op.eq, db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id'))] },
+            }]
+          }
+        ], limit: 100, order: [['yearFounded', 'ASC']]
+      });
 
       if (directory && directory.length > 0) {
-        return res.status(200).json({
-          result: directory,
-        });
+        return res.status(200).json({ result: directory });
       } else {
-        return res.status(404).json({
-          result: [],
-          error: "No Company found",
-        });
+        return res.status(404).json({ result: [], error: "No Company found" });
       }
     } catch (err) {
       console.log(err)

@@ -63,7 +63,7 @@ company.delete(
 
 /* 
  * filterBy ---   location       | activities            | year-founded
- * filterValue--  the district   | array of activity ids | a year-eg.2005 
+ * filterValue--  the district   | activity id           | a year-eg.2005 
  */
 company.get(
   "/directory/filter",
@@ -87,7 +87,7 @@ company.get(
 
 /* 
  * filterBy ---   location       | activities            | year-founded
- * filterValue--  the district   | array of activity ids | a year-eg.2005 
+ * filterValue--  the district   | activity id           | a year-eg.2005 
  * type can be enabler or Tech Company or other depending on types set for companies
  */
 company.get(

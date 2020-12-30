@@ -60,7 +60,7 @@ blog.delete(
 
 /* 
  * FilterBy ---   company       | topic                 | year
- * FilterValue--  id of company | array of activity ids | a year-eg.2020 
+ * FilterValue--  id of company | activity id           | a year-eg.2020 
  */
 blog.get(
   "/blogs/public/filter",

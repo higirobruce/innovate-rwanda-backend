@@ -31,8 +31,30 @@ async function getActivities(post_id, postType, callback) {
     });
 }
 
+async function getCompaniesIdPerActivity(activityId, callback) {
+    await db["ActivitiesOfCompany"].findAll({
+        where: { activityId: activityId }, attributes: ["companyId"], raw: true
+    }).then((companiesId) => {
+        callback(companiesId);
+    }).catch((error) => {
+        callback(-1);
+    });
+}
+
+async function getPostsIdPerActivity(type, activityId, callback) {
+    await db["AudienceForPost"].findAll({
+        where: { typeOfPost: type, activityId: activityId }, attributes: ["postId"], raw: true
+    }).then((postsId) => {
+        callback(postsId);
+    }).catch((error) => {
+        callback(-1);
+    });
+}
+
 module.exports = {
     generateSlug: generateSlug,
     getCompanyEmail: getCompanyEmail,
-    getActivities: getActivities
+    getActivities: getActivities,
+    getCompaniesIdPerActivity: getCompaniesIdPerActivity,
+    getPostsIdPerActivity: getPostsIdPerActivity
 };
