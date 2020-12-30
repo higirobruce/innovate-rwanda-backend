@@ -38,4 +38,10 @@ generic.get(
     GenericController.getCountsNew
 );
 
+// Search: Directory, Blogs, Events, Jobs
+generic.get(
+    "/search",
+    GenericController.search
+);
+
 export default generic;

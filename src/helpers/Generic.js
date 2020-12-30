@@ -92,11 +92,157 @@ async function deleteCompany(companyData, callback) {
     }
 }
 
+async function searchDirectory(searchValue, callback) {
+    const likeOp = db.Op.iLike;
+    const response = new Array(2);
+    try {
+        const directory = await db['Company'].findAll({
+            where: { [db.Op.or]: [{ coName: { [likeOp]: "%" + searchValue + "%" } }, { coType: { [likeOp]: "%" + searchValue + "%" } }, { coWebsite: { [likeOp]: "%" + searchValue + "%" } }, { shortDescription: { [likeOp]: "%" + searchValue + "%" } }, { districtBasedIn: { [likeOp]: "%" + searchValue + "%" } }, { customerBase: { [likeOp]: "%" + searchValue + "%" } }, { officeAddress: { [likeOp]: "%" + searchValue + "%" } }], status: "approved" },
+            include: [
+                { model: db["BusinessActivities"], attributes: ["name"] },
+                {
+                    model: db["ActivitiesOfCompany"], attributes: ["activityId"],
+                    on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('ActivitiesOfCompanies.companyId'), db.Op.eq, db.sequelize.col('Company.id'))] },
+                    include: [{
+                        model: db["BusinessActivities"], attributes: ["name"],
+                        on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('ActivitiesOfCompanies.activityId'), db.Op.eq, db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id'))] },
+                    }]
+                }
+            ], limit: 100, order: [['yearFounded', 'ASC']]
+        });
+
+        if (directory && directory.length > 0) {
+            response[0] = 200;
+            response[1] = { result: directory };
+        } else {
+            response[0] = 404;
+            response[1] = { result: [], error: "No Company found" };
+        }
+        callback(response);
+    } catch (err) {
+        console.log(err)
+        response[0] = 400;
+        response[1] = { message: " Directory not got at this moment" };
+        callback(response);
+    }
+}
+
+async function searchForBlogs(searchValue, callback) {
+    const likeOp = db.Op.iLike;
+    const response = new Array(2);
+    try {
+        const blogs = await db['Blog'].findAll({
+            where: { [db.Op.or]: [{ title: { [likeOp]: "%" + searchValue + "%" } }, { content: { [likeOp]: "%" + searchValue + "%" } }, { category: { [likeOp]: "%" + searchValue + "%" } }], status: "approved" },
+            include: [
+                { model: db["Company"], attributes: [["coName", "companyName"]] },
+                { model: db["User"], attributes: ["firstName", "lastName"] },
+                {
+                    model: db["AudienceForPost"], attributes: [["activityId", "activity"]],
+                    on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('Blog.id'), db.Op.eq, db.sequelize.col('AudienceForPosts.postId')), db.sequelize.where(db.sequelize.col('AudienceForPosts.typeOfPost'), db.Op.eq, 'blog')] },
+                    include: [{
+                        model: db["BusinessActivities"], attributes: ["name"],
+                        on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('AudienceForPosts.activityId'), db.Op.eq, db.sequelize.col('AudienceForPosts->BusinessActivity.id'))] }
+                    }]
+                }
+            ], limit: 10, order: [['title', 'ASC']]
+        });
+
+        if (blogs && blogs.length > 0) {
+            response[0] = 200;
+            response[1] = { result: blogs };
+        } else {
+            response[0] = 404;
+            response[1] = { result: [], error: "No Blog found" };
+        }
+        callback(response);
+    } catch (err) {
+        console.log(err)
+        response[0] = 400;
+        response[1] = { message: " List of Blogs not got at this moment" };
+        callback(response);
+    }
+}
+
+async function searchForEvents(searchValue, callback) {
+    const likeOp = db.Op.iLike;
+    const response = new Array(2);
+    try {
+        const events = await db['Event'].findAll({
+            where: { [db.Op.or]: [{ title: { [likeOp]: "%" + searchValue + "%" } }, { description: { [likeOp]: "%" + searchValue + "%" } }, { category: { [likeOp]: "%" + searchValue + "%" } }], status: "approved" },
+            include: [
+              { model: db["Company"], attributes: [["coName", "companyName"]] },
+              { model: db["User"], attributes: ["firstName", "lastName"] },
+              {
+                model: db["AudienceForPost"], attributes: [["activityId", "activity"]],
+                on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('Event.id'), db.Op.eq, db.sequelize.col('AudienceForPosts.postId')), db.sequelize.where(db.sequelize.col('AudienceForPosts.typeOfPost'), db.Op.eq, 'event')] },
+                include: [{
+                  model: db["BusinessActivities"], attributes: ["name"],
+                  on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('AudienceForPosts.activityId'), db.Op.eq, db.sequelize.col('AudienceForPosts->BusinessActivity.id'))] },
+                }]
+              }
+            ], limit: 10, order: [['title', 'ASC']]
+          });
+  
+        if (events && events.length > 0) {
+            response[0] = 200;
+            response[1] = { result: events };
+        } else {
+            response[0] = 404;
+            response[1] = { result: [], error: "No Event found" };
+        }
+        callback(response);
+      } catch (err) {
+        console.log(err)
+        response[0] = 400;
+        response[1] = { message: "  List of Events not got at this moment" };
+        callback(response);
+      }
+}
+
+async function searchForJobs(searchValue, callback) {
+    const likeOp = db.Op.iLike;
+    const response = new Array(2);
+    try {
+        const jobs = await db['Job'].findAll({
+            where: { [db.Op.or]: [{ title: { [likeOp]: "%" + searchValue + "%" } }, { description: { [likeOp]: "%" + searchValue + "%" } }, { category: { [likeOp]: "%" + searchValue + "%" } }], status: "approved" },
+            include: [
+              { model: db["Company"], attributes: ["logo", ["coName", "companyName"]] },
+              {
+                model: db["AudienceForPost"], attributes: [["activityId", "activity"]],
+                on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('Job.id'), db.Op.eq, db.sequelize.col('AudienceForPosts.postId')), db.sequelize.where(db.sequelize.col('AudienceForPosts.typeOfPost'), db.Op.eq, 'job')] },
+                include: [{
+                  model: db["BusinessActivities"], attributes: ["name"],
+                  on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('AudienceForPosts.activityId'), db.Op.eq, db.sequelize.col('AudienceForPosts->BusinessActivity.id'))] }
+                }]
+              },
+            ], limit: 10, order: [['title', 'ASC']]
+          });
+  
+        if (jobs && jobs.length > 0) {
+            response[0] = 200;
+            response[1] = { result: jobs };
+        } else {
+            response[0] = 404;
+            response[1] = { result: [], error: "No Job found" };
+        }
+        callback(response);
+      } catch (err) {
+        console.log(err)
+        response[0] = 400;
+        response[1] = { message: " List of Jobs not got at this moment" };
+        callback(response);
+      }
+}
+
 module.exports = {
     generateSlug: generateSlug,
     getCompanyEmail: getCompanyEmail,
     getActivities: getActivities,
     getCompaniesIdPerActivity: getCompaniesIdPerActivity,
     getPostsIdPerActivity: getPostsIdPerActivity,
-    deleteCompany:deleteCompany
+    deleteCompany: deleteCompany,
+    searchDirectory: searchDirectory,
+    searchForBlogs: searchForBlogs,
+    searchForEvents: searchForEvents,
+    searchForJobs: searchForJobs
 };

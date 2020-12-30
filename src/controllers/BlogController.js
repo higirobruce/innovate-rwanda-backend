@@ -510,34 +510,9 @@ export default class BlogController {
   }
 
   static async searchForBlogs(req, res) {
-    try {
-      const likeOp = db.Op.iLike;
-      const searchValue = req.query.searchValue.trim();
-
-      const blogs = await db['Blog'].findAll({
-        where: { [db.Op.or]: [{ title: { [likeOp]: "%" + searchValue + "%" } }, { content: { [likeOp]: "%" + searchValue + "%" } }, { category: { [likeOp]: "%" + searchValue + "%" } }], status: "approved" },
-        include: [
-          { model: db["Company"], attributes: [["coName", "companyName"]] },
-          { model: db["User"], attributes: ["firstName", "lastName"] },
-          {
-            model: db["AudienceForPost"], attributes: [["activityId", "activity"]],
-            on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('Blog.id'), db.Op.eq, db.sequelize.col('AudienceForPosts.postId')), db.sequelize.where(db.sequelize.col('AudienceForPosts.typeOfPost'), db.Op.eq, 'blog')] },
-            include: [{
-              model: db["BusinessActivities"], attributes: ["name"],
-              on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('AudienceForPosts.activityId'), db.Op.eq, db.sequelize.col('AudienceForPosts->BusinessActivity.id'))] }
-            }]
-          }
-        ], limit: 10, order: [['title', 'ASC']]
-      });
-
-      if (blogs && blogs.length > 0) {
-        return res.status(200).json({ result: blogs });
-      } else {
-        return res.status(404).json({ result: [], error: "No Blog found" });
-      }
-    } catch (err) {
-      console.log(err)
-      return res.status(400).send({ message: " List of Blogs not got at this moment" });
-    }
+    const searchValue = req.query.searchValue.trim();
+    generic.searchForBlogs(searchValue, function (result) {
+      return res.status(result[0]).send(result[1]);
+    })
   }
 }

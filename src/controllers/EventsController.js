@@ -512,34 +512,9 @@ export default class EvenController {
   }
 
   static async searchForEvents(req, res) {
-    try {
-      const likeOp = db.Op.iLike;
-      const searchValue = req.query.searchValue.trim();
-
-      const events = await db['Event'].findAll({
-        where: { [db.Op.or]: [{ title: { [likeOp]: "%" + searchValue + "%" } }, { description: { [likeOp]: "%" + searchValue + "%" } }, { category: { [likeOp]: "%" + searchValue + "%" } }], status: "approved" },
-        include: [
-          { model: db["Company"], attributes: [["coName", "companyName"]] },
-          { model: db["User"], attributes: ["firstName", "lastName"] },
-          {
-            model: db["AudienceForPost"], attributes: [["activityId", "activity"]],
-            on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('Event.id'), db.Op.eq, db.sequelize.col('AudienceForPosts.postId')), db.sequelize.where(db.sequelize.col('AudienceForPosts.typeOfPost'), db.Op.eq, 'event')] },
-            include: [{
-              model: db["BusinessActivities"], attributes: ["name"],
-              on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('AudienceForPosts.activityId'), db.Op.eq, db.sequelize.col('AudienceForPosts->BusinessActivity.id'))] },
-            }]
-          }
-        ], limit: 10, order: [['title', 'ASC']]
-      });
-
-      if (events && events.length > 0) {
-        return res.status(200).json({ result: events });
-      } else {
-        return res.status(404).json({ result: [], error: "No Event found" });
-      }
-    } catch (err) {
-      console.log(err)
-      return res.status(400).send({ message: " List of Events not got at this moment" });
-    }
+    const searchValue = req.query.searchValue.trim();
+    generic.searchForEvents(searchValue, function (result) {
+      return res.status(result[0]).send(result[1]);
+    })
   }
 }

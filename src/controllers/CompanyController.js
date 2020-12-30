@@ -727,34 +727,10 @@ export default class CompanyController {
   }
 
   static async searchDirectory(req, res) {
-    try {
-      const likeOp = db.Op.iLike;
-      const searchValue = req.query.searchValue.trim();
-
-      const directory = await db['Company'].findAll({
-        where: { [db.Op.or]: [{ coName: { [likeOp]: "%" + searchValue + "%" } }, { coType: { [likeOp]: "%" + searchValue + "%" } }, { coWebsite: { [likeOp]: "%" + searchValue + "%" } }, { shortDescription: { [likeOp]: "%" + searchValue + "%" } }, { districtBasedIn: { [likeOp]: "%" + searchValue + "%" } }, { customerBase: { [likeOp]: "%" + searchValue + "%" } }, { officeAddress: { [likeOp]: "%" + searchValue + "%" } }], status: "approved" },
-        include: [
-          { model: db["BusinessActivities"], attributes: ["name"] },
-          {
-            model: db["ActivitiesOfCompany"], attributes: ["activityId"],
-            on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('ActivitiesOfCompanies.companyId'), db.Op.eq, db.sequelize.col('Company.id'))] },
-            include: [{
-              model: db["BusinessActivities"], attributes: ["name"],
-              on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('ActivitiesOfCompanies.activityId'), db.Op.eq, db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id'))] },
-            }]
-          }
-        ], limit: 100, order: [['yearFounded', 'ASC']]
-      });
-
-      if (directory && directory.length > 0) {
-        return res.status(200).json({ result: directory });
-      } else {
-        return res.status(404).json({ result: [], error: "No Company found" });
-      }
-    } catch (err) {
-      console.log(err)
-      return res.status(400).send({ message: " Directory not got at this moment" });
-    }
+    const searchValue = req.query.searchValue.trim();
+    generic.searchDirectory(searchValue, function (result) {
+      return res.status(result[0]).send(result[1]);
+    })
   }
 
   static async getDirectoryFilteredByType(req, res) {//location       | activity            | year-founded
