@@ -12,6 +12,7 @@ import companyTypes from "./companyTypes";
 import activitiesOfCompany from "./activitiesOfCompany";
 import audienceForPost from "./audienceForPost";
 import companyCategories from "./companyCategories";
+import eventsTypes from "./eventsTypes";
 
 const router = express.Router();
 
@@ -28,5 +29,6 @@ router.use("/", companyTypes);
 router.use("/", activitiesOfCompany);
 router.use("/", audienceForPost);
 router.use("/", companyCategories);
+router.use("/", eventsTypes);
 
 export default router;

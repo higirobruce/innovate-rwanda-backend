@@ -11,6 +11,7 @@ const config = {
     host: process.env.DB_HOST_DEV,
     dialect: 'postgres',
     port: process.env.DB_PORT_DEV,
+    "seederStorage": "sequelize",
     dialectOptions: {
       ssl: {
         require: true,
