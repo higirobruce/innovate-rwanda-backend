@@ -43,6 +43,17 @@ async function getCompaniesIdPerActivity(activityId, callback) {
     });
 }
 
+async function getSimilarCompaniesId(companyId, activities, callback) {
+    await db["ActivitiesOfCompany"].findAll({
+        where: { companyId: { [db.Op.not]: companyId }, activityId: { [db.Op.in]: activities } },
+        attributes: ["companyId"], raw: true
+    }).then((similarCompaniesId) => {
+        callback(similarCompaniesId);
+    }).catch((error) => {
+        callback(-1);
+    });
+}
+
 async function getPostsIdPerActivity(type, activityId, callback) {
     await db["AudienceForPost"].findAll({
         where: { typeOfPost: type, activityId: activityId }, 
@@ -244,5 +255,6 @@ module.exports = {
     searchDirectory: searchDirectory,
     searchForBlogs: searchForBlogs,
     searchForEvents: searchForEvents,
-    searchForJobs: searchForJobs
+    searchForJobs: searchForJobs,
+    getSimilarCompaniesId:getSimilarCompaniesId
 };

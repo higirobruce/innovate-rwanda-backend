@@ -63,7 +63,7 @@ export default class genericController {
       if (error instanceof UniqueConstraintError) {
         return res.status(409).send({ error: "Activity already added for the company" });
       }
-      console.log(err)
+      console.log(error)
       return res.status(400).send({ message: "Activity not added at this moment" });
     }
   }
