@@ -21,6 +21,13 @@ job.put(
   JobController.approveOrDeclineJobPost
 );
 
+job.put(
+  "/jobs/manage",
+  auth.verifyToken,
+  checkPermissions("admin-job"),
+  JobController.manageJobPost
+);
+
 job.get(
   "/jobs/public",
   JobController.getApprovedJobsList

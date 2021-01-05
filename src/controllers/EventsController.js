@@ -68,6 +68,44 @@ export default class EvenController {
       })
   }
 
+  static async manageEventPost(req, res) {
+    const decision = req.body.decision;
+    await db["Event"].findOne({ where: { id: req.body.id, status: { [db.Op.not]: decision } }, attributes: ["id", "title", "description", "flyer", "companyId","messages"] })
+      .then((event) => {
+        if (event) {
+          var response;
+          if (req.body.message) {
+            if (event.messages) {
+              event.messages[event.messages.length] = req.body.message;
+            } else {
+              event.messages = [];
+              event.messages[0] = req.body.message;
+            }
+            response = event.update({ status: decision, messages: event.messages });
+          } else {
+            response = event.update({ status: decision });
+          }
+          if (response) {
+            if (decision == "approved") {
+              const parameters = { id: req.body.id, title: event.title, description: event.description, file_name: event.flyer, format: "Event", companyId: event.companyId };
+              notification.notify("post approval", parameters, function (resp) {
+                return res.status(200).json({ message: resp });
+              });
+            } else {
+              res.status(200).json({ message: "Event " + decision })
+            }
+          } else {
+            res.status(404).json({ message: "Action Failed" });
+          }
+        } else {
+          res.status(404).json({ message: "Event could have been already treated" });
+        }
+      }).catch((err) => {
+        console.log(err)
+        return res.status(400).send({ message: "Sorry, Action failed" });
+      })
+  }
+
   static async getApprovedEventsList(req, res) {
     try {
       const eventPosts = await db["Event"].findAll({

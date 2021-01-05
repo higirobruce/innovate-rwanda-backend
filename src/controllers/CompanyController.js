@@ -101,7 +101,45 @@ export default class CompanyController {
       return res.status(400).send({ message: "Decision not set at this moment" });
     }
   }
-
+  
+  static async manageCompany(req, res) {
+    try {
+      var company = await db["Company"].findOne({
+        where: { id: req.body.id }
+      });
+      if (company) {
+        const decision = req.body.decision;
+        var response;
+        if (req.body.message) {
+          if (company.messages) {
+            company.messages[company.messages.length] = req.body.message;
+          } else {
+            company.messages = [];
+            company.messages[0] = req.body.message;
+          }
+          response = await company.update({
+            status: decision,
+            messages: company.messages
+          });
+        } else {
+          response = await company.update(
+            { status: decision }
+          );
+        }
+        if (response) {
+          return res.status(200).json({ message: "Company " + decision })
+        } else {
+          return res.status(404).json({ message: " Something is wrong, please confirm input provided is okay " })
+        }
+      } else {
+        return res.status(404).json({ message: " The mentioned company was not found " })
+      }
+    } catch (error) {
+      console.log(error)
+      return res.status(400).send({ message: "Decision not set at this moment" });
+    };
+  }
+     
   static async getCompanyInfo(req, res) {
     try {
       const company = await db["Company"].findOne({

@@ -30,6 +30,13 @@ company.put(
   CompanyController.approveOrDeclineCompany
 );
 
+company.put(
+  "/company/manage",
+  auth.verifyToken,
+  checkPermissions("admin-company"),
+  CompanyController.manageCompany
+);
+
 company.get(
   "/company/my-company",
   auth.verifyToken,

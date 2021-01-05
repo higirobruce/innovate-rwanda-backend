@@ -21,6 +21,13 @@ blog.put(
   BlogController.approveOrDeclineBlogPost
 );
 
+blog.put(
+  "/blog/manage",
+  auth.verifyToken,
+  checkPermissions("admin-blog"),
+  BlogController.manageBlogPost
+);
+
 blog.get(
   "/blog/public",
   BlogController.getApprovedBlogsList

@@ -21,6 +21,13 @@ events.put(
   EventsController.approveOrDeclineEventPost
 );
 
+events.put(
+  "/events/manage",
+  auth.verifyToken,
+  checkPermissions("admin-event"),
+  EventsController.manageEventPost
+);
+
 events.get(
   "/events/public",
   EventsController.getApprovedEventsList

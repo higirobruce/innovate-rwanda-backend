@@ -14,6 +14,7 @@ module.exports = (sequelize, DataTypes) => {
     deadlineDate: DataTypes.DATE,
     deadlineTime: DataTypes.TIME,
     jobDetailsDocument: DataTypes.STRING,
+    messages: DataTypes.ARRAY(DataTypes.TEXT),
     status: DataTypes.STRING
   }, {
     sequelize,

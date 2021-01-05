@@ -67,6 +67,44 @@ export default class JobController {
       })
   }
 
+  static async manageJobPost(req, res) {
+    const decision = req.body.decision;
+    await db["Job"].findOne({ where: { id: req.body.jobId, status: { [db.Op.not]: decision } }, attributes: ["id", "title", "description", "companyId","messages"] })
+      .then((job) => {
+        if (job) {
+          var response;
+          if (req.body.message) {
+            if (job.messages) {
+              job.messages[job.messages.length] = req.body.message;
+            } else {
+              job.messages = [];
+              job.messages[0] = req.body.message;
+            }
+            response = job.update({ status: decision, messages: job.messages });
+          } else {
+            response = job.update({ status: decision });
+          }
+          if (response) {
+            if (decision == "approved") {
+              const parameters = { id: req.body.jobId, title: job.title, description: job.description, file_name: "", format: "Job", companyId: job.companyId };
+              notification.notify("post approval", parameters, function (resp) {
+                return res.status(200).json({ message: resp });
+              });
+            } else {
+              res.status(200).json({ message: "Job " + decision })
+            }
+          } else {
+            res.status(404).json({ message: "Action Failed" });
+          }
+        } else {
+          res.status(404).json({ message: "Job could have been already treated" });
+        }
+      }).catch((err) => {
+        console.log(err)
+        return res.status(400).send({ message: "Sorry, Action failed" });
+      })
+  }
+
   static async getApprovedJobsList(req, res) {
     try {
       const jobPosts = await db["Job"].findAll({

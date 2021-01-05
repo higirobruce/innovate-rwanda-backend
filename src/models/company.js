@@ -37,6 +37,7 @@ module.exports = (sequelize, DataTypes) => {
     phoneDisplay: DataTypes.BOOLEAN,
     officeAddress: DataTypes.STRING,
     slug: DataTypes.STRING,
+    messages: DataTypes.ARRAY(DataTypes.TEXT),
     status: DataTypes.STRING
   }, {
     sequelize,

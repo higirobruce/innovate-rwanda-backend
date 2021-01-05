@@ -67,6 +67,45 @@ export default class BlogController {
       })
   }
 
+  static async manageBlogPost(req, res) {
+    const decision = req.body.decision;
+    await db["Blog"].findOne({ where: { id: req.body.blogId, status: { [db.Op.not]: decision } }, attributes: ["id", "title", "content", "image", "companyId", "messages"] })
+      .then((blog) => {
+        if (blog) {
+          console.log(blog)
+          var response;
+          if (req.body.message) {
+            if (blog.messages) {
+              blog.messages[blog.messages.length] = req.body.message;
+            } else {
+              blog.messages = [];
+              blog.messages[0] = req.body.message;
+            }
+            response = blog.update({ status: decision, messages: blog.messages });
+          } else {
+            response = blog.update({ status: decision });
+          }
+          if (response) {
+            if (decision == "approved") {
+              const parameters = { id: req.body.blogId, title: blog.title, description: blog.content, file_name: blog.image, format: "Blog", companyId: blog.companyId };
+              notification.notify("post approval", parameters, function (resp) {
+                return res.status(200).json({ message: resp });
+              });
+            } else {
+              res.status(200).json({ message: "Blog " + decision })
+            }
+          } else {
+            res.status(404).json({ message: "Action Failed" });
+          }
+        } else {
+          res.status(404).json({ message: "Blog  could have been already treated" });
+        }
+      }).catch((err) => {
+        console.log(err)
+        return res.status(400).send({ message: "Sorry, Action failed" });
+      })
+  }
+
   static async getApprovedBlogsList(req, res) {
     try {
       const blogPosts = await db["Blog"].findAll({
