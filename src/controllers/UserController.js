@@ -8,48 +8,26 @@ const saltRounds = 10;
 
 export default class UserController {
   static async getUsersList(req, res, next) {
-    db["User"]
-      .findAll({
-        attributes: [
-          "id",
-          "firstName",
-          "lastName",
-          "email",
-          "jobTitle",
-          "role",
-          "companyId",
-          "status",
-          "lastActivity",
-          "createdAt"
-        ],
-        order: [["createdAt", "DESC"]],
-      })
-      .then((users) => {
-        res.status(200).send({
-          result: users,
-        });
-      })
-      .catch((err) => {
-        console.log(err);
-        return res.status(401).send({
-          message: "list of users not got",
-        });
-      });
+    await db["User"].findAll({
+      attributes: ["id", "firstName", "lastName", "email", "jobTitle", "role", "companyId", "status", "lastActivity", "createdAt"],
+      order: [["createdAt", "DESC"]]
+    }).then((users) => {
+      res.status(200).send({ result: users });
+    }).catch((err) => {
+      console.log(err);
+      return res.status(401).send({ message: "list of users not got" });
+    });
   }
 
   static async getUserProfile(req, res) {
     await db["User"].findOne({
-      where: { email: req.user.email }, attributes: { exclude: ["password","companyId", "resetLink", "lastActivity"] }
-      }).then((user) => {
-        res.status(200).send({
-          result: user
-        });
-      }).catch((err) => {
-        console.log(err);
-        return res.status(401).send({
-          message: "Profile not got",
-        });
-      });
+      where: { id: req.user.id }, attributes: { exclude: ["password", "companyId", "resetLink", "lastActivity"] }
+    }).then((user) => {
+      res.status(200).send({ result: user });
+    }).catch((err) => {
+      console.log(err);
+      return res.status(401).send({ message: "Profile not got" });
+    });
   }
 
   static async register(req, res) {
@@ -367,22 +345,10 @@ export default class UserController {
 
   static async changeRole(req, res) {
     try {
-      const response = await db['User']
-        .update(
-          { role: req.body.role },
-          {
-            where: {
-              id: req.params.userId,
-            },
-          }
-        );
-      return response
-        ? res.status(200).json({
-          message: "User's role changed successfully"
-        })
-        : res.status(404).json({
-          error: "Sorry, role change failed..Try again"
-        });
+      const response = await db['User'].update(
+          { role: req.body.role }, { where: { id: req.params.userId } });
+      return response ? res.status(200).json({ message: "User's role changed successfully" })
+                      : res.status(404).json({ error: "Sorry, role change failed..Try again" });
     } catch (err) {
       console.log(err)
       return res.status(400).send({ message: "Sorry, role change failed..Try again" });
@@ -425,6 +391,40 @@ export default class UserController {
     } catch (err) {
       console.log(err)
       return res.status(400).send({ message: " List of Messages not got at this moment" });
+    }
+  }
+
+  static async editProfile(req, res) {
+    try {
+      var values = {};
+      if (req.body.firstName) {
+        values.firstName = req.body.firstName;
+      } 
+      if (req.body.lastName) {
+        values.lastName = req.body.lastName;
+      } 
+      if (req.body.email) {
+        values.email = req.body.email;
+      } 
+      if (req.body.jobTitle) {
+        values.jobTitle = req.body.jobTitle;
+      }
+
+      if(Object.entries(values).length === 0) {
+        res.status(404).json({ error: "Profile change failed, allowed to change here names, email and job title" })
+      } else {
+        const response = await db['User'].update(values, { where: { id: req.user.id } });
+        if (response == 1) {
+          res.status(200).json({ message: "Profile change successfully" })
+        } else {
+          res.status(404).json({ error: "Profile change failed, please confirm input and try again" });
+        }
+      }
+    } catch (error) {
+      if (error instanceof UniqueConstraintError) {
+        return res.status(409).send({ error: "Email already used for a company on the system, Please use a different email", field: error.errors[0].path });
+      }
+      return res.status(400).send({ message: "Sorry, profile change failed... Try again later" });
     }
   }
 }

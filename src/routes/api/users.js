@@ -44,6 +44,12 @@ users.get(
 );
 
 users.put(
+  "/profile/edit",
+  auth.verifyToken,
+  userController.editProfile
+);
+
+users.put(
   "/users/change-role/:userId",
   auth.verifyToken,
   checkPermissions("admin-user"),
