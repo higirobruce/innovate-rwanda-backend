@@ -115,13 +115,15 @@ async function postApproval(parameters) {
   })
 
   const destination = await Mail_Destination.subscriber_dirPerActivity(activities)
-  if (destination != -1) {
+  if (destination != -1 && destination != 0) {
     if (parameters.description.length > 250)
+    {
       parameters.description = parameters.description.substr(0, 250)
+    }
     return {
       destination: destination.notifList,
       subject: parameters.title,
-      content: `${parameters.description} <a href="${process.env.APP_URL}/blog/info/${parameters.id}">read more</a>`,
+      content: `${parameters.description} <a href="${process.env.APP_URL}/${parameters.format.toLowerCase()}/info/${parameters.id}">read more</a>`,
       title: parameters.title,
       file_name: parameters.file_name,
       format: parameters.format,

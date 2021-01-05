@@ -31,10 +31,10 @@ async function email_list_perActivity(business_activities) {
       });
 
     for (var i = 0; i < directoryEmails.length; i++) {
-      email = Object.values(directoryEmails[i])[1];
+      email = Object.values(directoryEmails[i])[2];
       if (email) {
         emails.push(email);
-        co_ids.push(Object.values(directoryEmails[i])[2])
+        co_ids.push(Object.values(directoryEmails[i])[3])
       }
     }
 
@@ -56,17 +56,19 @@ async function subscriber_dirPerActivity(business_activities) {
     if (business_activities && business_activities.length > 0) {
       directory_emails = await email_list_perActivity(business_activities);
     }
-
     if (subscription_emails != 0 && subscription_emails != -1) {
-      if (directory_emails.directory_email_list.length > 0 && directory_emails != -1) {
+      if (directory_emails && directory_emails.directory_email_list.length > 0 && directory_emails != -1) {
         notifList = subscription_emails.concat(",", directory_emails.directory_email_list);
+        return { notifList: notifList, co_ids: Array.from(new Set(directory_emails.co_ids)) };
       } else {
         notifList = subscription_emails;
+        return { notifList: notifList, co_ids: 0 };
       }
-    } else if (directory_emails.directory_email_list.length > 0 && directory_emails != -1) {
+    } else if (directory_emails && directory_emails.directory_email_list.length > 0 && directory_emails != -1) {
       notifList = directory_emails.directory_email_list;
+      return { notifList: notifList, co_ids: Array.from(new Set(directory_emails.co_ids)) };
     }
-    return { notifList: notifList, co_ids: directory_emails.co_ids };
+    return 0;
   } catch (error) {
     return -1;
   }

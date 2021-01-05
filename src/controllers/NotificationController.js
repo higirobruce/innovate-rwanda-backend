@@ -9,13 +9,18 @@ export default class NotificationController {
           case "Event":
           case "Blog":
           case "Job":
+
             if (mail[i].co_ids && mail[i].co_ids.length > 0) {
+              var notifications = [];
               for (var j = 0; j < mail[i].co_ids.length; j++) {
-                await db['Notification'].create({
+                notifications.push({
                   companyId: mail[i].co_ids[j],
                   subject: mail[i].subject,
                   content: mail[i].content,
                 });
+              }
+              if (notifications.length > 0) {
+                await db['Notification'].bulkCreate(notifications)
               }
             }
             await db['Notification'].create({
