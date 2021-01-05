@@ -37,6 +37,12 @@ users.get(
   userController.getUsersList
 );
 
+users.get(
+  "/profile",
+  auth.verifyToken,
+  userController.getUserProfile
+);
+
 users.put(
   "/users/change-role/:userId",
   auth.verifyToken,

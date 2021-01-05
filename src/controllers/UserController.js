@@ -37,6 +37,21 @@ export default class UserController {
       });
   }
 
+  static async getUserProfile(req, res) {
+    await db["User"].findOne({
+      where: { email: req.user.email }, attributes: { exclude: ["password","companyId", "resetLink", "lastActivity"] }
+      }).then((user) => {
+        res.status(200).send({
+          result: user
+        });
+      }).catch((err) => {
+        console.log(err);
+        return res.status(401).send({
+          message: "Profile not got",
+        });
+      });
+  }
+
   static async register(req, res) {
     try {
       await db.sequelize.transaction(async (t) => {
