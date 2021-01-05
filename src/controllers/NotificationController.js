@@ -47,7 +47,7 @@ export default class NotificationController {
       const user = req.user;
       const notifications = await db['Notification'].findAll({
         where: { companyId: user.companyId, },
-        attributes: ["id", "subject", "content"],
+        attributes: ["id", "subject", "content", "createdAt", "firstread"],
         order: [['createdAt', 'DESC']]
       });
       if (notifications && notifications.length > 0) {
