@@ -23,10 +23,10 @@ export default class genericController {
   static async getCountsNew(req, res) {
     try {
       const newNotifications = await db['Notification'].count({
-        where: { companyId:req.user.companyId, firstread: { $eq: null } }
+        where: { companyId:req.user.companyId, firstread: null }
       });
       const newMessages= await db['Message'].count({
-        where: { companyId:req.user.companyId, firstread: { $eq: null } }
+        where: { companyId:req.user.companyId, firstread: null }
       });
       return res.status(200).json({ result: { newNotifications, newMessages } })
     } catch (err) {
