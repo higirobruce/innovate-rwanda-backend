@@ -27,7 +27,7 @@ function accountActivation(parameters) {
 
 function firstLogin(parameters) {
   const subject = "Welcome to Innovate Rwanda",
-    content = `Thank you ${parameters.firstName} ${parameters.lastName} for login in Innovate Rwanda. For the next step you may complete your company profile.`;
+    content = `Thank you ${parameters.firstName} ${parameters.lastName} for login in Innovate Rwanda. For the next step, complete your company's profile under My Company.`;
   return {
     companyId: parameters.companyId,
     subject: subject,
@@ -72,9 +72,9 @@ function subscription(parameters) {
   }
 }
 
-function emailToSender(parameters) {
+function emailToSender(parameters, contactedCompany) {
   const subject = "Thanks for contacting us",
-    content = "The email is checked regularly during business hours. We’ll get back to you as soon as possible.";
+    content = "The email is checked regularly during business hours. We’ll get back to you as soon as possible.<br><br>Regards,<br>" + contactedCompany;
   return {
     destination: parameters.email,
     subject: subject,
@@ -82,29 +82,22 @@ function emailToSender(parameters) {
   }
 }
 
-async function emailToReceiver(parameters, callback) {
-  await generic.getCompanyEmail(parameters.companyId, function (resp) {
-    if (resp != -1 || resp != 0) {
-      callback({
-        destination: resp,
-        subject: "You got a new message from " + parameters.email,
-        content: "The message is: " + parameters.message
-      });
-    } else {
-      callback(resp);
-    }
-  });
+function emailToReceiver(parameters, contactedCompanyEmail) {
+  return {
+    destination: contactedCompanyEmail,
+    subject: "You got a new message from " + parameters.email,
+    content: "The message is: " + parameters.message
+  }
 }
 
 async function messagePost(parameters) {
   var mails = new Array();
-  mails[0] = await emailToSender(parameters);
-
-  await emailToReceiver(parameters, function (rcvMail) {
-    if (rcvMail != -1 || rcvMail != 0) {
-      mails[1] = rcvMail;
+  await generic.getCompanyDetails(parameters.companyId, function (resp) {
+    if (resp != -1 || resp != 0) {
+      mails[0] = emailToSender(parameters, resp.coName);
+      mails[1] = emailToReceiver(parameters, resp.contactEmail);
     }
-  })
+  });
   return mails;
 }
 

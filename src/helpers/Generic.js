@@ -4,15 +4,15 @@ function generateSlug(company_name) {
     return company_name.trim().replace(/ /g, "-").toLowerCase();
 }
 
-async function getCompanyEmail(company_id, callback) {
+async function getCompanyDetails(company_id, callback) {
     await db["Company"].findOne({
         where: { id: company_id },
-        attributes: ["contactEmail"]
-    }).then((company) => {
-        if (company) {
-            if (company.contactEmail) {
-                callback(company.contactEmail);
-            }
+        attributes: ["coName", "contactEmail"]
+    }).then((details) => {
+        if (details) {
+            callback(details);
+        } else {
+            callback(0);
         }
     }).catch((error) => {
         callback(-1);
@@ -247,7 +247,7 @@ async function searchForJobs(searchValue, callback) {
 
 module.exports = {
     generateSlug: generateSlug,
-    getCompanyEmail: getCompanyEmail,
+    getCompanyDetails: getCompanyDetails,
     getActivities: getActivities,
     getCompaniesIdPerActivity: getCompaniesIdPerActivity,
     getPostsIdPerActivity: getPostsIdPerActivity,
