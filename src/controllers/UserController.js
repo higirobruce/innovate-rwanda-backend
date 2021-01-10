@@ -46,9 +46,7 @@ export default class UserController {
             }, { transaction: t });
 
             const hashPassword = bcrypt.hashSync(req.body.password, saltRounds);
-            const token = jwt.sign({ _id: req.body.email }, process.env.ACCOUNT_ACTIVATION_KEY, {
-              expiresIn: '1h',
-            });
+            const token = jwt.sign({ _id: req.body.email }, process.env.ACCOUNT_ACTIVATION_KEY, {});
 
             db["User"].create({
               firstName: req.body.firstName, lastName: req.body.lastName, email: req.body.email,
@@ -88,6 +86,7 @@ export default class UserController {
           });
       });
     } catch (error) {
+      
       return res.status(401).send({ error: "Error occurred" });
     }
   }
@@ -123,14 +122,14 @@ export default class UserController {
   static async login(req, res, next) 
   {
     await db["User"].findOne({
-      where: { email: req.body.email.trim(), status: "active" }
+      where: { email: req.body.email.trim() }
     }).then((user) => {
 
       if (!user) {
-        return res.status(403).send({
-          message:
-            "Invalid email, password or company information or Account not activated, check your email"
-        });
+        return res.status(403).send({ message: "Invalid email or Account not activated, check your email" });
+      }
+      if (user.status != "active") {
+        return res.status(403).send({ message: "You haven't activated your account, or the account is not active; please check email for activation link" });
       }
       if (!user.lastActivity && user.role == "normal") {
         notification.notify("first login",
@@ -151,7 +150,7 @@ export default class UserController {
               res.locals.companyInfo = company;
             }
             next();
-          }).catch((error) => {
+          }).catch((err) => {
             res.status(403).send({ message: "Error - company info not got" });
           });
         } else {
@@ -159,8 +158,8 @@ export default class UserController {
           res.status(403).send({ message: "Wrong Password" });
         }
       });
-    }).catch((error) => {
-      console.log("err", error)
+    }).catch((errr) => {
+      console.log("err", errr)
       res.status(401).send({ message: "Error occurred" });
     });
   }
@@ -241,7 +240,7 @@ export default class UserController {
           } else {
             bcrypt.hash(newPassword, saltRounds, function (err, hashPassword) {
               if (hashPassword) {
-                const response = db['User'].update({ password: hashPassword }, { where: { resetLink: resetLink } });
+                const response = db['User'].update({ password: hashPassword, resetLink: null }, { where: { resetLink: resetLink } });
                 
                 if (response) {
                   return res.status(200).send({ message: "password reset" });
@@ -309,37 +308,37 @@ export default class UserController {
   }
 
   static async activateAccount(req, res) {
-    const { activationLink } = req.params;
-    if (activationLink) {
-      jwt.verify(activationLink, process.env.ACCOUNT_ACTIVATION_KEY, (error, decoded) => {
-        if (error) {
-          return res.status(401).send({
-            message: "Incorrect link or The link expired",
-          });
-        } else {
-          db["User"].findOne({
-            where: { resetLink: activationLink }, attributes: ["id", "email"]
-          }).then((user) => {
-            if (!user) {
-              return res.status(400).json({ error: "Account with that link does not exist" });
-            } else {
-              const response = user.update({ status: "active" });
-              if (response) {
-                notification.notify("account activation", { email: user.email }, function (response) {
-                  return res.status(200).json({ message: response });
-                });
-              } else {
-                return res.status(200).json({ error: "Sorry, activation failed." });
-              }
-            }
-          }).catch((error) => {
-            console.log(error)
-            return res.status(401).json({ error: "Activation Error" });
-          });
-        }
-      });
-    } else {
-      return res.status(401).json({ error: "Activation Error" });
+    try {
+      const { activationLink } = req.params;
+      if (activationLink) {
+        jwt.verify(activationLink, process.env.ACCOUNT_ACTIVATION_KEY, (error, decoded) => {
+          if (error) {
+            return res.status(401).send({
+              message: "Incorrect link or The link expired",
+            });
+          }
+        });
+
+        await db["User"].findOne({
+          where: { resetLink: activationLink }, attributes: ["id", "email"]
+        }).then((user) => {
+          if (!user) {
+            return res.status(400).json({ error: "Your account is already activated" });
+          } else {
+            user.update({ status: "active", resetLink: null });
+            notification.notify("account activation", { email: user.email }, function (response) {
+              return res.status(200).json({ message: response });
+            });
+          }
+        }).catch((errr) => {
+          console.log(errr)
+          return res.status(401).json({ error: "Activation Error, try later" });
+        });
+      } else {
+        return res.status(401).json({ error: "Activation Link not privided" });
+      }
+    } catch (err) {
+      return res.status(400).json({ error: "Activation Error" });
     }
   }
 
