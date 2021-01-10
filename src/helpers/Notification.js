@@ -40,22 +40,25 @@ export default class Notification {
             }
 
             if (notifCo == true) {
-                NotificationController.notificationPost(mail);
+                await NotificationController.notificationPost(mail);
             }
+
             if (send == true && mail && mail.length > 0) {
                 for (var i = 0; i < mail.length; i++) {
                     if (mail[i] && mail[i].destination) {
                         Notification.sendEmail(mail[i], function (resp) {
                             if (resp == -1 || resp == 0) {
-                                callback("Error: Could not send email")
+                                callback("Approved but an error accurred on email sending")
                             } else if (resp == 1 && i == mail.length) {
                                 callback(response)
                             }
                         });
+                    } else {
+                        callback("Approved. No email to send to found though, no email sent");
                     }
                 }
             } else {
-                callback("No email to send to found, no email sent");
+                callback("Approved. No email to send found though, no email sent");
             }
         } catch (error) {
             callback(-2)

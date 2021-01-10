@@ -116,7 +116,7 @@ async function postApproval(parameters) {
     return {
       destination: destination.notifList,
       subject: parameters.title,
-      content: `${parameters.description} <a href="${process.env.APP_URL}/${parameters.format.toLowerCase()}/info/${parameters.id}">read more</a>`,
+      content: `${parameters.description} <a href="${process.env.APP_URL}/${parameters.format.toLowerCase()}/${parameters.id}">read more</a>`,
       title: parameters.title,
       file_name: parameters.file_name,
       format: parameters.format,
@@ -124,7 +124,12 @@ async function postApproval(parameters) {
       co_ids: destination.co_ids
     }
   } else {
-    return {}
+    return {
+      subject: parameters.title,
+      content: `${parameters.description} <a href="${process.env.APP_URL}/${parameters.format.toLowerCase()}/${parameters.id}">read more</a>`,
+      format: parameters.format,
+      companyId: parameters.companyId
+    }
   }
 }
 
