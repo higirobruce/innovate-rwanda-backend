@@ -91,7 +91,7 @@ export default class Notification {
                                         <div style="font-size:28px">
                                             <b>${mail.title}</b>
                                         </div>
-                                        <div>${mail.content}</div>
+                                        <div>${mail.content} ${mail.readMoreLink}</div>
                                     </div>
                                     <div style="padding:35px 10px;text-align:center;background:#150D4C1A;">${footer}</div>
                                 </div>`;
@@ -116,7 +116,7 @@ export default class Notification {
                                         <div style="font-size:28px">
                                             <b>${mail.title}</b>
                                         </div>
-                                        <div>${mail.content}</div>
+                                        <div>${mail.content} ${mail.readMoreLink}</div>
                                     </div>
                                     <div style="padding:35px 10px;text-align:center;background:#150D4C1A;">${footer}</div>
                                 </div>`;

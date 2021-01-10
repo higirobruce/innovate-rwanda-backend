@@ -5,7 +5,7 @@ function accountRegistration(parameters) {
   const subject = "We’re almost there let's verify your email",
     content = `Dear ${parameters.firstName} ${parameters.lastName},<br><br> 
                Please verify your email in order to access your account. <br>
-               Click on the button below or open it in your browser to activate your account, It will expire in 1h.<br><br><br>
+               Click on the button below or open it in your browser to activate your account.<br><br><br>
                <a style="margin:35px 0;padding:15px 35px;background:#00AEEF;color:#ffffff;clear:both;border-radius:2px;text-decoration:none"
                href="${process.env.APP_URL}/activate-account/${parameters.token}">Activate account</a><br><br><br>`;
   return {
@@ -116,7 +116,9 @@ async function postApproval(parameters) {
     return {
       destination: destination.notifList,
       subject: parameters.title,
-      content: `${parameters.description} <a href="${process.env.APP_URL}/${parameters.format.toLowerCase()}/${parameters.id}">read more</a>`,
+      content: parameters.description,
+      linkForMore: `${parameters.format.toLowerCase()}/${parameters.id}`,
+      readMoreLink: `<a href="${process.env.APP_URL}/${parameters.format.toLowerCase()}/${parameters.id}">read more</a>`,
       title: parameters.title,
       file_name: parameters.file_name,
       format: parameters.format,
@@ -126,7 +128,8 @@ async function postApproval(parameters) {
   } else {
     return {
       subject: parameters.title,
-      content: `${parameters.description} <a href="${process.env.APP_URL}/${parameters.format.toLowerCase()}/${parameters.id}">read more</a>`,
+      content: parameters.description,
+      linkForMore: `${parameters.format.toLowerCase()}/${parameters.id}`,
       format: parameters.format,
       companyId: parameters.companyId
     }

@@ -17,6 +17,7 @@ export default class NotificationController {
                   companyId: mail[i].co_ids[j],
                   subject: mail[i].subject,
                   content: mail[i].content,
+                  linkForMore: mail[i].linkForMore
                 });
               }
               if (notifications.length > 0) {
@@ -27,6 +28,7 @@ export default class NotificationController {
               companyId: mail[i].companyId,
               subject: mail[i].format+" Published: " + mail[i].subject,
               content: mail[i].content,
+              linkForMore: mail[i].linkForMore
             });
             break;
           default:
@@ -47,7 +49,7 @@ export default class NotificationController {
       const user = req.user;
       const notifications = await db['Notification'].findAll({
         where: { companyId: user.companyId, },
-        attributes: ["id", "subject", "content", "createdAt", "firstread"],
+        attributes: ["id", "subject", "content", "linkForMore", "createdAt", "firstread"],
         order: [['createdAt', 'DESC']]
       });
       if (notifications && notifications.length > 0) {

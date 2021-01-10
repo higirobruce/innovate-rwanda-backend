@@ -16,6 +16,9 @@ module.exports = (sequelize, DataTypes) => {
     content: {
       type: DataTypes.TEXT
     },
+    linkForMore: {
+      type: DataTypes.STRING
+    },
     firstread: {
       type: DataTypes.DATE
     },
