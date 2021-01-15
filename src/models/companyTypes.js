@@ -8,11 +8,13 @@ module.exports = (sequelize, DataTypes) => {
         unique: true,
         type: DataTypes.STRING
       },
+      description: DataTypes.TEXT,
       slug: {
         allowNull: false,
         unique: true,
         type: DataTypes.STRING
       },
+      image: DataTypes.STRING,
       createdAt: DataTypes.DATE,
       updatedAt: DataTypes.DATE,
     },

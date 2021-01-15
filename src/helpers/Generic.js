@@ -4,6 +4,10 @@ function generateSlug(company_name) {
     return company_name.trim().replace(/ /g, "-").toLowerCase();
 }
 
+function generateSlug_companyTypes(name) {
+    return name.trim().replace(/[^a-zA-Z]/g, "").toLowerCase();
+}
+
 async function getCompanyDetails(company_id, callback) {
     await db["Company"].findOne({
         where: { id: company_id },
@@ -247,6 +251,7 @@ async function searchForJobs(searchValue, callback) {
 
 module.exports = {
     generateSlug: generateSlug,
+    generateSlug_companyTypes:generateSlug_companyTypes,
     getCompanyDetails: getCompanyDetails,
     getActivities: getActivities,
     getCompaniesIdPerActivity: getCompaniesIdPerActivity,

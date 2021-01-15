@@ -1,4 +1,6 @@
 import db from "../models";
+import generic from "../helpers/Generic";
+import { UniqueConstraintError } from "sequelize";
 
 export default class CompanyTypes {
   static async getCompanyTypes(req, res) {
@@ -12,9 +14,21 @@ export default class CompanyTypes {
 
   static async addType(req, res) {
     try {
-      const response = await db['CompanyTypes'].create(req.body);
+      const response = await db['CompanyTypes'].create({
+        name: req.body.name,
+        description: req.body.description,
+        slug: generic.generateSlug_companyTypes(req.body.name),
+        image: req.body.image
+      });
       return res.status(200).send({ message: response });
     } catch (error) {
+      if (error instanceof UniqueConstraintError) {
+        return res.status(409).send({
+          error:
+            "This type already exist!!!!",
+          field: error.errors[0].path
+        });
+      }
       return res.status(400).send({ message: "Sorry, Failed to add company type at moment" });
     }
   }
