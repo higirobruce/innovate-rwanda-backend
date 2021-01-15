@@ -13,6 +13,7 @@ import activitiesOfCompany from "./activitiesOfCompany";
 import audienceForPost from "./audienceForPost";
 import companyCategories from "./companyCategories";
 import eventsTypes from "./eventsTypes";
+import resources from "./resources";
 
 const router = express.Router();
 
@@ -30,5 +31,6 @@ router.use("/", activitiesOfCompany);
 router.use("/", audienceForPost);
 router.use("/", companyCategories);
 router.use("/", eventsTypes);
+router.use("/", resources);
 
 export default router;
