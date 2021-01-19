@@ -39,6 +39,8 @@ company.get(
 
 company.get(
   "/company/:companyId",
+  auth.verifyToken,
+  checkPermissions(["normal", "admin-company"]),
   CompanyController.getCompanyInfo
 );
 

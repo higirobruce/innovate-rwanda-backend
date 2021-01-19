@@ -18,7 +18,8 @@ export default class CompanyController {
               model: db["BusinessActivities"], attributes: ["name"],
               on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('ActivitiesOfCompanies.activityId'), db.Op.eq, db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id'))] },
             }]
-          }
+          },
+          { model: db["CompanyTypes"], attributes: ["name"] }
         ]
       });
       if (companies && companies.length > 0) {
@@ -44,7 +45,8 @@ export default class CompanyController {
               model: db["BusinessActivities"], attributes: ["name"],
               on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('ActivitiesOfCompanies.activityId'), db.Op.eq, db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id'))] },
             }]
-          }
+          },
+          { model: db["CompanyTypes"], attributes: ["name"] }
         ],
       });
       if (companies && companies.length > 0) {
@@ -70,7 +72,8 @@ export default class CompanyController {
               model: db["BusinessActivities"], attributes: ["name"],
               on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('ActivitiesOfCompanies.activityId'), db.Op.eq, db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id'))] },
             }]
-          }
+          },
+          { model: db["CompanyTypes"], attributes: ["name"] }
         ],
       });
       if (companies && companies.length > 0) {
@@ -114,7 +117,8 @@ export default class CompanyController {
                 on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('ActivitiesOfCompanies.activityId'), db.Op.eq, db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id'))] },
               }
             ]
-          }
+          },
+          { model: db["CompanyTypes"], attributes: ["name"] }
         ],
       });
       const owner = await db["User"].findOne({
@@ -144,7 +148,8 @@ export default class CompanyController {
                 on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('ActivitiesOfCompanies.activityId'), db.Op.eq, db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id'))] },
               }
             ]
-          }
+          },
+          { model: db["CompanyTypes"], attributes: ["name"] }
         ]
       });
       var activities = company.get({ plain: true }).ActivitiesOfCompanies;
@@ -190,7 +195,8 @@ export default class CompanyController {
                 model: db["BusinessActivities"], attributes: ["name"],
                 on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('ActivitiesOfCompanies.activityId'),db.Op.eq,db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id'))] },
               }]
-          }
+          },
+          { model: db["CompanyTypes"], attributes: ["name"] }
         ],
       });
       delete owner.password;
@@ -245,6 +251,7 @@ export default class CompanyController {
             model: db["ActivitiesOfCompany"], attributes: ["companyId", "activityId", "createdAt", "updatedAt"],
             on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('ActivitiesOfCompanies.companyId'), db.Op.eq, db.sequelize.col('Company.id'))] }
           },
+          { model: db["CompanyTypes"], attributes: ["name"] },
           {
             model: db["Blog"],
             on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('Blogs.companyId'), db.Op.eq, db.sequelize.col('Company.id'))] },
@@ -370,7 +377,8 @@ export default class CompanyController {
                 model: db["BusinessActivities"], attributes: ["name"],
                 on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('ActivitiesOfCompanies.activityId'), db.Op.eq, db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id'))] }
               }]
-            }
+            },
+            { model: db["CompanyTypes"], attributes: ["name"] }
           ], order: [['createdAt', 'DESC']]
         });
       } else if (filterBy == "activities") {
@@ -392,7 +400,8 @@ export default class CompanyController {
                 model: db["BusinessActivities"], attributes: ["name"],
                 on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('ActivitiesOfCompanies.activityId'), db.Op.eq, db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id'))] },
               }]
-            }
+            },
+            { model: db["CompanyTypes"], attributes: ["name"] }
           ], order: [['createdAt', 'DESC']]
         });
       } else if (filterBy == "year-founded") {
@@ -407,7 +416,8 @@ export default class CompanyController {
                 model: db["BusinessActivities"], attributes: ["name"],
                 on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('ActivitiesOfCompanies.activityId'), db.Op.eq, db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id'))] }
               }]
-            }
+            },
+            { model: db["CompanyTypes"], attributes: ["name"] }
           ], order: [['createdAt', 'DESC']]
         });
       }
@@ -442,7 +452,8 @@ export default class CompanyController {
                   model: db["BusinessActivities"], attributes: ["name"],
                   on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('ActivitiesOfCompanies.activityId'), db.Op.eq, db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id'))] }
                 }]
-              }
+              },
+              { model: db["CompanyTypes"], attributes: ["name"] }
             ], order: [['yearFounded', sortValue]]
           });
         } else if (sortBy == "name") {
@@ -457,7 +468,8 @@ export default class CompanyController {
                   model: db["BusinessActivities"], attributes: ["name"],
                   on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('ActivitiesOfCompanies.activityId'), db.Op.eq, db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id'))] }
                 }]
-              }
+              },
+              { model: db["CompanyTypes"], attributes: ["name"] }
             ], order: [['coName', sortValue]]
           });
         }
@@ -499,7 +511,8 @@ export default class CompanyController {
                 model: db["BusinessActivities"], attributes: ["name"],
                 on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('ActivitiesOfCompanies.activityId'), db.Op.eq, db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id'))] },
               }]
-            }
+            },
+            { model: db["CompanyTypes"], attributes: ["name"] }
           ], order: [['createdAt', 'DESC']]
         });
       } else if (filterBy == "activities") {
@@ -519,7 +532,8 @@ export default class CompanyController {
                 model: db["BusinessActivities"], attributes: ["name"],
                 on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('ActivitiesOfCompanies.activityId'), db.Op.eq, db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id'))] },
               }]
-            }
+            },
+            { model: db["CompanyTypes"], attributes: ["name"] }
           ], order: [['createdAt', 'DESC']]
         });
       } else if (filterBy == "year-founded") {
@@ -534,7 +548,8 @@ export default class CompanyController {
                 model: db["BusinessActivities"], attributes: ["name"],
                 on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('ActivitiesOfCompanies.activityId'), db.Op.eq, db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id'))] },
               }]
-            }
+            },
+            { model: db["CompanyTypes"], attributes: ["name"] }
           ], order: [['createdAt', 'DESC']]
         });
       }
@@ -569,7 +584,8 @@ export default class CompanyController {
                   model: db["BusinessActivities"], attributes: ["name"],
                   on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('ActivitiesOfCompanies.activityId'), db.Op.eq, db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id'))] },
                 }]
-              }
+              },
+              { model: db["CompanyTypes"], attributes: ["name"] }
             ], order: [['yearFounded', sortValue]]
           });
         } else if (sortBy == "name") {
@@ -584,7 +600,8 @@ export default class CompanyController {
                   model: db["BusinessActivities"], attributes: ["name"],
                   on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('ActivitiesOfCompanies.activityId'), db.Op.eq, db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id'))] }
                 }]
-              }
+              },
+              { model: db["CompanyTypes"], attributes: ["name"] }
             ], order: [['coName', sortValue]]
           });
         }
@@ -617,7 +634,8 @@ export default class CompanyController {
               model: db["BusinessActivities"], attributes: ["name"],
               on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('ActivitiesOfCompanies.activityId'), db.Op.eq, db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id'))] },
             }]
-          }
+          },
+          { model: db["CompanyTypes"], attributes: ["name"] }
         ], limit: 100, order: [['yearFounded', 'ASC']]
       });
 

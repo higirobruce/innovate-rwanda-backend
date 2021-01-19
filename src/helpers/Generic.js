@@ -8,6 +8,10 @@ function generateSlug_companyTypes(name) {
     return name.trim().replace(/[^a-zA-Z]/g, "").toLowerCase();
 }
 
+function isVowel(character) {
+    return (/^[aeiou]$/i).test(character);
+  }
+
 async function getCompanyDetails(company_id, callback) {
     await db["Company"].findOne({
         where: { id: company_id },
@@ -122,7 +126,8 @@ async function searchDirectory(searchValue, callback) {
                         model: db["BusinessActivities"], attributes: ["name"],
                         on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('ActivitiesOfCompanies.activityId'), db.Op.eq, db.sequelize.col('ActivitiesOfCompanies->BusinessActivity.id'))] },
                     }]
-                }
+                },
+                { model: db["CompanyTypes"], attributes: ["name"] }
             ], limit: 100, order: [['yearFounded', 'ASC']]
         });
 
@@ -230,6 +235,7 @@ async function searchForJobs(searchValue, callback) {
                   on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('AudienceForPosts.activityId'), db.Op.eq, db.sequelize.col('AudienceForPosts->BusinessActivity.id'))] }
                 }]
               },
+              { model: db["CompanyTypes"], attributes: ["name"] }
             ], limit: 10, order: [['title', 'ASC']]
           });
   
@@ -252,6 +258,7 @@ async function searchForJobs(searchValue, callback) {
 module.exports = {
     generateSlug: generateSlug,
     generateSlug_companyTypes:generateSlug_companyTypes,
+    isVowel:isVowel,
     getCompanyDetails: getCompanyDetails,
     getActivities: getActivities,
     getCompaniesIdPerActivity: getCompaniesIdPerActivity,

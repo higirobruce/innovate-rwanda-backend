@@ -8,7 +8,14 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER
     },
     coName: DataTypes.STRING,
-    coType: DataTypes.STRING,
+    coType: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      references: {
+        model: "CompanyTypes",
+        key: "slug",
+      },
+    },
     coWebsite: DataTypes.STRING,
     districtBasedIn: DataTypes.STRING,
     businessActivityId: {
@@ -69,7 +76,11 @@ module.exports = (sequelize, DataTypes) => {
     company.hasMany(models.Notification, {
       foreignKey: 'companyId'
     });
-    
+
+    company.hasOne(models.CompanyTypes, {
+      foreignKey: 'slug',
+      sourceKey: 'coType'
+    }); 
   };
   return company;
 };

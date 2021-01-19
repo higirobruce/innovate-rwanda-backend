@@ -5,13 +5,13 @@ module.exports = {
     return await queryInterface.bulkInsert(
       "BusinessActivities",
       [
-        { name: "Co-working spaces", createdAt: new Date(), updatedAt: new Date()},
-        { name: "Business networks", createdAt: new Date(), updatedAt: new Date()},
+        { name: "Co-Working Spaces", createdAt: new Date(), updatedAt: new Date()},
+        { name: "Business Networks", createdAt: new Date(), updatedAt: new Date()},
         { name: "Accelerators", createdAt: new Date(), updatedAt: new Date()},
-        { name: "Government agencies", createdAt: new Date(), updatedAt: new Date()},
-        { name: "Ecosystem builders", createdAt: new Date(), updatedAt: new Date()},
+        { name: "Government Agencies", createdAt: new Date(), updatedAt: new Date()},
+        { name: "Ecosystem Builders", createdAt: new Date(), updatedAt: new Date()},
         { name: "Financer/Investors", createdAt: new Date(), updatedAt: new Date()},
-        { name: "Academic/Research institutions", createdAt: new Date(), updatedAt: new Date()},
+        { name: "Academic/Research Institutions", createdAt: new Date(), updatedAt: new Date()},
         { name: "Incubators", createdAt: new Date(), updatedAt: new Date()},
         { name: "Talent Development", createdAt: new Date(), updatedAt: new Date()},
       ]);
