@@ -32,5 +32,6 @@ router.use("/", audienceForPost);
 router.use("/", companyCategories);
 router.use("/", eventsTypes);
 router.use("/", resources);
+router.use("/uploads", express.static("./uploads"));
 
 export default router;

@@ -8,6 +8,7 @@ export default class JobController {
       const activities = req.body.activities;
       const fields = req.body;
       const author = req.user;
+
       const job = await db['Job'].create({
         title: fields.title,
         description: fields.description,
@@ -15,7 +16,7 @@ export default class JobController {
         category: fields.category,
         deadlineDate: fields.deadlineDate,
         deadlineTime: fields.deadlineTime,
-        jobDetailsDocument: fields.jobDocument,
+        jobDetailsDocument: req.file.path.replace(/\\/g, "/"),
         status: fields.status,
       });
       if (job) {
@@ -35,7 +36,6 @@ export default class JobController {
         });
       }
     } catch (err) {
-      console.log(err)
       return res.status(400).send({ message: "Job not posted at this moment" });
     }
   }

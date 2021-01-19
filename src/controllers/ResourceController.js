@@ -12,7 +12,13 @@ export default class ResourceController {
 
   static async addResource(req, res) {
     try {
-      const response = await db['Resource'].create(req.body);
+      const response = await db['Resource'].create(
+        {
+          type: req.body.type,
+          title: req.body.title,
+          description: req.body.description,
+          file: req.file.path.replace(/\\/g, "/"),
+        });
       return res.status(200).send({ message: response });
     } catch (error) {
       return res.status(400).send({ message: "Sorry, Failed to add resource at moment" });

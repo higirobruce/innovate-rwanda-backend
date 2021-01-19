@@ -1,9 +1,21 @@
 import { Router } from "express";
-
 import JobController from "../../controllers/JobController";
-
 import auth from "../../middlewares/authorization_authentication.js";
 import checkPermissions from "../../middlewares/checkPermissions";
+
+const multer = require('multer');
+const path = require('path');
+
+const storage = multer.diskStorage({
+  destination: './uploads',
+  filename: (req, file, cb) => {
+    return cb(null, `${file.fieldname}_${Date.now()}${path.extname(file.originalname)}`);
+  }
+});
+var upload = multer({
+  storage: storage,
+  limits: { fileSize: 1000000, files: 1 },
+});
 
 const job = Router();
 
@@ -11,6 +23,7 @@ job.post(
   "/jobs/post",
   auth.verifyToken,
   checkPermissions("normal"),
+  upload.single('jobDetailsDocument'),
   JobController.jobPost
 );
 
