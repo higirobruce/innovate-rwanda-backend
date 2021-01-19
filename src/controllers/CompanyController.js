@@ -182,10 +182,10 @@ export default class CompanyController {
   static async getCompanyMyInfo(req, res) {
     try {
       const owner = await db["User"].findOne({
-        where: { id: req.user.id }, raw: true,
+        where: { companyId: req.params.companyId }, raw: true,
       });
       const company = await db["Company"].findOne({
-        where: { id: owner.companyId}, attributes: { exclude: ["createdAt", "updatedAt"] },
+        where: { id: req.params.companyId}, attributes: { exclude: ["createdAt", "updatedAt"] },
         include: [
           { model: db["BusinessActivities"], attributes: ["name"] },
           {
@@ -222,13 +222,13 @@ export default class CompanyController {
     try {
       var response = await db["Company"].update(
           { status: "deleted" }, 
-          { where: { id: req.body.companyId } }
+          { where: { id: req.params.companyId } }
         )
       if (response) {
-        response = await db["User"].update({ status: "inactive" }, { where: { companyId: req.body.companyId } });
-        response = await db["Blog"].update({ status: "inactive" }, { where: { companyId: req.body.companyId } });
-        response = await db["Job"].update({ status: "inactive" }, { where: { companyId: req.body.companyId } })
-        response = await db["Event"].update({ status: "inactive" }, { where: { companyId: req.body.companyId } })
+        response = await db["User"].update({ status: "inactive" }, { where: { companyId: req.params.companyId } });
+        response = await db["Blog"].update({ status: "inactive" }, { where: { companyId: req.params.companyId } });
+        response = await db["Job"].update({ status: "inactive" }, { where: { companyId: req.params.companyId } })
+        response = await db["Event"].update({ status: "inactive" }, { where: { companyId: req.params.companyId } })
       }
       return response
         ? res.status(200).json({ message: "Deleted Successfully" })

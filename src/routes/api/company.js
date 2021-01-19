@@ -57,7 +57,7 @@ company.patch(
 );
 
 company.delete(
-  "/company/delete",
+  "/company/delete/:companyId",
   auth.verifyToken,
   checkPermissions("admin-company"),
   CompanyController.deleteCompany
