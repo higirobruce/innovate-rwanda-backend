@@ -8,10 +8,6 @@ function generateSlug_companyTypes(name) {
     return name.trim().replace(/[^a-zA-Z]/g, "").toLowerCase();
 }
 
-function isVowel(character) {
-    return (/^[aeiou]$/i).test(character);
-  }
-
 async function getCompanyDetails(company_id, callback) {
     await db["Company"].findOne({
         where: { id: company_id },
@@ -258,7 +254,6 @@ async function searchForJobs(searchValue, callback) {
 module.exports = {
     generateSlug: generateSlug,
     generateSlug_companyTypes:generateSlug_companyTypes,
-    isVowel:isVowel,
     getCompanyDetails: getCompanyDetails,
     getActivities: getActivities,
     getCompaniesIdPerActivity: getCompaniesIdPerActivity,

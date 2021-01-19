@@ -5,16 +5,8 @@ import { UniqueConstraintError } from "sequelize";
 export default class CompanyTypes {
   static async getCompanyTypes(req, res) {
     try {
-      const CompanyTypes = await db["CompanyTypes"].findAll({ order: [["slug", "ASC"]] });
-      CompanyTypes.forEach((companyType) => {
-        companyType.name = companyType.name.trim();
-        if (generic.isVowel(companyType.name.toLowerCase()[0])) {
-          companyType.name = "I am an " + companyType.name;
-        } else {
-          companyType.name = "I am a " + companyType.name;
-        }
-      });
-      return res.status(200).json({ result: CompanyTypes });
+      const response = await db["CompanyTypes"].findAll({ order: [["slug", "ASC"]] });
+      return res.status(200).json({ result: response });
     } catch (err) {
       console.log(err)
       return res.status(400).send({ message: "Sorry, no company types found" });
