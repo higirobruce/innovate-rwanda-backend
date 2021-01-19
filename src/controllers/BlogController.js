@@ -408,6 +408,27 @@ export default class BlogController {
             }
           ], order: [['createdAt', 'DESC']]
         });
+      } else if (filterBy == "company-type") {
+        var companiesId;
+        await generic.getCompaniesIdPerType(filterValue, function (theCompanies) {
+          companiesId = theCompanies.map(company => company.id);
+        })
+
+        blogPosts = await db['Blog'].findAll({
+          where: { companyId: { [db.Op.in]: companiesId }, status: "approved" },
+          include: [
+            { model: db["Company"], attributes: [["coName", "companyName"]] },
+            { model: db["User"], attributes: ["firstName", "lastName"] },
+            {
+              model: db["AudienceForPost"], attributes: [["activityId", "activity"]],
+              on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('Blog.id'), db.Op.eq, db.sequelize.col('AudienceForPosts.postId')), db.sequelize.where(db.sequelize.col('AudienceForPosts.typeOfPost'), db.Op.eq, 'blog')] },
+              include: [{
+                model: db["BusinessActivities"], attributes: ["name"],
+                on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('AudienceForPosts.activityId'), db.Op.eq, db.sequelize.col('AudienceForPosts->BusinessActivity.id'))] },
+              }]
+            }
+          ], order: [['createdAt', 'DESC']]
+        });
       } else if (filterBy == "topic") {
         var postsId;
         await generic.getPostsIdPerActivity("blog", filterValue, function (thepostsId) {

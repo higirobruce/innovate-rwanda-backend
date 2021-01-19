@@ -59,8 +59,8 @@ blog.delete(
 );
 
 /* 
- * FilterBy ---   company       | topic                 | year
- * FilterValue--  id of company | activity id           | a year-eg.2020 
+ * FilterBy ---   company       | topic                 | year             | company-type
+ * FilterValue--  id of company | activity id           | a year-eg.2020   |
  */
 blog.get(
   "/blogs/public/filter",

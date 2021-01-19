@@ -418,6 +418,26 @@ export default class JobController {
             },
           ], order: [['deadlineDate', 'DESC']]
         });
+      } else if (filterBy == "company-type") {
+        var companiesId;
+        await generic.getCompaniesIdPerType(filterValue, function (theCompanies) {
+          companiesId = theCompanies.map(company => company.id);
+        })
+
+        jobPosts = await db['Job'].findAll({
+          where: { companyId: { [db.Op.in]: companiesId }, status: "approved" },
+          include: [
+            { model: db["Company"], attributes: ["logo", ["coName", "companyName"]] },
+            {
+              model: db["AudienceForPost"], attributes: [["activityId", "activity"]],
+              on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('Job.id'), db.Op.eq, db.sequelize.col('AudienceForPosts.postId')), db.sequelize.where(db.sequelize.col('AudienceForPosts.typeOfPost'), db.Op.eq, 'job')] },
+              include: [{
+                model: db["BusinessActivities"], attributes: ["name"],
+                on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('AudienceForPosts.activityId'), db.Op.eq, db.sequelize.col('AudienceForPosts->BusinessActivity.id'))] },
+              }]
+            },
+          ], order: [['deadlineDate', 'DESC']]
+        });
       } else if (filterBy == "topic") {
         var postsId;
         await generic.getPostsIdPerActivity("job", filterValue, function (thepostsId) {

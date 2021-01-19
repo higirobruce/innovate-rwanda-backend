@@ -407,6 +407,26 @@ export default class EvenController {
             }
           ], order: [['eventDate', 'DESC']]
         });
+      } else if (filterBy == "company-type") {
+        var companiesId;
+        await generic.getCompaniesIdPerType(filterValue, function (theCompanies) {
+          companiesId = theCompanies.map(company => company.id);
+        })
+        eventPosts = await db['Event'].findAll({
+          where: { companyId: { [db.Op.in]: companiesId }, status: "approved" },
+          include: [
+            { model: db["Company"], attributes: [["coName", "companyName"]] },
+            { model: db["User"], attributes: ["firstName", "lastName"] },
+            {
+              model: db["AudienceForPost"], attributes: [["activityId", "activity"]],
+              on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('Event.id'), db.Op.eq, db.sequelize.col('AudienceForPosts.postId')), db.sequelize.where(db.sequelize.col('AudienceForPosts.typeOfPost'), db.Op.eq, 'event')] },
+              include: [{
+                model: db["BusinessActivities"], attributes: ["name"],
+                on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('AudienceForPosts.activityId'), db.Op.eq, db.sequelize.col('AudienceForPosts->BusinessActivity.id'))] },
+              }]
+            }
+          ], order: [['eventDate', 'DESC']]
+        });
       } else if (filterBy == "topic") {
         var eventsId;
         await generic.getPostsIdPerActivity("event", filterValue, function (theEventsId) {

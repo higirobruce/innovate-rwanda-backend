@@ -69,6 +69,17 @@ async function getPostsIdPerActivity(type, activityId, callback) {
     });
 }
 
+async function getCompaniesIdPerType(type, callback) {
+    await db["Company"].findAll({
+        where: { coType: type }, 
+        attributes: ["id"], raw: true
+    }).then((companiesId) => {
+        callback(companiesId);
+    }).catch((error) => {
+        callback(-1);
+    });
+}
+
 async function deleteCompany(companyData, callback) {
     try {
         var i;
@@ -258,6 +269,7 @@ module.exports = {
     getActivities: getActivities,
     getCompaniesIdPerActivity: getCompaniesIdPerActivity,
     getPostsIdPerActivity: getPostsIdPerActivity,
+    getCompaniesIdPerType: getCompaniesIdPerType,
     deleteCompany: deleteCompany,
     searchDirectory: searchDirectory,
     searchForBlogs: searchForBlogs,
