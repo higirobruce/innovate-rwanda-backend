@@ -9,6 +9,19 @@ export default class ResourceController {
       return res.status(400).send({ message: "Sorry, no resources found" });
     }
   }
+  static async getResource(req, res) {
+    try {
+      const response = await db["Resource"].findOne({
+        where: {
+          id: req.params.id
+        },
+        raw: true
+      });
+      return res.status(200).json({ result: response });
+    } catch (err) {
+      return res.status(400).send({ message: "Sorry, no resource found" });
+    }
+  }
 
   static async addResource(req, res) {
     try {
@@ -17,10 +30,11 @@ export default class ResourceController {
           type: req.body.type,
           title: req.body.title,
           description: req.body.description,
-          file: req.file.path.replace(/\\/g, "/"),
+          file: req.body.file,
         });
       return res.status(200).send({ message: response });
     } catch (error) {
+      console.log("err",error)
       return res.status(400).send({ message: "Sorry, Failed to add resource at moment" });
     }
   }

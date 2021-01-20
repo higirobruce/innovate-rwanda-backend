@@ -23,11 +23,14 @@ resources.get(
     "/resources",
     ResourceController.getResources);
 
+resources.get(
+    "/resources/:id",
+    ResourceController.getResource);
+
 resources.post(
     "/resources/add-resource",
     auth.verifyToken,
     checkPermissions(["admin-company", "admin-job", "admin-event", "admin-blog", "admin-user"]),
-    upload.single('resourceDocument'),
     ResourceController.addResource
 );
 

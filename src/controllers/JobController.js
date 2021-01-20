@@ -16,7 +16,7 @@ export default class JobController {
         category: fields.category,
         deadlineDate: fields.deadlineDate,
         deadlineTime: fields.deadlineTime,
-        jobDetailsDocument: req.file.path.replace(/\\/g, "/"),
+        jobDetailsDocument: fields.jobDetailsDocument,
         status: fields.status,
       });
       if (job) {
