@@ -76,8 +76,13 @@ export default class CompanyController {
           { model: db["CompanyTypes"], attributes: ["name"] }
         ],
       });
+      const type = req.params.type && await db["CompanyTypes"].findOne({
+        where: {
+          slug: req.params.type
+        }
+      })
       if (companies && companies.length > 0) {
-        return res.status(200).json({ result: companies });
+        return res.status(200).json({ result: companies, meta: type });
       }
       return res.status(404).json({ result: [], error: "No companies found at this moment" });
     } catch (err) {
@@ -209,7 +214,12 @@ export default class CompanyController {
           where: { id: { [db.Op.in]: similarCompaniesId }, status: "approved" }
         });
       }
-      return company ? res.status(200).json({ result: { company, similarCompanies } })
+      const type = company && await db["CompanyTypes"].findOne({
+        where: {
+          slug: company.coType
+        }
+      })
+      return company ? res.status(200).json({ result: { company, similarCompanies }, meta: type })
                      : res.status(404).json({ error: "Sorry, Company not found" });
     } catch (err) {
       console.log("err", err)
