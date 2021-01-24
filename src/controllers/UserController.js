@@ -206,7 +206,7 @@ export default class UserController {
         if (token) {
           user.update({ resetLink: token }).then(result => {
             if (result) {
-              notification.notify("forgot password", { email: user.email, token: token }, function (response) {
+              notification.notify("forgot password", { firstName: user.firstName, lastName: user.lastName, email: user.email, token: token }, function (response) {
                 return res.status(200).json({ message: response });
               });
             } else {

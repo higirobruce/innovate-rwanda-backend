@@ -3,11 +3,14 @@ const Mail_Destination = require('./Mail_Destination.js');
 
 function accountRegistration(parameters) {
   const subject = "We are almost there, let us verify your email",
+    url = `${process.env.APP_URL}/activate-account/${parameters.token}`,
     content = `Dear ${parameters.firstName} ${parameters.lastName},<br><br> 
                Please verify your email in order to access your account. <br>
                Click on the button below or open it in your browser to activate your account.<br><br><br>
                <a style="margin:35px 0;padding:15px 35px;background:#00AEEF;color:#ffffff;clear:both;border-radius:2px;text-decoration:none"
-               href="${process.env.APP_URL}/activate-account/${parameters.token}">Activate account</a><br><br><br>`;
+               href="${url}">Activate account</a><br><br><br>
+               If the button does not work, please copy and paste the link below into your browser:<br>
+               <a href="${url}">${url}</a><br><br>`;
   return {
     subject: subject,
     content: content,
@@ -17,7 +20,8 @@ function accountRegistration(parameters) {
 
 function accountActivation(parameters) {
   const subject = "Let us dive right in",
-    content = "Thank you for joining the community, please feel free to explore some of the tools at your disposal; Blogs, Events, Source Talent, Collaborate through the directory. We look forward to your contribution to this growing community.";
+    content = `Thank you for joining the community, please feel free to explore some of the tools at your disposal; Blogs, Events, Source Talent, Collaborate through the directory. We look forward to your contribution to this growing community.<br><br>
+              Please note that you could de-register from the platform from your account settings.`;
   return {
     subject: subject,
     content: content,
@@ -27,7 +31,7 @@ function accountActivation(parameters) {
 
 function firstLogin(parameters) {
   const subject = "Welcome to Innovate Rwanda",
-    content = `Dear ${parameters.firstName} ${parameters.lastName}, you have successfully signed into your Innovate Rwanda account. For the next steps, please complete your organisation/company profile under My Profile.`;
+    content = `Dear ${parameters.firstName} ${parameters.lastName}, you have successfully signed into your Innovate Rwanda account. For the next steps, please complete your organisation/company profile under My Profile. Please note that you could de-register from the platform from your account settings.`;
   return {
     companyId: parameters.companyId,
     subject: subject,
@@ -50,11 +54,15 @@ function adminAccountCreation(parameters) {
 }
 
 function forgotPassword(parameters) {
-  const subject = "[Innovate Rwanda] Please reset your password",
-    content = `Please use the following link to reset your password: <br><br><br>
+  const subject = `Password Reset: ${parameters.firstName} ${parameters.lastName}, we have made it easy to get back into your account`,
+    url = `${process.env.APP_URL}/reset-password/${parameters.token}`,
+    content = `Hi ${parameters.firstName} ${parameters.lastName},<br><br>
+               Sorry to hear that you're having trouble with logging into Innovate Rwanda. We can help you get straight back into your account. 
+               You can reset your password by clicking on link below.<br><br><br>
                <a style="margin:35px 0;padding:15px 35px;background:#00AEEF;color:#ffffff;clear:both;border-radius:2px;text-decoration:none"
-               href="${process.env.APP_URL}/reset-password/${parameters.token}">Reset password</a> <br><br><br>
-               This link  will expire in 1h.`;
+               href="${url}">Reset password</a><br><br><br>This link  will expire in 1h.<br><br>
+               If the above does not work, please copy and paste the link below into your browser:<br>
+               <a href="${url}">${url}</a><br><br>`;
   return {
     destination: parameters.email,
     subject: subject,
