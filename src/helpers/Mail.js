@@ -2,7 +2,7 @@ import generic from "./Generic";
 const Mail_Destination = require('./Mail_Destination.js');
 
 function accountRegistration(parameters) {
-  const subject = "We’re almost there let's verify your email",
+  const subject = "We are almost there, let us verify your email",
     content = `Dear ${parameters.firstName} ${parameters.lastName},<br><br> 
                Please verify your email in order to access your account. <br>
                Click on the button below or open it in your browser to activate your account.<br><br><br>
@@ -16,8 +16,8 @@ function accountRegistration(parameters) {
 }
 
 function accountActivation(parameters) {
-  const subject = "Let’s dive right in",
-    content = "Welcome to the innovate Rwanda community";
+  const subject = "Let us dive right in",
+    content = "Thank you for joining the community, please feel free to explore some of the tools at your disposal; Blogs, Events, Source Talent, Collaborate through the directory. We look forward to your contribution to this growing community.";
   return {
     subject: subject,
     content: content,
@@ -27,7 +27,7 @@ function accountActivation(parameters) {
 
 function firstLogin(parameters) {
   const subject = "Welcome to Innovate Rwanda",
-    content = `Thank you ${parameters.firstName} ${parameters.lastName} for login in Innovate Rwanda. For the next step, complete your company's profile under My Company.`;
+    content = `Dear ${parameters.firstName} ${parameters.lastName}, you have successfully signed into your Innovate Rwanda account. For the next steps, please complete your organisation/company profile under My Profile.`;
   return {
     companyId: parameters.companyId,
     subject: subject,
@@ -63,8 +63,8 @@ function forgotPassword(parameters) {
 }
 
 function subscription(parameters) {
-  const subject = "Let’s keep in touch",
-    content = "Thank you for choosing to receive updated info from our community.";
+  const subject = "Let us keep in touch",
+    content = "We are now going to do our best to keep you posted on the latest updates from our community. Please note that you can unsubscribe from these updates anytime through our platform anytime you choose to.";
   return {
     destination: parameters.email,
     subject: subject,
