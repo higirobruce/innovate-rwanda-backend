@@ -70,6 +70,8 @@ export default class Notification {
         try {
             var content, mailOptions;
             const footer = `Copyright, ${generic.getYear()}<br>Innovate Rwanda`;
+            const unsubscribe = `<a href="${process.env.APP_URL}/unsubscribe">unsubscribe</a>`;
+               
             const transporter = nodemailer.createTransport({
                 service: "gmail",
                 auth: {
@@ -94,7 +96,9 @@ export default class Notification {
                                         </div>
                                         <div>${mail.content} ${mail.readMoreLink}</div>
                                     </div>
-                                    <div style="padding:35px 10px;text-align:center;background:#150D4C1A;">${footer}</div>
+                                    <div style="padding:35px 10px;text-align:center;background:#150D4C1A;">
+                                        ${footer} <br><br> ${unsubscribe}
+                                    </div>
                                 </div>`;
                     mailOptions = {
                         from: process.env.MAILER_EMAIL,
@@ -119,7 +123,9 @@ export default class Notification {
                                         </div>
                                         <div>${mail.content} ${mail.readMoreLink}</div>
                                     </div>
-                                    <div style="padding:35px 10px;text-align:center;background:#150D4C1A;">${footer}</div>
+                                    <div style="padding:35px 10px;text-align:center;background:#150D4C1A;">
+                                        ${footer} <br><br> ${unsubscribe}
+                                    </div>
                                 </div>`;
                     mailOptions = {
                         from: process.env.MAILER_EMAIL,

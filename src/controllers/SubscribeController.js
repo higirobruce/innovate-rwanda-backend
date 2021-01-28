@@ -31,19 +31,24 @@ export default class SubscribeController {
   }
 
   static async unsubscribeFromNotification(req, res) {
-    db['Subscription'].update(
-      { status: "inactive" },
-      {
-        where: {
-          email: req.body.email,
-        },
+    await db["Subscription"].findOne({
+      where: { email: req.params.email.trim() }
+    }).then((subscription) => {
+      if (!subscription) {
+        return res.status(400).json({ message: "Reiceiving the emails means your company has activities belonged to by the posts, to unsubscribe change company's activities on the platform." });
+      } else {
+        subscription.destroy().then(() => {
+          res.status(200).send({
+            message: "Unsubscribed",
+          });
+        }).catch((err) => {
+          res.status(401).send({
+            message: "An error occurred while unsubscribing, try again later",
+          });
+        });;
       }
-    )
-      .then(() => {
-        res.status(200).send({
-          message: "Unsubscribed",
-        });
-      })
+
+    })
       .catch((err) => {
         res.status(401).send({
           message: "An error occurred",

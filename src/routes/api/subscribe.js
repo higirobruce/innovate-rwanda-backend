@@ -11,8 +11,8 @@ subscribe.post(
     SubscribeController.subscribeToNotification
 );
 
-subscribe.put(
-    "/unsubscribe",
+subscribe.delete(
+    "/unsubscribe/:email",
     SubscribeController.unsubscribeFromNotification
 );
 
