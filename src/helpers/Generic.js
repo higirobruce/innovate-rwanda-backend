@@ -8,6 +8,10 @@ function generateSlug_companyTypes(name) {
     return name.trim().replace(/[^a-zA-Z]/g, "").toLowerCase();
 }
 
+function getYear() {
+    return new Date().getFullYear();
+}
+
 async function getCompanyDetails(company_id, callback) {
     await db["Company"].findOne({
         where: { id: company_id },
@@ -265,6 +269,7 @@ async function searchForJobs(searchValue, callback) {
 module.exports = {
     generateSlug: generateSlug,
     generateSlug_companyTypes:generateSlug_companyTypes,
+    getYear: getYear,
     getCompanyDetails: getCompanyDetails,
     getActivities: getActivities,
     getCompaniesIdPerActivity: getCompaniesIdPerActivity,

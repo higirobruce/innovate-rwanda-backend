@@ -1,6 +1,7 @@
 
 import nodemailer from "nodemailer";
 const Mail = require('./Mail.js');
+const generic = require('./Generic.js');
 import NotificationController from "../controllers/NotificationController";
 
 export default class Notification {
@@ -68,7 +69,7 @@ export default class Notification {
     static sendEmail(mail, callback) {
         try {
             var content, mailOptions;
-            const footer = "Copyright, 2020<br>Innovate Rwanda";
+            const footer = `Copyright, ${generic.getYear()}<br>Innovate Rwanda`;
             const transporter = nodemailer.createTransport({
                 service: "gmail",
                 auth: {
