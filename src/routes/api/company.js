@@ -33,7 +33,7 @@ company.put(
 company.put(
   "/company/manage",
   auth.verifyToken,
-  checkPermissions("admin-company"),
+  checkPermissions(["normal","admin-company"]),
   CompanyController.manageCompany
 );
 
