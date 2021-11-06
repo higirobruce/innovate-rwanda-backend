@@ -94,12 +94,28 @@ export default class CompanyController {
   static async approveOrDeclineCompany(req, res) {
     try {
       const decision = req.body.decision;
-      const response = await db["Company"].update(
-        { status: decision },
-        { where: { id: req.body.id } }
-      )
-      if (response) {
-        return res.status(200).json({ message: "Company " + decision })
+      var company = await db["Company"].findOne({
+        where: { id: req.body.id }
+      });
+      if (company) {
+        const response = await company.update(
+          { status: decision },
+          { where: { id: company.id } }
+        )
+        if (response) {
+          const owner = await db["User"].findOne({
+            where: { companyId: company.id }, raw: true,
+          });
+          const parameters = { firstName: owner.firstName, lastName: owner.lastName, email: owner.email, companyName: company.coName, decision: decision }
+            notification.notify("company approval", parameters, function (resp) {
+            return res.status(200).json({ message: "Company " + decision + " , " + resp})
+          });
+
+        } else {
+          return res.status(404).json({ message: " Something is wrong, please confirm input provided is okay " })
+        }
+      } else {
+        return res.status(404).json({ message: " The mentioned company was not found " })
       }
     } catch (err) {
       console.log(err)
@@ -132,7 +148,16 @@ export default class CompanyController {
           );
         }
         if (response) {
-          return res.status(200).json({ message: "Company " + decision })
+          if (req.user && req.user.role != "normal") {
+            const owner = await db["User"].findOne({
+              where: { companyId: company.id }, raw: true,
+            });
+            const parameters = { firstName: owner.firstName, lastName: owner.lastName, email: owner.email, companyName: company.coName, decision: decision }
+            notification.notify("company approval", parameters, function (resp) {
+              return res.status(200).json({ message: "Company " + decision + " , " + resp})
+            });
+          }
+          return res.status(200).json({ message: "Company " + decision})
         } else {
           return res.status(404).json({ message: " Something is wrong, please confirm input provided is okay " })
         }

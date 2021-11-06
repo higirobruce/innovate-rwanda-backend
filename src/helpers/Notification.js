@@ -41,6 +41,9 @@ export default class Notification {
             } else if (notification_type === "delete own company") {
                 mail[0] = await Mail.deleteCompanyByOwner(parameters)
                 response = "Company deleted successfully, a confirmation email just got sent to you about that";
+            } else if (notification_type == "company approval") {
+                mail[0] = await Mail.companyApproval(parameters);
+                response = "Message Sent";
             }
 
             if (notifCo == true) {

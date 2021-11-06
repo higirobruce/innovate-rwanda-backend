@@ -157,6 +157,34 @@ function deleteCompanyByOwner(parameters) {
   }
 }
 
+function companyApproval(parameters) {
+  const subject = `Your company has been ${parameters.decision}!`,
+        url = `${process.env.APP_URL}/login`;
+  var content;
+  if (parameters.decision == "approved") {
+    content = `Dear ${parameters.firstName} ${parameters.lastName},<br><br>
+              Innovate Rwanda has successfully ${parameters.decision} your company ${parameters.companyName}. For the next steps,
+              please complete your organisation/company profile under My profile, after signing in.<br><br><br>
+              <a style="margin:35px 0;padding:15px 35px;background:#00AEEF;color:#ffffff;clear:both;border-radius:2px;text-decoration:none"
+              href="${url}">Sign In</a><br><br><br> Please note that you could de-register from the platform from your account settings.<br><br>
+              If the above does not work, please copy and paste the link below into your browser:<br>
+              <a href="${url}">${url}</a><br><br>`;
+  } else if (parameters.decision == "declined") {
+    content = `Dear ${parameters.firstName} ${parameters.lastName},<br><br>
+              Innovate Rwanda has ${parameters.decision} your company ${parameters.companyName}. For the next steps, please complete
+              your organisation/company profile under My profile, after signing in.<br><br><br>
+              <a style="margin:35px 0;padding:15px 35px;background:#00AEEF;color:#ffffff;clear:both;border-radius:2px;text-decoration:none"
+              href="${url}">Sign In</a><br><br><br> Please note that you could de-register from the platform from your account settings.<br><br>
+              If the above does not work, please copy and paste the link below into your browser:<br>
+              <a href="${url}">${url}</a><br><br>`;
+  }
+  return {
+    subject: subject,
+    content: content,
+    destination: parameters.email
+  } 
+}
+
 module.exports = {
   accountRegistration: accountRegistration,
   accountActivation: accountActivation,
@@ -166,5 +194,6 @@ module.exports = {
   subscription: subscription,
   messagePost: messagePost,
   postApproval: postApproval,
-  deleteCompanyByOwner: deleteCompanyByOwner
+  deleteCompanyByOwner: deleteCompanyByOwner,
+  companyApproval: companyApproval
 };
