@@ -14,6 +14,7 @@ import audienceForPost from "./audienceForPost";
 import companyCategories from "./companyCategories";
 import eventsTypes from "./eventsTypes";
 import resources from "./resources";
+import resourcesTypes from "./resourcesTypes";
 
 const router = express.Router();
 
@@ -32,6 +33,7 @@ router.use("/", audienceForPost);
 router.use("/", companyCategories);
 router.use("/", eventsTypes);
 router.use("/", resources);
+router.use("/", resourcesTypes);
 router.use("/uploads", express.static("./uploads"));
 
 export default router;

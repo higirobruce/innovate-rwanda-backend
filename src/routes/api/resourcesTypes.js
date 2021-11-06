@@ -1,33 +1,33 @@
 import { Router } from "express";
-import EventsTypes from "../../controllers/EventsTypes";
+import ResourcesTypes from "../../controllers/ResourcesTypes";
 import auth from "../../middlewares/authorization_authentication.js";
 import checkPermissions from "../../middlewares/checkPermissions";
 
 const types = Router();
 
 types.get(
-    "/events-types",
-    EventsTypes.getEventsTypes);
+    "/resources-types",
+    ResourcesTypes.getResourcesTypes);
 
 types.post(
-    "/events-types/add-type",
+    "/resources-types/add-type",
     auth.verifyToken,
     checkPermissions(["admin-company", "admin-job", "admin-event", "admin-blog", "admin-user"]),
-    EventsTypes.addType
+    ResourcesTypes.addType
 );
 
 types.patch(
-    "/events-types/edit-type",
+    "/resources-types/edit-type",
     auth.verifyToken,
     checkPermissions(["admin-company", "admin-job", "admin-event", "admin-blog", "admin-user"]),
-    EventsTypes.editType
+    ResourcesTypes.editType
 );
 
 types.delete(
-    "/events-types/remove-type",
+    "/resources-types/remove-type",
     auth.verifyToken,
     checkPermissions(["admin-company", "admin-job", "admin-event", "admin-blog", "admin-user"]),
-    EventsTypes.removeType
+    ResourcesTypes.removeType
 );
 
 export default types;
