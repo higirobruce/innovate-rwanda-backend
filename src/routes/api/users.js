@@ -17,6 +17,13 @@ users.get(
   userController.activateAccount
 );
 
+users.get(
+  "/account-activation-link",
+  auth.verifyToken,
+  checkPermissions("admin-user"),
+  userController.resendAccountActivationLink
+);
+
 users.post(
   "/users/create",
   auth.verifyToken,

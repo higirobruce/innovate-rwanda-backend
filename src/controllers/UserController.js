@@ -342,6 +342,43 @@ export default class UserController {
     }
   }
 
+  static async resendAccountActivationLink(req, res) {
+    try {
+      const { userEmail } = req.body;
+
+        await db["User"].findOne({
+          where: { email: userEmail },
+          attributes: {
+            exclude: ["password", "resetLink"],
+          }
+        }).then((user) => {
+          if (!user) {
+            return res.status(400).json({ error: "The provided email is not linked to an existing account!!!" });
+          } else {
+            if (user.status == "pending") {
+              const token = jwt.sign({ _id: userEmail }, process.env.ACCOUNT_ACTIVATION_KEY, {});
+              const response = user.update({ resetLink: token });
+              if (response) {
+                const parameters = { firstName: user.firstName, lastName: user.lastName, email: user.email, token: token }
+                notification.notify("account activation link resubmission", parameters, function (response) {
+                  return res.status(200).json({ message: "Activation Link sent to " + user.email });
+                });
+              } else {
+                return res.status(200).json({ message: " Activation Link Resubmission Error, try again later" });
+              }
+            } else {
+              return res.status(200).json({ message: "The account linked to provided email is no longer pending!!!" });
+            }
+          }
+        }).catch((errr) => {
+          console.log(errr)
+          return res.status(401).json({ error: "Activation Error, try later" });
+        });
+    } catch (err) {
+      return res.status(400).json({ error: "Activation Link Resubmission Error" });
+    }
+  }
+
   static async changeRole(req, res) {
     try {
       const response = await db['User'].update(

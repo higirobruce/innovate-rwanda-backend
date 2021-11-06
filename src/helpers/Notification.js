@@ -15,6 +15,9 @@ export default class Notification {
             } else if (notification_type == "account activation") {
                 mail[0] = Mail.accountActivation(parameters);
                 response = "Account Activated. A confirmation is sent to your email";
+            } else if (notification_type == "account activation link resubmission") {
+                mail[0] = Mail.accountRegistration(parameters);
+                response = "Account activation link is resent to the user's email.";
             } else if (notification_type == "first login") {
                 send = false;
                 notifCo = true;
@@ -50,7 +53,7 @@ export default class Notification {
                         Notification.sendEmail(mail[i], function (resp) {
                             if (resp == -1 || resp == 0) {
                                 callback("Approved but an error accurred on email sending")
-                            } else if (resp == 1 && i == mail.length) {
+                            } else if (resp == 1 && i == (mail.length-1)) {
                                 callback(response)
                             }
                         });
