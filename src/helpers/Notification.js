@@ -53,10 +53,11 @@ export default class Notification {
             if (send == true && mail && mail.length > 0) {
                 for (var i = 0; i < mail.length; i++) {
                     if (mail[i] && mail[i].destination) {
-                        Notification.sendEmail(mail[i], function (resp) {
+                        Notification.sendEmail(mail[i], function (resp) {                        
                             if (resp == -1 || resp == 0) {
+                               
                                 callback("Approved but an error accurred on email sending")
-                            } else if (resp == 1 && i == (mail.length-1)) {
+                            } else if (resp == 1 && i == mail.length) {
                                 callback(response)
                             }
                         });

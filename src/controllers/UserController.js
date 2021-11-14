@@ -30,7 +30,62 @@ export default class UserController {
     });
   }
 
-  static async register(req, res) {
+  static async createIndividualAccount(req, res) {
+    try {
+      await db.sequelize.transaction(async (t) => {
+        await db["Individual"].create({
+          lastName: req.body.lastName, firstName: req.body.firstName, accType: req.body.accountType,
+          shortDescription: req.body.shortDescription, location: req.body.location, portfolio: req.body.portfolio,
+          linkedin: req.body.linkedin, slug: generic.generateSlug(req.body.lastName + " " +req.body.firstName),
+          contactEmail: req.body.email.trim(), emailDisplay: false, contactPhone: req.body.phone, phoneDisplay: false,
+          status: "pending"
+        }, { transaction: t })
+          .then((individual) => {
+            const hashPassword = bcrypt.hashSync(req.body.password, saltRounds);
+            const token = jwt.sign({ _id: req.body.email }, process.env.ACCOUNT_ACTIVATION_KEY, {});
+
+            db["User"].create({
+              firstName: individual.firstName, lastName: individual.lastName, email: individual.contactEmail,
+              jobTitle: req.body.profession, password: hashPassword, role: "individual",
+              resetLink: token, status: "pending"
+            }, { transaction: t })
+              .then((user) => {
+                individual.update({ user_id: user.id });
+                const parameters = { firstName: user.firstName, lastName: user.lastName, email: user.email, token: token }
+                notification.notify("registration", parameters, function (response) {
+                  return res.status(200).json({ message: response });
+                });
+              }).catch((error) => {
+                if (error instanceof UniqueConstraintError) {
+                  return res.status(409).send({
+                    error:
+                      "Email already used for a registration on the system, Please use a different email",
+                    field: error.errors[0].path
+                  });
+                }
+                return res.status(401).send({ message: "Please confirm you provided all required info then try again" });
+              });
+          }).catch((error) => {
+
+            if (error instanceof UniqueConstraintError) {
+              return res.status(409).send({
+                error: "The individual is already registered on the system",
+                field: error.errors[0].path
+              });
+            }
+            return res.status(401).send({
+              message:
+                "Please confirm you provided all required info then try again"
+            });
+          });
+      });
+    } catch (error) {
+      console.log(error)
+      return res.status(401).send({ error: "Error occurred!!!!" });
+    }
+  }
+
+    static async createCompanyAccount(req, res) {
     try {
       await db.sequelize.transaction(async (t) => {
         await db["Company"].create({
@@ -70,8 +125,7 @@ export default class UserController {
                 }
                 return res.status(401).send({ message: "Please confirm you provided all required info then try again" });
               });
-          })
-          .catch((error) => {
+          }).catch((error) => {
 
             if (error instanceof UniqueConstraintError) {
               return res.status(409).send({
@@ -87,6 +141,18 @@ export default class UserController {
       });
     } catch (error) {
       
+      return res.status(401).send({ error: "Error occurred" });
+    }
+  }
+
+  static async register(req, res) {
+    try {
+      if (req.body && req.body.entity_type && req.body.entity_type == "individual") {
+        return UserController.createIndividualAccount(req, res);
+      } else {
+        return UserController.createCompanyAccount(req, res);
+      }
+    } catch (error) {
       return res.status(401).send({ error: "Error occurred" });
     }
   }
@@ -294,7 +360,7 @@ export default class UserController {
             },
           }
         );
-      return response
+      return response && resp
         ? res.status(200).json({
           message: "User Account activated successfully"
         })
@@ -320,11 +386,17 @@ export default class UserController {
         });
 
         await db["User"].findOne({
-          where: { resetLink: activationLink }, attributes: ["id", "email"]
+          where: { resetLink: activationLink }, attributes: ["id", "email", "role"]
         }).then((user) => {
           if (!user) {
             return res.status(400).json({ error: "Your account is already activated" });
           } else {
+            if (user.role == "individual") {
+              db['Individual'].update(
+                { status: "active" },
+                { where: { contactEmail: user.email} }
+              );
+            }
             user.update({ status: "active", resetLink: null });
             notification.notify("account activation", { email: user.email }, function (response) {
               return res.status(200).json({ message: response });

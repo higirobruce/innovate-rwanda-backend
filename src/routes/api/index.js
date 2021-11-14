@@ -15,6 +15,7 @@ import companyCategories from "./companyCategories";
 import eventsTypes from "./eventsTypes";
 import resources from "./resources";
 import resourcesTypes from "./resourcesTypes";
+import talents from "./talents";
 
 const router = express.Router();
 
@@ -34,6 +35,7 @@ router.use("/", companyCategories);
 router.use("/", eventsTypes);
 router.use("/", resources);
 router.use("/", resourcesTypes);
+router.use("/", talents);
 router.use("/uploads", express.static("./uploads"));
 
 export default router;
