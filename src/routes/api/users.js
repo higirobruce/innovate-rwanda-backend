@@ -1,7 +1,6 @@
 import { Router } from "express";
 
 import userController from "../../controllers/UserController";
-import talentController from "../../controllers/TalentController";
 
 import auth from "../../middlewares/authorization_authentication.js";
 import checkPermissions from "../../middlewares/checkPermissions";
