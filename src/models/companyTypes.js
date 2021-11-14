@@ -15,6 +15,7 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING
       },
       image: DataTypes.STRING,
+      display_order: DataTypes.INTEGER,
       createdAt: DataTypes.DATE,
       updatedAt: DataTypes.DATE,
     },
