@@ -25,6 +25,7 @@ talents.get(
   talentController.getTalentsActive
 );
 
+
 talents.get(
   "/talent/search",
   talentController.findTalents
@@ -59,6 +60,14 @@ talents.put(
   auth.verifyToken,
   checkPermissions("admin-company"),
   talentController.reactivateAccount
+);
+
+/*
+ * Get individual info by id
+ */
+talents.get(
+  "/individual/:user_id",
+  talentController.getIndividualById
 );
 
 export default talents;
