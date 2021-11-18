@@ -1,4 +1,5 @@
 import db from "../models";
+import GenerateMeta from '../helpers/GenerateMeta';
 
 export default class Talents {
   static async getTalents(req, res) {
@@ -13,11 +14,24 @@ export default class Talents {
   }
 
   static async getTalentsActive(req, res) {
+    const where = { status: 'active' };
+    const { page } = req.query;
+    const limit = 2;
+    const count = await db["Individual"].count({ where });
+    const offset = page === 1 ? 0 : (parseInt(page, 10) - 1) * limit;
+    console.log('page', count, offset, limit)
     try {
       const response = await db["Individual"].findAll({
-        where: { status: "active" }, order: [["lastName", "ASC"], ["firstName", "ASC"]]
+        where,
+        order: [["lastName", "ASC"], ["firstName", "ASC"]],
+        limit,
+        offset
       });
-      return res.status(200).json({ result: response });
+      console.log('response',response)
+      return res.status(200).json({ 
+        meta: GenerateMeta(count, limit, parseInt(page, 10)),
+        result: response
+       });
     } catch (err) {
       console.log(err)
       return res.status(400).send({ message: "No individual accounts found at this moment" });

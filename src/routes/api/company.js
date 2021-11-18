@@ -18,10 +18,10 @@ company.get(
   CompanyController.getApprovedCompaniesList
 );
 
-company.get(
-  "/directory/public/:type",
-  CompanyController.getApprovedCompaniesByType
-);
+// company.get(
+//   "/directory/public/:type",
+//   CompanyController.getApprovedCompaniesByType
+// );
 
 company.put(
   "/company/approve-decline",
