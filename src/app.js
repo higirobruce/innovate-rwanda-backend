@@ -40,6 +40,6 @@ app.use((err, req, res, next) => {
 // app.listen(process.env.PORT);
 const port = process.env.PORT || 5000;
 app.listen(port, () => {
-  console.log(`Server is listening at http://localhost:${port}`)
-})
+  console.log(`Server is listening at http://localhost:${port}`);
+});
 export default app;
