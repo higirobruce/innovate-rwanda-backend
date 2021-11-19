@@ -22,7 +22,7 @@ export default class Talents {
   static async getTalentsActive(req, res) {
     const where = { status: 'active' };
     const { page } = req.query;
-    const limit = 2;
+    const limit = 20;
     const count = await db['Individual'].count({ where });
     const offset = page === 1 ? 0 : (parseInt(page, 10) - 1) * limit;
     console.log('page', count, offset, limit);
