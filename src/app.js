@@ -13,7 +13,11 @@ app.use(logger('dev'));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cors());
+app.use(
+  cors({
+    origin: '*',
+  })
+);
 
 app.use('/', routes);
 
@@ -32,7 +36,7 @@ app.use((err, req, res, next) => {
   res.status(err.status || 500);
   res.send({
     message: err.message,
-    error: err.status
+    error: err.status,
   });
   next();
 });
