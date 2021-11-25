@@ -36,7 +36,6 @@ export default class Talents {
         limit,
         offset,
       });
-      console.log('response', response);
       return res.status(200).json({
         meta: GenerateMeta(count, limit, parseInt(page, 10)),
         result: response,
