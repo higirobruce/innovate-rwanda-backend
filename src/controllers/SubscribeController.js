@@ -35,7 +35,7 @@ export default class SubscribeController {
       where: { email: req.params.email.trim() }
     }).then((subscription) => {
       if (!subscription) {
-        return res.status(400).json({ message: "Reiceiving the emails means your company has activities belonged to by the posts, to unsubscribe change company's activities on the platform." });
+        return res.status(400).json({ message: "Receiving the emails means your company has activities belonged to by the posts, to unsubscribe change company's activities on the platform." });
       } else {
         subscription.destroy().then(() => {
           res.status(200).send({
@@ -48,46 +48,24 @@ export default class SubscribeController {
         });;
       }
 
-    })
-      .catch((err) => {
-        res.status(401).send({
-          message: "An error occurred",
-        });
+    }).catch((err) => {
+      res.status(401).send({
+        message: "An error occurred",
       });
+    });
   }
 
   static async getSubscriptions(req, res) {
-    if (req.params.status == "all") {
-      db['Subscription'].findAll({ order: [['createdAt', 'DESC']] })
-        .then((subscriptions) => {
-          res.status(200).send({
-            result: subscriptions,
-          });
-        })
-        .catch((err) => {
-          res.status(401).send({
-            message: "list of subscriptions not got",
-            err: err,
-          });
+    db['Subscription'].findAll({ order: [['updatedAt', 'DESC']], attributes: { exclude: ['createdAt', 'updatedAt'] } })
+      .then((subscriptions) => {
+        res.status(200).send({
+          result: subscriptions,
         });
-    } else {
-      db['Subscription'].findAll({
-        where: {
-          status: req.params.status,
-        },
-        order: [['createdAt', 'DESC']]
-      })
-        .then((subscriptions) => {
-          res.status(200).send({
-            result: subscriptions,
-          });
-        })
-        .catch((err) => {
-          res.status(401).send({
-            message: "list of subscriptions not got",
-            err: err,
-          });
-        });
-    }
+    }).catch((err) => {
+      res.status(401).send({
+        message: "list of subscriptions not got",
+        err: err,
+      });
+    });
   }
 }
