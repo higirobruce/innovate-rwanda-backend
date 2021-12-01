@@ -9,7 +9,7 @@ export default class CompanyController {
   static async getCompaniesList(req, res) {
     try {
       const companies = await db['Company'].findAll({
-        order: [['createdAt', 'DESC']],
+        order: [['status', 'ASC'],['updatedAt', 'DESC']],
         include: [
           { model: db['BusinessActivities'], attributes: ['name'] },
           {
