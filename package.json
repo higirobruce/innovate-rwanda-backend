@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "Innovate Rwanda",
   "main": "src/app.js",
-  "private": true,
   "scripts": {
     "start": "concurrently \"npm run migrate\" \"babel-node src/app.js\"",
     "dev": "nodemon src/app.js --exec babel-node --presets @babel/preset-env",
