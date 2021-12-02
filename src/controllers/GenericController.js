@@ -2,22 +2,50 @@ import db from '../models';
 import generic from '../helpers/Generic';
 import { UniqueConstraintError } from 'sequelize';
 export default class genericController {
-  static async getCounts(req, res) {
-    try {
-      const pendingRequestsCount = await db['Company'].count({
+  static getCounts(req, res) {
+      const pendingRequestsCount = db['Company'].count({
         where: { status: 'pending' },
       });
-      const usersCount = await db['User'].count();
-      const approvedCompaniesCount = await db['Company'].count({
+      const usersCount = db['User'].count();
+      const approvedCompaniesCount =  db['Company'].count({
         where: { status: 'approved' },
       });
-      return res.status(200).json({
-        result: { pendingRequestsCount, usersCount, approvedCompaniesCount },
+      const startupsCount =  db['Company'].count({
+        where: { status: 'approved', coType:'startupcompany' },
       });
-    } catch (err) {
+      const enablersCount =  db['Company'].count({
+        where: { status: 'approved', coType:'ecosystemenabler' },
+      });
+      const govInstitutionsCount =  db['Company'].count({
+        where: { status: 'approved', coType:'governmentagency' },
+      });
+      const subscribersCount =  db['Subscription'].count({
+        where: { status: 'active' },
+      });
+    Promise.all([
+      pendingRequestsCount,
+      usersCount,
+      approvedCompaniesCount,
+      startupsCount,
+      enablersCount,
+      govInstitutionsCount,
+      subscribersCount
+    ]).then(counts => {
+      return res.status(200).json({
+        result: { 
+          pendingRequestsCount : counts[0],
+          usersCount : counts[1],
+          approvedCompaniesCount : counts[2],
+          startupsCount : counts[3],
+          enablersCount : counts[4],
+          govInstitutionsCount : counts[5],
+          subscribersCount : counts[6]
+        }
+      });
+    }).catch(err => {
       console.log(err);
       return res.status(400).send({ message: 'Sorry, Counts not found' });
-    }
+    });
   }
 
   //gives counts for new messages and notifications

@@ -24,9 +24,13 @@ const generic = Router();
 
 /*
  * For getting statistics for admins on the system
- * Returns Number of approved companies,
- *         Total number of users
- *         Number of pending comapnies' requests,
+ * Returns  Pending requests count,
+            Users count,
+            Approved companies count,
+            Startups count,
+            Enablers count,
+            Government institutions count,
+            Subscribers count
  */
 generic.get(
   "/counters",
