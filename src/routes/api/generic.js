@@ -1,13 +1,13 @@
-import { Router } from "express";
-import GenericController from "../../controllers/GenericController";
-import auth from "../../middlewares/authorization_authentication.js";
-import checkPermissions from "../../middlewares/checkPermissions";
+import { Router } from 'express';
+import GenericController from '../../controllers/GenericController';
+import auth from '../../middlewares/authorization_authentication.js';
+import checkPermissions from '../../middlewares/checkPermissions';
 
-import multer from "multer";
-import path from "path";
+import multer from 'multer';
+import path from 'path';
 
 const storage = multer.diskStorage({
-  destination: "./uploads",
+  destination: './uploads',
   filename: (req, file, cb) => {
     return cb(
       null,
@@ -23,6 +23,16 @@ const upload = multer({
 const generic = Router();
 
 /*
+ * For exporting data
+ */
+generic.get(
+  '/export',
+  auth.verifyToken,
+  checkPermissions("admin-company"),
+  GenericController.exportCompanies
+);
+
+/*
  * For getting statistics for admins on the system
  * Returns  Pending requests count,
             Users count,
@@ -33,14 +43,14 @@ const generic = Router();
             Subscribers count
  */
 generic.get(
-  "/counters",
+  '/counters',
   auth.verifyToken,
   checkPermissions([
-    "admin-company",
-    "admin-job",
-    "admin-event",
-    "admin-blog",
-    "admin-user",
+    'admin-company',
+    'admin-job',
+    'admin-event',
+    'admin-blog',
+    'admin-user',
   ]),
   GenericController.getCounts
 );
@@ -52,33 +62,29 @@ generic.get(
  *         Total number of events
  */
 generic.get(
-  "/countersCo",
+  '/countersCo',
   auth.verifyToken,
-  checkPermissions("normal"),
+  checkPermissions('normal'),
   GenericController.getCountsCo
 );
 
 generic.get(
-  "/countsNew",
+  '/countsNew',
   auth.verifyToken,
   checkPermissions([
-    "normal",
-    "admin-company",
-    "admin-job",
-    "admin-event",
-    "admin-blog",
-    "admin-user",
+    'normal',
+    'admin-company',
+    'admin-job',
+    'admin-event',
+    'admin-blog',
+    'admin-user',
   ]),
   GenericController.getCountsNew
 );
 
 // Search: Directory, Blogs, Events, Jobs
-generic.get("/search", GenericController.search);
+generic.get('/search', GenericController.search);
 
-generic.post(
-  "/upload",
-  upload.single("file"),
-  GenericController.upload
-);
+generic.post('/upload', upload.single('file'), GenericController.upload);
 
 export default generic;

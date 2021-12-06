@@ -115,8 +115,15 @@ export default class CompanyController {
 
   static async getApprovedCompaniesList(req, res) {
     let where = { status: 'approved' };
-    const { page, companyType, activity, location, orderType, orderValue, search } =
-      req.query;
+    const {
+      page,
+      companyType,
+      activity,
+      location,
+      orderType,
+      orderValue,
+      search,
+    } = req.query;
     if (companyType) {
       where = {
         ...where,
@@ -137,13 +144,13 @@ export default class CompanyController {
     }
     console.log('###where', search);
     // manage search query
-    if(search) {
+    if (search) {
       where = {
         ...where,
         coName: {
-          [db.Op.iLike]: `%${search}%`
+          [db.Op.iLike]: `%${search}%`,
         },
-      }
+      };
     }
     const limit = 20;
     const count = await db.Company.count({ where });

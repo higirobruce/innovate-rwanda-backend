@@ -1,7 +1,27 @@
+
 import db from '../models';
 import generic from '../helpers/Generic';
 import { UniqueConstraintError } from 'sequelize';
+import ExportHelper from '../helpers/ExportHelper';
 export default class genericController {
+  static async exportCompanies(req, res) {
+    const { model } = req.query;
+    const { where, include } = ExportHelper(req.query);
+    try {
+      const companies = await db[model].findAll({ where, include });
+      if (companies && companies.length > 0) {
+        return res.status(200).json({ result: companies });
+      }
+      return res
+        .status(404)
+        .json({ result: [], error: 'No companies found at this moment' });
+    } catch (err) {
+      console.log('###', err);
+      return res.status(400).send({
+        message: 'Can not export companies right now, try again later',
+      });
+    }
+  }
   static getCounts(req, res) {
       const pendingRequestsCount = db['Company'].count({
         where: { status: 'pending' },
