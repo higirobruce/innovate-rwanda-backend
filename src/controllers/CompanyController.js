@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import notification from '../helpers/Notification';
 var encryptor = require('simple-encryptor')(process.env.COMPANY_DEL_KEY);
 import GenerateMeta from '../helpers/GenerateMeta';
+const logger = require('../helpers/LoggerMod.js');
 
 export default class CompanyController {
   static async getCompaniesList(req, res) {
@@ -51,8 +52,9 @@ export default class CompanyController {
       return res
         .status(404)
         .json({ result: [], error: 'No companies found at this moment' });
-    } catch (err) {
-      console.log(err);
+    } catch (error) {
+      logger.customLogger.log('error', error)
+      //console.log(err);
       return res
         .status(400)
         .send({ message: 'No companies found at this moment' });
@@ -207,8 +209,9 @@ export default class CompanyController {
       return res
         .status(404)
         .json({ result: [], error: 'No companies found at this moment' });
-    } catch (err) {
-      console.log(err);
+    } catch (error) {
+      logger.customLogger.log('error', error)
+      //console.log(err);
       return res
         .status(400)
         .send({ message: 'No companies found at this moment' });
@@ -254,8 +257,9 @@ export default class CompanyController {
           .status(404)
           .json({ message: ' The mentioned company was not found ' });
       }
-    } catch (err) {
-      console.log(err);
+    } catch (error) {
+      //console.log(err);
+      logger.customLogger.log('error', error)
       return res
         .status(400)
         .send({ message: 'Decision not set at this moment' });
@@ -320,7 +324,8 @@ export default class CompanyController {
           .json({ message: ' The mentioned company was not found ' });
       }
     } catch (error) {
-      console.log(error);
+      //console.log(error);
+      logger.customLogger.log('error', error)
       return res
         .status(400)
         .send({ message: 'Decision not set at this moment' });
@@ -374,7 +379,8 @@ export default class CompanyController {
       return company
         ? res.status(200).json({ result: { company, owner } })
         : res.status(404).json({ error: 'Sorry, Company not found' });
-    } catch (err) {
+    } catch (error) {
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: 'Sorry, Company not found' });
     }
   }
@@ -456,8 +462,9 @@ export default class CompanyController {
             .status(200)
             .json({ result: { company, similarCompanies }, meta: type })
         : res.status(404).json({ error: 'Sorry, Company not found' });
-    } catch (err) {
-      console.log('err', err);
+    } catch (error) {
+      //console.log('err', err);
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: 'Sorry, Company not found' });
     }
   }
@@ -511,7 +518,8 @@ export default class CompanyController {
       return company
         ? res.status(200).json({ result: { company, owner } })
         : res.status(404).json({ error: 'Sorry, Company not found' });
-    } catch (err) {
+    } catch (error) {
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: 'Sorry, Company not found' });
     }
   }
@@ -525,7 +533,8 @@ export default class CompanyController {
             .status(200)
             .json({ message: 'Recent change is updated successfully' })
         : res.status(404).json({ message: 'Sorry, No record edited' });
-    } catch (err) {
+    } catch (error) {
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: 'Sorry, Company not found' });
     }
   }
@@ -559,7 +568,8 @@ export default class CompanyController {
         : res
             .status(404)
             .json({ message: 'Sorry, Failed to delete the record completely' });
-    } catch (err) {
+    } catch (error) {
+      logger.customLogger.log('error', error)
       return res
         .status(400)
         .send({ message: 'Decision not set at this moment' });
@@ -775,9 +785,9 @@ export default class CompanyController {
                   .status(404)
                   .send({ message: 'Please try again later' });
               }
-            })
-            .catch((error) => {
-              console.log(error);
+            }).catch((error) => {
+              logger.customLogger.log('error', error)
+              //console.log(error);
               return res.status(400).json({
                 error: 'Failed to complete the task, please try later',
               });
@@ -791,7 +801,8 @@ export default class CompanyController {
           .json({ message: 'You are not allowed to delete this company' });
       }
     } catch (err) {
-      console.log(err);
+      logger.customLogger.log('error', error)
+      //console.log(err);
       return res
         .status(400)
         .send({ message: 'Action Fail at this moment, try later' });
@@ -837,8 +848,8 @@ export default class CompanyController {
                         .send({ message: 'Try again later' });
                     }
                   }
-                })
-                .catch((error) => {
+                }).catch((error) => {
+                  logger.customLogger.log('error', error)
                   return res
                     .status(400)
                     .send({ error: 'Failed to recover the company' });
@@ -850,6 +861,7 @@ export default class CompanyController {
         return res.status(401).json({ error: 'Authentication Error' });
       }
     } catch (error) {
+      logger.customLogger.log('error', error)
       return res.status(400).send({ error: 'Failed to recover the company' });
     }
   }
@@ -998,8 +1010,9 @@ export default class CompanyController {
       } else {
         return res.status(404).json({ result: [], error: 'No Company found' });
       }
-    } catch (err) {
-      console.log(err);
+    } catch (error) {
+      logger.customLogger.log('error', error)
+      //console.log(err);
       return res
         .status(400)
         .send({ message: ' Directory not got at this moment' });
@@ -1099,8 +1112,9 @@ export default class CompanyController {
       } else {
         return res.status(404).json({ result: [], error: 'No Company found' });
       }
-    } catch (err) {
-      console.log(err);
+    } catch (error) {
+      //console.log(err);
+      logger.customLogger.log('error', error)
       return res
         .status(400)
         .send({ message: ' Directory not got at this moment' });
@@ -1267,8 +1281,9 @@ export default class CompanyController {
       } else {
         return res.status(404).json({ result: [], error: 'No Company found' });
       }
-    } catch (err) {
-      console.log(err);
+    } catch (error) {
+      //console.log(err);
+      logger.customLogger.log('error', error)
       return res
         .status(400)
         .send({ message: ' Directory not got at this moment' });
@@ -1369,8 +1384,9 @@ export default class CompanyController {
       } else {
         return res.status(404).json({ result: [], error: 'No Company found' });
       }
-    } catch (err) {
-      console.log(err);
+    } catch (error) {
+      //console.log(err);
+      logger.customLogger.log('error', error)
       return res
         .status(400)
         .send({ message: ' Directory not got at this moment' });
@@ -1440,8 +1456,9 @@ export default class CompanyController {
       } else {
         return res.status(404).json({ result: [], error: 'No Company found' });
       }
-    } catch (err) {
-      console.log(err);
+    } catch (error) {
+      //console.log(err);
+      logger.customLogger.log('error', error)
       return res
         .status(400)
         .send({ message: ' Directory not got at this moment' });

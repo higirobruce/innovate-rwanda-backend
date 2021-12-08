@@ -1,3 +1,5 @@
+const logger = require('../helpers/LoggerMod.js');
+
 const checkPermissions = (actions) => {
   return async (req, res, next) => {
     try {
@@ -9,6 +11,7 @@ const checkPermissions = (actions) => {
           .send({ error: "You are not allowed to perform this action" });
       }
     } catch (error) {
+      logger.customLogger.log('error', error)
       next(error);
     }
   };

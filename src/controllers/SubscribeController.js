@@ -3,6 +3,7 @@ import db from "../models";
 import generic from "../helpers/Generic";
 import notification from "../helpers/Notification";
 import { UniqueConstraintError } from "sequelize";
+const logger = require('../helpers/LoggerMod.js');
 
 export default class SubscribeController {
   static async subscribeToNotification(req, res) 
@@ -16,7 +17,8 @@ export default class SubscribeController {
         return res.status(401).json({ message: "Sorry, subscription failed, try later" })
       }
       }).catch((error) => {
-        console.log(error)
+        //console.log(error)
+        logger.customLogger.log('error', error)
         if (error instanceof UniqueConstraintError) {
           return res.status(409).send({
             error:
@@ -41,14 +43,16 @@ export default class SubscribeController {
           res.status(200).send({
             message: "Unsubscribed",
           });
-        }).catch((err) => {
+        }).catch((error) => {
+          logger.customLogger.log('error', error)
           res.status(401).send({
             message: "An error occurred while unsubscribing, try again later",
           });
         });;
       }
 
-    }).catch((err) => {
+    }).catch((error) => {
+      logger.customLogger.log('error', error)
       res.status(401).send({
         message: "An error occurred",
       });
@@ -61,7 +65,8 @@ export default class SubscribeController {
         res.status(200).send({
           result: subscriptions,
         });
-    }).catch((err) => {
+    }).catch((error) => {
+      logger.customLogger.log('error', error)
       res.status(401).send({
         message: "list of subscriptions not got",
         err: err,

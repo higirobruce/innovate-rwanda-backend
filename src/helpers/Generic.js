@@ -1,4 +1,5 @@
 import db from "../models";
+const logger = require('./LoggerMod.js');
 
 function generateSlug(company_name) {
     return company_name.trim().replace(/ /g, "-").toLowerCase();
@@ -23,6 +24,7 @@ async function getCompanyDetails(company_id, callback) {
             callback(0);
         }
     }).catch((error) => {
+        logger.customLogger.log('error', error)
         callback(-1);
     })
 }
@@ -35,7 +37,8 @@ async function getActivities(post_id, postType, callback) {
         console.log(activities)
         callback(activities);
     }).catch((error) => {
-        console.log(error)
+        logger.customLogger.log('error', error)
+        //console.log(error)
         callback(-1);
     });
 }
@@ -47,6 +50,7 @@ async function getCompaniesIdPerActivity(activityId, callback) {
     }).then((companiesId) => {
         callback(companiesId);
     }).catch((error) => {
+        logger.customLogger.log('error', error)
         callback(-1);
     });
 }
@@ -58,6 +62,7 @@ async function getSimilarCompaniesId(companyId, activities, callback) {
     }).then((similarCompaniesId) => {
         callback(similarCompaniesId);
     }).catch((error) => {
+        logger.customLogger.log('error', error)
         callback(-1);
     });
 }
@@ -69,6 +74,7 @@ async function getPostsIdPerActivity(type, activityId, callback) {
     }).then((postsId) => {
         callback(postsId);
     }).catch((error) => {
+        logger.customLogger.log('error', error)
         callback(-1);
     });
 }
@@ -80,6 +86,7 @@ async function getCompaniesIdPerType(type, callback) {
     }).then((companiesId) => {
         callback(companiesId);
     }).catch((error) => {
+        logger.customLogger.log('error', error)
         callback(-1);
     });
 }
@@ -118,6 +125,7 @@ async function deleteCompany(companyData, callback) {
         await companyData.destroy();
         callback("Company successfully deleted")
     } catch (error) {
+        logger.customLogger.log('error', error)
         callback(-1)
     }
 }
@@ -150,8 +158,9 @@ async function searchDirectory(searchValue, callback) {
             response[1] = { result: [], error: "No Company found" };
         }
         callback(response);
-    } catch (err) {
-        console.log(err)
+    } catch (error) {
+        //console.log(err)
+        logger.customLogger.log('error', error)
         response[0] = 400;
         response[1] = { message: " Directory not got at this moment" };
         callback(response);
@@ -186,8 +195,9 @@ async function searchForBlogs(searchValue, callback) {
             response[1] = { result: [], error: "No Blog found" };
         }
         callback(response);
-    } catch (err) {
-        console.log(err)
+    } catch (error) {
+        logger.customLogger.log('error', error)
+        //console.log(err)
         response[0] = 400;
         response[1] = { message: " List of Blogs not got at this moment" };
         callback(response);
@@ -222,8 +232,9 @@ async function searchForEvents(searchValue, callback) {
             response[1] = { result: [], error: "No Event found" };
         }
         callback(response);
-      } catch (err) {
-        console.log(err)
+      } catch (error) {
+        logger.customLogger.log('error', error)
+        //console.log(err)
         response[0] = 400;
         response[1] = { message: "  List of Events not got at this moment" };
         callback(response);
@@ -258,8 +269,9 @@ async function searchForJobs(searchValue, callback) {
             response[1] = { result: [], error: "No Job found" };
         }
         callback(response);
-      } catch (err) {
-        console.log(err)
+      } catch (error) {
+        logger.customLogger.log('error', error)
+        //console.log(err)
         response[0] = 400;
         response[1] = { message: " List of Jobs not got at this moment" };
         callback(response);

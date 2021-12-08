@@ -1,5 +1,6 @@
 import db from "../models";
 import notification from "../helpers/Notification";
+const logger = require('../helpers/LoggerMod.js');
 
 export default class MessageController {
   static async messagePost(req, res) 
@@ -13,8 +14,9 @@ export default class MessageController {
             return res.status(200).json({ message: response });
           });
       }
-    } catch (err) {
-      console.log(err)
+    } catch (error) {
+      //console.log(err)
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: " Message not sent at this moment" });
     }
   }
@@ -38,8 +40,9 @@ export default class MessageController {
           error: "No Message found",
         });
       }
-    } catch (err) {
-      console.log(err)
+    } catch (error) {
+      //console.log(err)
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: " List of Messages not got at this moment" });
     }
   }
@@ -60,7 +63,8 @@ export default class MessageController {
         : res.status(404).json({
           error: "Sorry, Message not found",
         });
-    } catch (err) {
+    } catch (error) {
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: "Sorry, Message not found" });
     }
   }
@@ -93,8 +97,9 @@ export default class MessageController {
           error: "No Message found",
         });
       }
-    } catch (err) {
-      console.log(err)
+    } catch (error) {
+      //console.log(err)
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: " List of Messages not got at this moment" });
     }
   }
@@ -112,7 +117,8 @@ export default class MessageController {
         return res.status(404).send()
       }
     } catch (error) {
-      console.log(error)
+      //console.log(error)
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: "Sorry, Failed at moment" });
     }
   }

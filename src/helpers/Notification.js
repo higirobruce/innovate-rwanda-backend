@@ -3,6 +3,7 @@ import nodemailer from "nodemailer";
 const Mail = require('./Mail.js');
 const generic = require('./Generic.js');
 import NotificationController from "../controllers/NotificationController";
+const logger = require('./LoggerMod.js');
 
 export default class Notification {
     static async notify(notification_type, parameters, callback) {
@@ -69,6 +70,7 @@ export default class Notification {
                 callback("Approved. No email to send found though, no email sent");
             }
         } catch (error) {
+            logger.customLogger.log('error', error)
             callback(-2)
         }
     }
@@ -176,7 +178,8 @@ export default class Notification {
                 }
             });
         } catch (error) {
-            console.log(error)
+            logger.customLogger.log('error', error)
+            //console.log(error)
             return callback(-1);
         }
     }

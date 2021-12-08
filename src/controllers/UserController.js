@@ -4,6 +4,7 @@ import generic from "../helpers/Generic";
 import notification from "../helpers/Notification";
 import jwt from "jsonwebtoken";
 import { UniqueConstraintError } from "sequelize";
+const logger = require('../helpers/LoggerMod.js');
 const saltRounds = 10;
 
 export default class UserController {
@@ -13,8 +14,9 @@ export default class UserController {
       order: [["createdAt", "DESC"]]
     }).then((users) => {
       res.status(200).send({ result: users });
-    }).catch((err) => {
-      console.log(err);
+    }).catch((error) => {
+      logger.customLogger.log('error', error)
+      //console.log(err);
       return res.status(401).send({ message: "list of users not got" });
     });
   }
@@ -24,8 +26,9 @@ export default class UserController {
       where: { id: req.user.id }, attributes: { exclude: ["password", "companyId", "resetLink", "lastActivity"] }
     }).then((user) => {
       res.status(200).send({ result: user });
-    }).catch((err) => {
-      console.log(err);
+    }).catch((error) => {
+      logger.customLogger.log('error', error)
+      //console.log(err);
       return res.status(401).send({ message: "Profile not got" });
     });
   }
@@ -56,6 +59,7 @@ export default class UserController {
                   return res.status(200).json({ message: response });
                 });
               }).catch((error) => {
+                logger.customLogger.log('error', error)
                 if (error instanceof UniqueConstraintError) {
                   return res.status(409).send({
                     error:
@@ -66,7 +70,7 @@ export default class UserController {
                 return res.status(401).send({ message: "Please confirm you provided all required info then try again" });
               });
           }).catch((error) => {
-
+            logger.customLogger.log('error', error)
             if (error instanceof UniqueConstraintError) {
               return res.status(409).send({
                 error: "The individual is already registered on the system",
@@ -80,7 +84,8 @@ export default class UserController {
           });
       });
     } catch (error) {
-      console.log(error)
+      logger.customLogger.log('error', error)
+      //console.log(error)
       return res.status(401).send({ error: "Error occurred!!!!" });
     }
   }
@@ -115,7 +120,7 @@ export default class UserController {
                   return res.status(200).json({ message: response });
                 });
               }).catch((error) => {
-
+                logger.customLogger.log('error', error)
                 if (error instanceof UniqueConstraintError) {
                   return res.status(409).send({
                     error:
@@ -126,7 +131,7 @@ export default class UserController {
                 return res.status(401).send({ message: "Please confirm you provided all required info then try again" });
               });
           }).catch((error) => {
-
+            logger.customLogger.log('error', error)
             if (error instanceof UniqueConstraintError) {
               return res.status(409).send({
                 error: "The company is already registered on the system",
@@ -140,7 +145,7 @@ export default class UserController {
           });
       });
     } catch (error) {
-      
+      logger.customLogger.log('error', error)      
       return res.status(401).send({ error: "Error occurred" });
     }
   }
@@ -153,6 +158,7 @@ export default class UserController {
         return UserController.createCompanyAccount(req, res);
       }
     } catch (error) {
+      logger.customLogger.log('error', error)
       return res.status(401).send({ error: "Error occurred" });
     }
   }
@@ -173,7 +179,8 @@ export default class UserController {
         return res.status(200).json({ message: "User Account created successfully. " + response });
       });
     } catch (error) {
-      console.log(error)
+      logger.customLogger.log('error', error);
+      //console.log(error)
       if (error instanceof UniqueConstraintError) {
         return res.status(409).send({
           error:
@@ -216,7 +223,8 @@ export default class UserController {
               res.locals.companyInfo = company;
             }
             next();
-          }).catch((err) => {
+          }).catch((error) => {
+            logger.customLogger.log('error', error)
             res.status(403).send({ message: "Error - company info not got" });
           });
         } else {
@@ -224,8 +232,9 @@ export default class UserController {
           res.status(403).send({ message: "Wrong Password" });
         }
       });
-    }).catch((errr) => {
-      console.log("err", errr)
+    }).catch((error) => {
+      logger.customLogger.log('error', error)
+      //console.log("err", errr)
       res.status(401).send({ message: "Error occurred" });
     });
   }
@@ -255,7 +264,8 @@ export default class UserController {
             })
           }
         });
-    } catch (err) {
+    } catch (error) {
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: "Sorry, change of password failed." });
     }
   }
@@ -279,6 +289,7 @@ export default class UserController {
                 return res.status(404).send({ message: "Please try again" });
               }
           }).catch(error => {
+            logger.customLogger.log('error', error)
             return res.status(400).json({ error: "Please confirm that the email is right, Try again later" });
           });
         } else {
@@ -286,6 +297,7 @@ export default class UserController {
         }
       }
     }).catch(error => {
+      logger.customLogger.log('error', error)   
       return res.status(400).json({ error: "Please try again later" });
     })
   }
@@ -343,8 +355,9 @@ export default class UserController {
         : res.status(404).json({
           error: "Sorry, deactivation failed..Try again"
         });
-    } catch (err) {
-      console.log(err)
+    } catch (error) {
+      logger.customLogger.log('error', error)
+      //console.log(err)
       return res.status(400).send({ message: "Sorry, Action failed" });
     }
   }
@@ -367,8 +380,9 @@ export default class UserController {
         : res.status(404).json({
           error: "Sorry, activation failed..Try again"
         });
-    } catch (err) {
-      console.log(err)
+    } catch (error) {
+      logger.customLogger.log('error', error)
+      //console.log(err)
       return res.status(400).send({ message: "Sorry, Action failed" });
     }
   }
@@ -402,14 +416,16 @@ export default class UserController {
               return res.status(200).json({ message: response });
             });
           }
-        }).catch((errr) => {
-          console.log(errr)
+        }).catch((error) => {
+          logger.customLogger.log('error', error)
+          //console.log(errr)
           return res.status(401).json({ error: "Activation Error, try later" });
         });
       } else {
         return res.status(401).json({ error: "Activation Link not privided" });
       }
-    } catch (err) {
+    } catch (error) {
+      logger.customLogger.log('error', error)
       return res.status(400).json({ error: "Activation Error" });
     }
   }
@@ -442,11 +458,13 @@ export default class UserController {
               return res.status(200).json({ message: "The account linked to provided email is no longer pending!!!" });
             }
           }
-        }).catch((errr) => {
-          console.log(errr)
+        }).catch((error) => {
+          logger.customLogger.log('error', error)
+          //console.log(errr)
           return res.status(401).json({ error: "Activation Error, try later" });
         });
-    } catch (err) {
+    } catch (error) {
+      logger.customLogger.log('error', error)
       return res.status(400).json({ error: "Activation Link Resubmission Error" });
     }
   }
@@ -457,8 +475,9 @@ export default class UserController {
           { role: req.body.role }, { where: { id: req.params.userId } });
       return response ? res.status(200).json({ message: "User's role changed successfully" })
                       : res.status(404).json({ error: "Sorry, role change failed..Try again" });
-    } catch (err) {
-      console.log(err)
+    } catch (error) {
+      logger.customLogger.log('error', error)
+      //console.log(err)
       return res.status(400).send({ message: "Sorry, role change failed..Try again" });
     }
   }
@@ -496,8 +515,9 @@ export default class UserController {
           error: "No Message found",
         });
       }
-    } catch (err) {
-      console.log(err)
+    } catch (error) {
+      logger.customLogger.log('error', error)
+      //console.log(err)
       return res.status(400).send({ message: " List of Messages not got at this moment" });
     }
   }
@@ -529,6 +549,7 @@ export default class UserController {
         }
       }
     } catch (error) {
+      logger.customLogger.log('error', error)
       if (error instanceof UniqueConstraintError) {
         return res.status(409).send({ error: "Email already used for a company on the system, Please use a different email", field: error.errors[0].path });
       }

@@ -1,11 +1,13 @@
 import db from "../models";
+const logger = require('../helpers/LoggerMod.js');
 
 export default class ResourceController {
   static async getResources(req, res) {
     try {
       const response = await db["Resource"].findAll({order: [["title", "ASC"]]});
       return res.status(200).json({ result: response });
-    } catch (err) {
+    } catch (error) {
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: "Sorry, no resources found" });
     }
   }
@@ -18,7 +20,8 @@ export default class ResourceController {
         raw: true
       });
       return res.status(200).json({ result: response });
-    } catch (err) {
+    } catch (error) {
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: "Sorry, no resource found" });
     }
   }
@@ -34,7 +37,8 @@ export default class ResourceController {
         });
       return res.status(200).send({ message: response });
     } catch (error) {
-      console.log("err",error)
+      //console.log("err",error)
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: "Sorry, Failed to add resource at moment" });
     }
   }
@@ -46,7 +50,8 @@ export default class ResourceController {
         });
       return update ? res.status(200).json({ result: "Edited Successfully" })
                     : res.status(404).json({ error: "Sorry, No record edited" });
-    } catch (err) {
+    } catch (error) {
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: "Sorry, Edit failed" });
     }
   }
@@ -61,8 +66,9 @@ export default class ResourceController {
       } else {
         return res.status(200).json({ message: "Resource not yet added" })
       }
-    } catch (err) {
-      console.log(err)
+    } catch (error) {
+      logger.customLogger.log('error', error)
+      //console.log(err)
       return res.status(400).send({ message: "Sorry, Failed to remove resource at moment" });
     }
   }

@@ -1,6 +1,7 @@
 import db from "../models";
 import notification from "../helpers/Notification";
 import generic from "../helpers/Generic";
+const logger = require('../helpers/LoggerMod.js');
 
 export default class JobController {
   static async jobPost(req, res) {
@@ -35,7 +36,8 @@ export default class JobController {
           message: "Job posting failed"
         });
       }
-    } catch (err) {
+    } catch (error) {
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: "Job not posted at this moment" });
     }
   }
@@ -61,8 +63,9 @@ export default class JobController {
         } else {
           res.status(404).json({ message: "Job could have been already treated" });
         }
-      }).catch((err) => {
-        console.log(err)
+      }).catch((error) => {
+      logger.customLogger.log('error', error)
+        //console.log(err)
         return res.status(400).send({ message: "Sorry, Action failed" });
       })
   }
@@ -99,8 +102,9 @@ export default class JobController {
         } else {
           res.status(404).json({ message: "Job could have been already treated" });
         }
-      }).catch((err) => {
-        console.log(err)
+      }).catch((error) => {
+        //console.log(err)
+        logger.customLogger.log('error', error)
         return res.status(400).send({ message: "Sorry, Action failed" });
       })
   }
@@ -158,7 +162,8 @@ export default class JobController {
         result: [],
         error: "No job found at this moment",
       });
-    } catch (err) {
+    } catch (error) {
+      logger.customLogger.log('error', error)
       return res
         .status(400)
         .send({ message: "No jobs found at this moment" });
@@ -223,8 +228,9 @@ export default class JobController {
           error: "No Job Posts found",
         });
       }
-    } catch (err) {
-      console.log(err)
+    } catch (error) {
+      //console.log(err)
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: " List of jobs not got at this moment" });
     }
   }
@@ -328,8 +334,9 @@ export default class JobController {
           error: "No Job Posts found",
         });
       }
-    } catch (err) {
-      console.log(err)
+    } catch (error) {
+      //console.log(err)
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: " List of Jobs not got at this moment" });
     }
   }
@@ -385,7 +392,8 @@ export default class JobController {
         : res.status(404).json({
           error: "Sorry, Job not found",
         });
-    } catch (err) {
+    } catch (error) {
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: "Sorry, Job not found" });
     }
   }
@@ -405,7 +413,8 @@ export default class JobController {
         : res.status(404).json({
           error: "Sorry, No record edited",
         });
-    } catch (err) {
+    } catch (error) {
+      logger.customLogger.log('error', error)
       console.log(err)
       return res.status(400).send({ message: "Sorry, Edit failed" });
     }
@@ -429,8 +438,9 @@ export default class JobController {
         : res.status(404).json({
           error: "Sorry, No record deleted"
         });
-    } catch (err) {
-      console.log(err)
+    } catch (error) {
+      //console.log(err)
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: "Sorry, Action failed" });
     }
   }
@@ -517,8 +527,9 @@ export default class JobController {
         return res.status(200).json({ result: jobPosts });
       }
       return res.status(404).json({ result: [], error: "No job found at this moment" });
-    } catch (err) {
-      console.log(err)
+    } catch (error) {
+      //console.log(err)
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: "No jobs found at this moment" });
     }
   }
@@ -567,7 +578,8 @@ export default class JobController {
         return res.status(200).json({ result: jobPosts });
       }
       return res.status(404).json({ result: [], error: "No job found at this moment" });
-    } catch (err) {
+    } catch (error) {
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: "No jobs found at this moment" });
     }
   }

@@ -1,6 +1,7 @@
 import db from "../models";
 import notification from "../helpers/Notification";
 import generic from "../helpers/Generic";
+const logger = require('../helpers/LoggerMod.js');
 
 export default class BlogController {
   static async blogPost(req, res) {
@@ -33,8 +34,9 @@ export default class BlogController {
           message: "Blog posting failed"
         });
       }
-    } catch (err) {
-      console.log(err)
+    } catch (error) {
+      //console.log(error)
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: " Blog not posted at this moment" });
     }
   }
@@ -61,8 +63,9 @@ export default class BlogController {
         } else {
           res.status(404).json({ message: "Blog  could have been already treated" });
         }
-      }).catch((err) => {
-        console.log(err)
+      }).catch((error) => {
+        // console.log(err)
+        logger.customLogger.log('error', error)
         return res.status(400).send({ message: "Sorry, Action failed" });
       })
   }
@@ -100,8 +103,9 @@ export default class BlogController {
         } else {
           res.status(404).json({ message: "Blog  could have been already treated" });
         }
-      }).catch((err) => {
-        console.log(err)
+      }).catch((error) => {
+        //console.log(err)
+        logger.customLogger.log('error', error)
         return res.status(400).send({ message: "Sorry, Action failed" });
       })
   }
@@ -157,8 +161,9 @@ export default class BlogController {
         result: [],
         error: "No blog posts found at this moment",
       });
-    } catch (err) {
-      console.log(err)
+    } catch (error) {
+      //console.log(err)
+      logger.customLogger.log('error', error)
       return res
         .status(400)
         .send({ message: "No blogs found at this moment" });
@@ -221,7 +226,8 @@ export default class BlogController {
           error: "No Blog Posts found",
         });
       }
-    } catch (err) {
+    } catch (error) {
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: " List of blogs not got at this moment" });
     }
   }
@@ -321,8 +327,9 @@ export default class BlogController {
           error: "No Blog Posts found",
         });
       }
-    } catch (err) {
-      console.log(err)
+    } catch (error) {
+      //console.log(err)
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: " List of blogs not got at this moment" });
     }
   }
@@ -376,7 +383,8 @@ export default class BlogController {
         : res.status(404).json({
           error: "Sorry, Blog not found",
         });
-    } catch (err) {
+    } catch (error) {
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: "Sorry, Blog not found" });
     }
   }
@@ -396,8 +404,9 @@ export default class BlogController {
         : res.status(404).json({
           error: "Sorry, No record edited",
         });
-    } catch (err) {
-      console.log(err)
+    } catch (error) {
+      logger.customLogger.log('error', error)
+      //console.log(err)
       return res.status(400).send({ message: "Sorry, Edit failed" });
     }
   }
@@ -420,7 +429,8 @@ export default class BlogController {
         : res.status(404).json({
           message: "Sorry, No record deleted"
         });
-    } catch (err) {
+    } catch (error) {
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: "Sorry, Action failed" });
     }
   }
@@ -512,8 +522,9 @@ export default class BlogController {
       } else {
         return res.status(404).json({ result: [], error: "No Blog Posts found" });
       }
-    } catch (err) {
-      console.log(err);
+    } catch (error) {
+      logger.customLogger.log('error', error)
+      //console.log(err);
       return res.status(400).send({ message: " List of blogs not got at this moment" });
     }
   }
@@ -564,7 +575,8 @@ export default class BlogController {
       } else {
         return res.status(404).json({ result: [], error: "No Blog Posts found" });
       }
-    } catch (err) {
+    } catch (error) {
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: " List of blogs not got at this moment" });
     }
   }

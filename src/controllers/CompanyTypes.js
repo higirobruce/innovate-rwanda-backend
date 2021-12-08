@@ -1,14 +1,16 @@
 import db from "../models";
 import generic from "../helpers/Generic";
 import { UniqueConstraintError } from "sequelize";
+const logger = require('../helpers/LoggerMod.js');
 
 export default class CompanyTypes {
   static async getCompanyTypes(req, res) {
     try {
       const response = await db["CompanyTypes"].findAll({ order: [["display_order", "ASC"], ["slug", "ASC"]] });
       return res.status(200).json({ result: response });
-    } catch (err) {
-      console.log(err)
+    } catch (error) {
+      logger.customLogger.log('error', error)
+      //console.log(err)
       return res.status(400).send({ message: "Sorry, no company types found" });
     }
   }
@@ -23,6 +25,7 @@ export default class CompanyTypes {
       });
       return res.status(200).send({ message: response });
     } catch (error) {
+      logger.customLogger.log('error', error)
       if (error instanceof UniqueConstraintError) {
         return res.status(409).send({
           error:
@@ -41,7 +44,8 @@ export default class CompanyTypes {
         });
       return update ? res.status(200).json({ result: "Edited Successfully" })
         : res.status(404).json({ error: "Sorry, No record edited" });
-    } catch (err) {
+    } catch (error) {
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: "Sorry, Edit failed" });
     }
   }
@@ -56,7 +60,8 @@ export default class CompanyTypes {
       } else {
         return res.status(200).json({ message: "Type not yet added" })
       }
-    } catch (err) {
+    } catch (error) {
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: "Sorry, Failed to remove company type at moment" });
     }
   }

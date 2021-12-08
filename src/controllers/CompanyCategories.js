@@ -1,11 +1,13 @@
 import db from "../models";
+const logger = require('../helpers/LoggerMod.js');
 
 export default class CompanyCategories {
   static async getCompanyCategories(req, res) {
     try {
       const response = await db["CompanyCategories"].findAll({order: [["name", "ASC"]]});
       return res.status(200).json({ result: response });
-    } catch (err) {
+    } catch (error) {
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: "Sorry, no company categories found" });
     }
   }
@@ -15,6 +17,7 @@ export default class CompanyCategories {
       const response = await db['CompanyCategories'].create(req.body);
       return res.status(200).send({ message: response });
     } catch (error) {
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: "Sorry, Failed to add company category at moment" });
     }
   }
@@ -26,7 +29,8 @@ export default class CompanyCategories {
         });
       return update ? res.status(200).json({ result: "Edited Successfully" })
                     : res.status(404).json({ error: "Sorry, No record edited" });
-    } catch (err) {
+    } catch (error) {
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: "Sorry, Edit failed" });
     }
   }
@@ -41,7 +45,8 @@ export default class CompanyCategories {
       } else {
         return res.status(200).json({ message: "Category not yet added" })
       }
-    } catch (err) {
+    } catch (error) {
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: "Sorry, Failed to remove category at moment" });
     }
   }

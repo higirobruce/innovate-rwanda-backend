@@ -1,5 +1,6 @@
 import db from '../models';
 import GenerateMeta from '../helpers/GenerateMeta';
+const logger = require('../helpers/LoggerMod.js');
 
 export default class Talents {
   static async getTalents(req, res) {
@@ -11,8 +12,9 @@ export default class Talents {
         ],
       });
       return res.status(200).json({ result: response });
-    } catch (err) {
-      console.log(err);
+    } catch (error) {
+      //console.log(err);
+      logger.customLogger.log('error', error)
       return res
         .status(400)
         .send({ message: 'No individual accounts found at this moment' });
@@ -40,8 +42,9 @@ export default class Talents {
         meta: GenerateMeta(count, limit, parseInt(page, 10)),
         result: response,
       });
-    } catch (err) {
-      console.log(err);
+    } catch (error) {
+      //console.log(err);
+      logger.customLogger.log('error', error)
       return res
         .status(400)
         .send({ message: 'No individual accounts found at this moment' });
@@ -55,8 +58,9 @@ export default class Talents {
       return res.status(200).json({
         result: response,
       });
-    } catch (err) {
-      console.log(err);
+    } catch (error) {
+      logger.customLogger.log('error', error)
+      //console.log(err);
       return res
         .status(400)
         .send({ message: 'No individual accounts found at this moment' });
@@ -71,8 +75,9 @@ export default class Talents {
       return profile
         ? res.status(200).json({ result: 'Edited Successfully' })
         : res.status(404).json({ error: 'Sorry, No record edited' });
-    } catch (err) {
-      console.log(err);
+    } catch (error) {
+      //console.log(err);      
+      logger.customLogger.log('error', error);
       return res.status(400).send({ message: 'Sorry, Edit failed' });
     }
   }
@@ -105,8 +110,9 @@ export default class Talents {
       } else {
         return res.status(404).json({ result: [], error: 'No result found' });
       }
-    } catch (err) {
-      console.log(err);
+    } catch (error) {
+      logger.customLogger.log('error', error)
+      //console.log(err);
       return res
         .status(400)
         .send({ message: ' Individual accounts not got at this moment' });
@@ -126,8 +132,9 @@ export default class Talents {
       return profile
         ? res.status(200).json({ result: 'Entry deactivated' })
         : res.status(404).json({ error: 'Sorry, No record deactivated' });
-    } catch (err) {
-      console.log(err);
+    } catch (error) {
+      //console.log(err);
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: 'Sorry, Edit failed' });
     }
   }
@@ -145,8 +152,9 @@ export default class Talents {
       return profile
         ? res.status(200).json({ result: 'Entry activated' })
         : res.status(404).json({ error: 'Sorry, No record activated' });
-    } catch (err) {
-      console.log(err);
+    } catch (error) {
+      //console.log(err);
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: 'Sorry, Edit failed' });
     }
   }

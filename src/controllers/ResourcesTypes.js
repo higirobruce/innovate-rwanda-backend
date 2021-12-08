@@ -1,13 +1,15 @@
 import db from "../models";
 import generic from "../helpers/Generic";
 import { UniqueConstraintError } from "sequelize";
+const logger = require('../helpers/LoggerMod.js');
 
 export default class ResourcesTypes {
   static async getResourcesTypes(req, res) {
     try {
       const response = await db["ResourcesTypes"].findAll({ order: [["name", "ASC"]] });
       return res.status(200).json({ result: response });
-    } catch (err) {
+    } catch (error) {
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: "Sorry, no resources types found" });
     }
   }
@@ -20,6 +22,7 @@ export default class ResourcesTypes {
       });
       return res.status(200).send({ message: response });
     } catch (error) {
+      logger.customLogger.log('error', error)
       if (error instanceof UniqueConstraintError) {
         return res.status(409).send({
           error:
@@ -38,7 +41,8 @@ export default class ResourcesTypes {
         });
       return update ? res.status(200).json({ result: "Edited Successfully" })
         : res.status(404).json({ error: "Sorry, No record edited" });
-    } catch (err) {
+    } catch (error) {
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: "Sorry, Edit failed" });
     }
   }
@@ -53,7 +57,8 @@ export default class ResourcesTypes {
       } else {
         return res.status(200).json({ message: "Type not yet added" })
       }
-    } catch (err) {
+    } catch (error) {
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: "Sorry, Failed to remove resources type at moment" });
     }
   }

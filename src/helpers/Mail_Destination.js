@@ -1,4 +1,5 @@
 import db from "../models";
+const logger = require('./LoggerMod.js');
 
 async function subscribers_email_list() {
   try {
@@ -12,6 +13,7 @@ async function subscribers_email_list() {
       return emails.map(email => email.email).toString()
     }
   } catch (error) {
+    logger.customLogger.log('error', error)
     return -1
   }
 }
@@ -45,6 +47,7 @@ async function email_list_perActivity(business_activities) {
     }
     return { directory_email_list: directory_email_list, co_ids: co_ids };
   } catch (error) {
+    logger.customLogger.log('error', error)
     return -1;
   }
 }
@@ -70,6 +73,7 @@ async function subscriber_dirPerActivity(business_activities) {
     }
     return 0;
   } catch (error) {
+    logger.customLogger.log('error', error)
     return -1;
   }
 }

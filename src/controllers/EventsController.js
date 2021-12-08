@@ -1,6 +1,7 @@
 import db from "../models";
 import notification from "../helpers/Notification";
 import generic from "../helpers/Generic";
+const logger = require('../helpers/LoggerMod.js');
 
 export default class EvenController {
   static async eventPost(req, res) {
@@ -35,8 +36,9 @@ export default class EvenController {
           message: "Event posting failed"
         });
       }
-    } catch (err) {
-      console.log(err)
+    } catch (error) {
+      //console.log(err)
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: " Event not submitted at this moment" });
     }
   }
@@ -62,8 +64,9 @@ export default class EvenController {
         } else {
           res.status(404).json({ message: "Event could have been already treated" });
         }
-      }).catch((err) => {
-        console.log(err)
+      }).catch((error) => {
+        //console.log(err)
+        logger.customLogger.log('error', error)
         return res.status(400).send({ message: "Sorry, Action failed" });
       })
   }
@@ -100,8 +103,9 @@ export default class EvenController {
         } else {
           res.status(404).json({ message: "Event could have been already treated" });
         }
-      }).catch((err) => {
-        console.log(err)
+      }).catch((error) => {
+        //console.log(err)
+        logger.customLogger.log('error', error)
         return res.status(400).send({ message: "Sorry, Action failed" });
       })
   }
@@ -157,7 +161,8 @@ export default class EvenController {
         result: [],
         error: "No event found at this moment",
       });
-    } catch (err) {
+    } catch (error) {
+      logger.customLogger.log('error', error)
       return res
         .status(400)
         .send({ message: "No events found at this moment" });
@@ -220,8 +225,9 @@ export default class EvenController {
           error: "No Event Posts found",
         });
       }
-    } catch (err) {
-      console.log(err)
+    } catch (error) {
+      //console.log(err)
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: " List of events not got at this moment" });
     }
   }
@@ -321,8 +327,9 @@ export default class EvenController {
           error: "No Event Posts found",
         });
       }
-    } catch (err) {
-      console.log(err)
+    } catch (error) {
+      //console.log(err)
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: " List of Events not got at this moment" });
     }
   }
@@ -376,7 +383,8 @@ export default class EvenController {
         : res.status(404).json({
           error: "Sorry, Event not found",
         });
-    } catch (err) {
+    } catch (error) {
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: "Sorry, Event not found" });
     }
   }
@@ -396,7 +404,8 @@ export default class EvenController {
         : res.status(404).json({
           error: "Sorry, No record edited",
         });
-    } catch (err) {
+    } catch (error) {
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: "Sorry, Edit failed" });
     }
   }
@@ -419,7 +428,8 @@ export default class EvenController {
         : res.status(404).json({
           error: "Sorry, No record deleted"
         });
-    } catch (err) {
+    } catch (error) {
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: "Sorry, Action failed" });
     }
   }
@@ -508,8 +518,9 @@ export default class EvenController {
       } else {
         return res.status(404).json({ result: [], error: "No Event Posts found" });
       }
-    } catch (err) {
-      console.log(err)
+    } catch (error) {
+      //console.log(err)
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: " List of Events not got at this moment" });
     }
   }
@@ -563,8 +574,9 @@ export default class EvenController {
       } else {
         return res.status(404).json({ result: [], error: "No Event Posts found" });
       }
-    } catch (err) {
-      console.log(err)
+    } catch (error) {
+      //console.log(err)
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: " List of Events not got at this moment" });
     }
   }

@@ -1,6 +1,8 @@
 import db from '../models';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
+const logger = require('../helpers/LoggerMod.js');
+
 dotenv.config();
 
 const getToken = (req, res) => {
@@ -46,6 +48,7 @@ const verifyToken = (req, res, next) => {
       }
     });
   } catch (error) {
+    logger.customLogger.log('error', error)
     return res.status(401).send({
       message: 'Invalid email, password or company information',
     });

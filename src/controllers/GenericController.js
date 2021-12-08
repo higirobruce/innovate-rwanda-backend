@@ -3,6 +3,8 @@ import db from '../models';
 import generic from '../helpers/Generic';
 import { UniqueConstraintError } from 'sequelize';
 import ExportHelper from '../helpers/ExportHelper';
+const logger = require('../helpers/LoggerMod.js');
+
 export default class genericController {
   static async exportCompanies(req, res) {
     const { model } = req.query;
@@ -15,8 +17,8 @@ export default class genericController {
       return res
         .status(404)
         .json({ result: [], error: 'No companies found at this moment' });
-    } catch (err) {
-      console.log('###', err);
+    } catch (error) {
+      logger.customLogger.log('error', error)
       return res.status(400).send({
         message: 'Can not export companies right now, try again later',
       });
@@ -62,8 +64,8 @@ export default class genericController {
           subscribersCount : counts[6]
         }
       });
-    }).catch(err => {
-      console.log(err);
+    }).catch(error => {
+      logger.customLogger.log('error', error);
       return res.status(400).send({ message: 'Sorry, Counts not found' });
     });
   }
@@ -80,8 +82,9 @@ export default class genericController {
       return res
         .status(200)
         .json({ result: { newNotifications, newMessages } });
-    } catch (err) {
-      console.log(err);
+    } catch (error) {
+      //console.log(err);
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: 'Sorry, Counts not found' });
     }
   }
@@ -100,8 +103,9 @@ export default class genericController {
       });
 
       return res.status(200).json({ result: { jobs, events, blogs } });
-    } catch (err) {
-      console.log(err);
+    } catch (error) {
+      //console.log(err);
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: 'Sorry, Counts not found' });
     }
   }
@@ -111,6 +115,7 @@ export default class genericController {
       const response = await db['ActivitiesOfCompany'].create(req.body);
       return res.status(200).send({ message: response });
     } catch (error) {
+      logger.customLogger.log('error', error)
       if (error instanceof UniqueConstraintError) {
         return res
           .status(409)
@@ -133,8 +138,9 @@ export default class genericController {
       } else {
         return res.status(200).json({ message: 'Activity not yet added' });
       }
-    } catch (err) {
-      console.log(err);
+    } catch (error) {
+      logger.customLogger.log('error', error)
+      //console.log(err);
       return res
         .status(400)
         .send({ message: 'Activity not removed..Try again later' });
@@ -150,10 +156,11 @@ export default class genericController {
       });
       return res.status(200).send({ message: response });
     } catch (error) {
+      logger.customLogger.log('error', error)
       if (error instanceof UniqueConstraintError) {
         return res.status(409).send({ error: 'Activity already added' });
       }
-      console.log(err);
+      //console.log(err);
       return res
         .status(400)
         .send({ message: 'Activity not added at this moment' });
@@ -174,8 +181,9 @@ export default class genericController {
       } else {
         return res.status(200).json({ message: 'Activity not yet added' });
       }
-    } catch (err) {
-      console.log(err);
+    } catch (error) {
+      //console.log(err);
+      logger.customLogger.log('error', error)
       return res
         .status(400)
         .send({ message: 'Activity not removed..Try again later' });
@@ -202,8 +210,9 @@ export default class genericController {
         response.push({ jobs: { status: result[0], result: result[1] } });
       });
       return res.status(200).json({ result: response });
-    } catch (err) {
-      console.log(err);
+    } catch (error) {
+      logger.customLogger.log('error', error)
+      //console.log(err);
       return res
         .status(400)
         .send({ message: 'Sorry, Search failed for the moment' });

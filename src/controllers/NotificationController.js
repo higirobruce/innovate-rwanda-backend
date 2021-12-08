@@ -1,5 +1,6 @@
 import db from "../models";
 import generic from "../helpers/Generic";
+const logger = require('../helpers/LoggerMod.js');
 
 export default class NotificationController {
   static async notificationPost(mail) {
@@ -40,7 +41,8 @@ export default class NotificationController {
         }
       }
     } catch (error) {
-      console.log(error)
+      logger.customLogger.log('error', error)
+      //console.log(error)
     }
   }
 
@@ -62,8 +64,9 @@ export default class NotificationController {
           error: "No notification found",
         });
       }
-    } catch (err) {
-      console.log(err)
+    } catch (error) {
+      //console.log(err)
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: " List of notifications not got at this moment" });
     }
   }
@@ -81,7 +84,8 @@ export default class NotificationController {
         return res.status(404).send()
       }
     } catch (error) {
-      console.log(error)
+      //console.log(error)
+      logger.customLogger.log('error', error)
       return res.status(400).send({ message: "Sorry, Failed at moment" });
     }
   }
