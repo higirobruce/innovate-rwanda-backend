@@ -1,9 +1,13 @@
 
 import nodemailer from "nodemailer";
+const google = require('googleapis').google;
 const Mail = require('./Mail.js');
 const generic = require('./Generic.js');
 import NotificationController from "../controllers/NotificationController";
 const logger = require('./LoggerMod.js');
+
+const oAuthClient = new google.auth.OAuth2(process.env.MAILER_CLIENT_ID, process.env.MAILER_CLIENT_SECRET, process.env.MAILER_REDIRECT_URI)
+oAuthClient.setCredentials({ refresh_token : process.env.MAILER_REFRESH_TOKEN })
 
 export default class Notification {
     static async notify(notification_type, parameters, callback) {
@@ -75,20 +79,26 @@ export default class Notification {
         }
     }
 
-    static sendEmail(mail, callback) {
+    static async sendEmail(mail, callback) {
         try {
             var content, mailOptions;
             const footer = `Copyright, ${generic.getYear()}<br>Innovate Rwanda`;
             const unsubscribe = `<a href="${process.env.APP_URL}/unsubscribe">unsubscribe</a>`;
                
+            const accessToken = await oAuthClient.getAccessToken()
             const transporter = nodemailer.createTransport({
                 service: "gmail",
                 auth: {
+                    type:'OAuth2',
                     user: process.env.MAILER_EMAIL,
-                    pass: process.env.MAILER_PASSWORD
+                    clientId: process.env.MAILER_CLIENT_ID,
+                    clientSecret: process.env.MAILER_CLIENT_SECRET,
+                    refreshToken: process.env.MAILER_REFRESH_TOKEN,
+                    accessToken: accessToken                    
                 }
             });
 
+            let mail_from = `Innovate Rwanda <${process.env.MAILER_EMAIL}>`;
             switch (mail.format) {
                 case "Event":
                 case "Blog":
@@ -110,7 +120,7 @@ export default class Notification {
                                     </div>
                                 </div>`;
                     mailOptions = {
-                        from: process.env.MAILER_EMAIL,
+                        from: mail_from,
                         bcc: mail.destination,
                         subject: mail.subject,
                         html: content,
@@ -156,7 +166,7 @@ export default class Notification {
                                     <div style="padding:35px 10px;text-align:center;">${footer}</div>
                                 </div>`;
                     mailOptions = {
-                        from: process.env.MAILER_EMAIL,
+                        from: mail_from,
                         to: mail.destination,
                         subject: mail.subject,
                         html: content,
@@ -170,7 +180,8 @@ export default class Notification {
 
             transporter.sendMail(mailOptions, function (error, info) {
                 if (error) {
-                    console.log(error)
+                    logger.customLogger.log('error', error)
+                    //console.log(error)
                     callback(0)
                 } else {
                     console.log("email sent" + info.response)

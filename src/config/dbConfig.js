@@ -25,7 +25,13 @@ const config = {
     password: process.env.DB_PASSWORD_TEST,
     database: process.env.DB_NAME_TEST,
     host: process.env.DB_HOST_TEST,
-    dialect: 'postgres'
+    dialect: 'postgres',
+        dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    },
   },
   production: {
     url: process.env.DATABASE_URL_PROD,

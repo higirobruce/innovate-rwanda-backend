@@ -1,5 +1,5 @@
 {
-  "name": "innovate_rw_api",
+  "name": "Innovate",
   "version": "1.0.0",
   "description": "Innovate Rwanda",
   "main": "src/app.js",
@@ -17,7 +17,7 @@
     "@babel/node": "^7.4.5",
     "@babel/preset-env": "^7.4.5",
     "@babel/register": "^7.4.4",
-    "bcrypt": "^5.0.0",
+    "bcrypt": "^5.0.1",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.0",
     "concurrently": "^4.1.0",
@@ -28,6 +28,7 @@
     "express-jwt": "^5.3.1",
     "express-session": "^1.16.1",
     "extend": "^3.0.2",
+    "googleapis": "^92.0.0",
     "http-errors": "^1.7.2",
     "jsonwebtoken": "^8.5.1",
     "morgan": "^1.9.1",
