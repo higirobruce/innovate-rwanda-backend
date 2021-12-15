@@ -133,9 +133,20 @@ export default class CompanyController {
       };
     }
     if (activity) {
+      var companiesId;
+      await generic.getCompaniesIdPerActivity(
+        activity,
+        function (thecompaniesId) {
+          companiesId = thecompaniesId.map(
+            (companyId) => companyId.companyId
+          );
+        }
+      );
       where = {
         ...where,
-        coType: companyType,
+        [db.Op.or]: [
+        { id: { [db.Op.in]: companiesId } },
+        { businessActivityId: activity} ]
       };
     }
     if (location) {
@@ -154,7 +165,7 @@ export default class CompanyController {
         },
       };
     }
-    const limit = 20;
+    const limit = 3; //20
     const count = await db.Company.count({ where });
     const offset = page === 1 ? 0 : (parseInt(page, 10) - 1) * limit;
     // manage orders
