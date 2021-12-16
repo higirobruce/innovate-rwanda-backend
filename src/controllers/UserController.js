@@ -97,7 +97,7 @@ export default class UserController {
           coName: req.body.coName, coType: req.body.coType, coWebsite: req.body.coWebsite,
           districtBasedIn: req.body.districtBasedIn, businessActivityId: req.body.businessActivityId,
           shortDescription: req.body.shortDescription, slug: generic.generateSlug(req.body.coName),
-          contactEmail: req.body.email, emailDisplay: false, status: "pending"
+          contactEmail: req.body.email, emailDisplay: false, status: "in_editing"
         }, { transaction: t })
           .then((company) => {
 
