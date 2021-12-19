@@ -111,11 +111,71 @@ export default class EvenController {
   }
 
   static async getApprovedEventsList(req, res) {
+    let where = { status: 'approved' };
+    const {
+      companyType,
+      topic,
+      year,
+      orderType,
+      orderValue,
+      search,
+    } = req.query;
+
     try {
+      if (companyType) {
+          var companiesId;
+          await generic.getCompaniesIdPerType(companyType, function (theCompanies) {
+            companiesId = theCompanies.map(company => company.id);
+          });
+        where = {
+          ...where,
+          companyId: { [db.Op.in]: companiesId },
+        };
+      }
+      if (topic) {
+        var postsId;
+        await generic.getPostsIdPerActivity("event", topic, function (thepostsId) {
+          postsId = thepostsId.map(postId => postId.postId);
+        });
+        if (postsId){
+          where = {
+            ...where,
+            id: { [db.Op.in]: postsId }
+          };
+        }
+
+      }
+      if (year) {
+        where = {
+          ...where,
+          [db.Op.and]: db.sequelize.where(db.sequelize.literal('EXTRACT(YEAR FROM "Event"."eventDate")'), year),
+        };
+      }
+
+      // manage search query
+      if (search) {
+        const search_value = search.trim();
+        where = {
+          ...where,
+          [db.Op.or]: [
+            { title: { [db.Op.iLike]: "%" + search_value + "%" } },
+            { description: { [db.Op.iLike]: "%" + search_value + "%" } },
+            { category: { [db.Op.iLike]: "%" + search_value + "%" } }
+          ], 
+        };
+      }
+      // manage orders
+      let orderT;
+      if (orderType === 'title') {
+        orderT = 'title';
+      } else {
+        orderT = 'eventDate';
+      }
+      let order = [[orderT, orderValue || 'DESC']];
+
       const eventPosts = await db["Event"].findAll({
-        where: {
-          status: "approved",
-        },
+        where,
+        order,
         include: [
           { model: db["Company"], attributes: [["coName", "companyName"]] },
           { model: db["User"], attributes: ["firstName", "lastName"] },
@@ -150,7 +210,6 @@ export default class EvenController {
             }]
           }
         ],
-        order: [['createdAt', 'DESC']],
       });
       if (eventPosts && eventPosts.length > 0) {
         return res.status(200).json({
@@ -162,6 +221,7 @@ export default class EvenController {
         error: "No event found at this moment",
       });
     } catch (error) {
+      //console.log(error)
       logger.customLogger.log('error', error)
       return res
         .status(400)
