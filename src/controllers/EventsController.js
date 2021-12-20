@@ -9,17 +9,54 @@ export default class EvenController {
       const activities = req.body.activities;
       const fields = req.body;
       const author = req.user;
-      const event = await db['Event'].create({
+      let event;
+      if (fields.eventDate){
+        if(fields.eventTime) {
+        event = await db['Event'].create({
+          title: fields.title,
+          description: fields.description,
+          companyId: author.companyId,
+          author: author.id,
+          category: fields.category,
+          eventDate: fields.eventDate,
+          eventTime: fields.eventTime,
+          flyer: fields.flyer,
+          status: fields.status
+        });
+      } else {
+        event = await db['Event'].create({
+          title: fields.title,
+          description: fields.description,
+          companyId: author.companyId,
+          author: author.id,
+          category: fields.category,
+          eventDate: fields.eventDate,
+          flyer: fields.flyer,
+          status: fields.status
+        });
+      }
+    } else if(fields.eventTime) { 
+      event = await db['Event'].create({
         title: fields.title,
         description: fields.description,
         companyId: author.companyId,
         author: author.id,
         category: fields.category,
-        eventDate: fields.eventDate,
         eventTime: fields.eventTime,
         flyer: fields.flyer,
         status: fields.status
       });
+    } else {
+        event = await db['Event'].create({
+          title: fields.title,
+          description: fields.description,
+          companyId: author.companyId,
+          author: author.id,
+          category: fields.category,
+          flyer: fields.flyer,
+          status: fields.status
+        });
+    }
       if (event) {
         var activitiesToLoad = new Array();
         for (var i = 0; i < activities.length; i++) {
@@ -37,7 +74,7 @@ export default class EvenController {
         });
       }
     } catch (error) {
-      //console.log(err)
+      console.log(error)
       logger.customLogger.log('error', error)
       return res.status(400).send({ message: " Event not submitted at this moment" });
     }
