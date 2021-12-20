@@ -165,7 +165,7 @@ export default class CompanyController {
         },
       };
     }
-    const limit = 3; //20
+    const limit = 20;
     const count = await db.Company.count({ where });
     const offset = page === 1 ? 0 : (parseInt(page, 10) - 1) * limit;
     // manage orders
