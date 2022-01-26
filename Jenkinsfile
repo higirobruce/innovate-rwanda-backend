@@ -4,7 +4,8 @@ pipeline {
   stages {
     stage('Cloning Git') {
       steps {
-        git url: 'https://github.com/techclick-rw/innovaterwanda-backend.git',     
+        git url: 'https://github.com/techclick-rw/innovaterwanda-backend.git'     
+    }
     }
     stage('Build') {
        steps {
