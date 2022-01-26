@@ -5,7 +5,7 @@ pipeline {
     stage('Cloning Git') {
       steps {
         git url: 'https://github.com/techclick-rw/innovaterwanda-backend.git',
-            credentialsId: 'your-credentials-id'
+            credentialsId: 'Username with Password'
       }
     }
     stage('Build') {
