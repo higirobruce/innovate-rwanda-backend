@@ -1,5 +1,5 @@
 pipeline {
-  agent any
+  agent {label 'Slave-back'}
   tools {nodejs "NODEJS" }
   stages {
     stage('Build') {
