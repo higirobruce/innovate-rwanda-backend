@@ -1,13 +1,14 @@
 import createError from 'http-errors';
 import express from 'express';
 import logger from 'morgan';
-import dotenv from 'dotenv';
+import 'dotenv/config';
 import cors from 'cors';
 import routes from './routes';
 
-const app = express();
+import joiErrors from './middlewares/validationErrors';
 
-dotenv.config();
+
+const app = express();
 
 app.use(logger('dev'));
 
@@ -20,6 +21,8 @@ app.use(
 );
 
 app.use('/', routes);
+
+app.use(joiErrors());
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {
