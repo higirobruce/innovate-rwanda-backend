@@ -14,7 +14,7 @@ pipeline {
     }
     stage('Deploy') {
       steps {
-        sh 'yarn run'
+        sh './deploy'
       }
     }
   }
