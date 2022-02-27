@@ -1,20 +1,20 @@
-import { Router } from "express";
+import { Router } from 'express';
 
-import CompanyController from "../../controllers/CompanyController";
+import CompanyController from '../../controllers/CompanyController';
 
-import auth from "../../middlewares/authorization_authentication.js";
-import checkPermissions from "../../middlewares/checkPermissions";
+import auth from '../../middlewares/authorization_authentication';
+import checkPermissions from '../../middlewares/checkPermissions';
 
 const company = Router();
 
 company.get(
-  "/directory/admin",
+  '/directory/admin',
   auth.verifyToken,
-  checkPermissions("admin-company"),
+  checkPermissions('admin-company'),
   CompanyController.getCompaniesList
 );
 company.get(
-  "/directory/public",
+  '/directory/public',
   CompanyController.getApprovedCompaniesList
 );
 
@@ -24,112 +24,109 @@ company.get(
 // );
 
 company.put(
-  "/company/approve-decline",
+  '/company/approve-decline',
   auth.verifyToken,
-  checkPermissions("admin-company"),
+  checkPermissions('admin-company'),
   CompanyController.approveOrDeclineCompany
 );
 
 company.put(
-  "/company/manage",
+  '/company/manage',
   auth.verifyToken,
-  checkPermissions(["normal","admin-company"]),
+  checkPermissions(['normal', 'admin-company']),
   CompanyController.manageCompany
 );
 
 company.get(
-  "/company/my-company",
+  '/company/my-company',
   auth.verifyToken,
-  checkPermissions(["normal"]),
+  checkPermissions(['normal']),
   CompanyController.getCompanyMyInfo
 );
 
 company.get(
-  "/company/:companyId",
+  '/company/:companyId',
   auth.verifyToken,
-  checkPermissions(["normal", "admin-company"]),
+  checkPermissions(['normal', 'admin-company']),
   CompanyController.getCompanyInfo
 );
 
 company.get(
-  "/company/public/:slug",
+  '/company/public/:slug',
   CompanyController.getCompanyInfoPublic
 );
 
 company.patch(
-  "/company/edit/:companyId",
+  '/company/edit/:companyId',
   auth.verifyToken,
-  checkPermissions(["normal", "admin-company"]),
+  checkPermissions(['normal', 'admin-company']),
   CompanyController.editCompanyInfo
 );
 
 company.delete(
-  "/company/delete/:companyId",
+  '/company/delete/:companyId',
   auth.verifyToken,
-  checkPermissions("admin-company"),
+  checkPermissions('admin-company'),
   CompanyController.deleteCompany
 );
 
 company.delete(
-  "/company/delete-company",
+  '/company/delete-company',
   auth.verifyToken,
-  checkPermissions("normal"),
+  checkPermissions('normal'),
   CompanyController.deleteOwnCo
 );
 
 company.get(
-  "/recover-company/emaillink/:recoveryToken",
+  '/recover-company/emaillink/:recoveryToken',
   CompanyController.recoverCompany
 );
 
-/* 
+/*
  * filterBy ---   location       | activities            | year-founded
- * filterValue--  the district   | activity id           | a year-eg.2005 
+ * filterValue--  the district   | activity id           | a year-eg.2005
  */
 company.get(
-  "/directory/filter",
+  '/directory/filter',
   CompanyController.getDirectoryFiltered
 );
 
-/* 
+/*
  * sortBy ---    year-founded or name (company names)
  * sortValue--   desc or asc
  */
 company.get(
-  "/directory/sort",
+  '/directory/sort',
   CompanyController.getDirectorySorted
 );
 
-// Search in names, company types, website,description, district based in, customer base and, Office Address
 company.get(
-  "/directory/search",
+  '/directory/search',
   CompanyController.searchDirectory
 );
 
-/* 
+/*
  * filterBy ---   location       | activities            | year-founded
- * filterValue--  the district   | activity id           | a year-eg.2005 
+ * filterValue--  the district   | activity id           | a year-eg.2005
  * type can be enabler or Tech Company or other depending on types set for companies
  */
 company.get(
-  "/directory/filter/:type",
+  '/directory/filter/:type',
   CompanyController.getDirectoryFilteredByType
 );
 
-/* 
+/*
  * sortBy ---    year-founded or name (company names)
  * sortValue--   desc or asc
  * type can be enabler or Tech Company or other depending on types set for companies
  */
 company.get(
-  "/directory/sort/:type",
+  '/directory/sort/:type',
   CompanyController.getDirectorySortedByType
 );
 
-// Search in names, company types, website,description, district based in, customer base and, Office Address
-// type can be enabler or Tech Company or other depending on types set for companies
 company.get(
-  "/directory/search/:type",
+  '/directory/search/:type',
   CompanyController.searchDirectoryByType
 );
 
