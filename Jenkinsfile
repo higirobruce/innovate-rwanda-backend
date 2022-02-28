@@ -14,7 +14,7 @@ pipeline {
     }
     stage('Deploy') {
       steps {
-        sh './jenkins/deploy.sh'
+        sh './var/www/html/innovaterwanda-backend/deploy.sh'
       }
     }
   }
