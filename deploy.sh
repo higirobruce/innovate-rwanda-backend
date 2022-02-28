@@ -1,4 +1,4 @@
--#!/bin/sh      
+#!/bin/sh      
 ssh root@68.183.143.68 <  cd /var/www/html/innovaterwanda-backend 
  git pull
  npm install -g       
