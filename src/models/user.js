@@ -1,4 +1,5 @@
-'use strict';
+
+
 module.exports = (sequelize, DataTypes) => {
   const user = sequelize.define('User', {
     id: {
@@ -21,7 +22,7 @@ module.exports = (sequelize, DataTypes) => {
     sequelize,
     modelName: 'User',
   });
-  user.associate = models => {
+  user.associate = (models) => {
     user.hasMany(models.Blog, {
       foreignKey: 'author',
       onDelete: 'CASCADE',
@@ -31,6 +32,11 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: 'author',
       onDelete: 'CASCADE',
       onUpdate: 'CASCADE'
+    });
+
+    user.belongsTo(models.Company, {
+      as: 'company',
+      foreignKey: 'companyId'
     });
   };
   return user;
