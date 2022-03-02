@@ -37,6 +37,13 @@ export default class UserController {
         'createdAt',
       ],
       order: [['createdAt', 'DESC']],
+      include: [
+        {
+          model: db.Company,
+          as: 'company',
+          required: false,
+        }
+      ]
     });
     return responseWrapper({
       res,
