@@ -1,4 +1,5 @@
-'use strict';
+
+
 module.exports = (sequelize, DataTypes) => {
   const company = sequelize.define('Company', {
     id: {
@@ -12,8 +13,8 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: true,
       references: {
-        model: "CompanyTypes",
-        key: "slug",
+        model: 'CompanyTypes',
+        key: 'slug',
       },
     },
     coWebsite: DataTypes.STRING,
@@ -22,8 +23,8 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
       allowNull: true,
       references: {
-        model: "BusinessActivities",
-        key: "id",
+        model: 'BusinessActivities',
+        key: 'id',
       },
     },
     shortDescription: DataTypes.TEXT,
@@ -43,7 +44,7 @@ module.exports = (sequelize, DataTypes) => {
     sequelize,
     modelName: 'Company',
   });
-  company.associate = models => {
+  company.associate = (models) => {
     company.hasMany(models.Blog, {
       foreignKey: 'companyId',
       onDelete: 'CASCADE',
@@ -81,7 +82,7 @@ module.exports = (sequelize, DataTypes) => {
     company.hasOne(models.CompanyTypes, {
       foreignKey: 'slug',
       sourceKey: 'coType'
-    }); 
+    });
   };
   return company;
 };

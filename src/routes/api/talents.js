@@ -1,9 +1,9 @@
-import { Router } from "express";
+import { Router } from 'express';
 
-import talentController from "../../controllers/TalentController";
+import talentController from '../../controllers/TalentController';
 
-import auth from "../../middlewares/authorization_authentication.js";
-import checkPermissions from "../../middlewares/checkPermissions";
+import auth from '../../middlewares/authorization_authentication';
+import checkPermissions from '../../middlewares/checkPermissions';
 
 const talents = Router();
 
@@ -11,9 +11,9 @@ const talents = Router();
  * List all Talent/individual ordering by lastName then by firstName
  */
 talents.get(
-  "/talent/admin",
+  '/talent/admin',
   auth.verifyToken,
-  checkPermissions("admin-company"),
+  checkPermissions('admin-company'),
   talentController.getTalents
 );
 
@@ -21,13 +21,13 @@ talents.get(
  * List active Talent/individual  by lastName then by firstName
  */
 talents.get(
-  "/talent/public",
+  '/talent/public',
   talentController.getTalentsActive
 );
 
 
 talents.get(
-  "/talent/search",
+  '/talent/search',
   talentController.findTalents
 );
 
@@ -36,9 +36,9 @@ talents.get(
  *
  */
 talents.put(
-  "/individual/edit_profile",
+  '/individual/edit_profile',
   auth.verifyToken,
-  checkPermissions("individual"),
+  checkPermissions('individual'),
   talentController.editInfo
 );
 
@@ -46,9 +46,9 @@ talents.put(
  * Deactivate Individual on the platform
  */
 talents.put(
-  "/individual/deactivateAccount",
+  '/individual/deactivateAccount',
   auth.verifyToken,
-  checkPermissions("admin-company"),
+  checkPermissions('admin-company'),
   talentController.deactivateAccount
 );
 
@@ -56,9 +56,9 @@ talents.put(
  * Reactivate Individual on the platform
  */
 talents.put(
-  "/individual/activateAccount",
+  '/individual/activateAccount',
   auth.verifyToken,
-  checkPermissions("admin-company"),
+  checkPermissions('admin-company'),
   talentController.reactivateAccount
 );
 
@@ -66,7 +66,7 @@ talents.put(
  * Get individual info by id
  */
 talents.get(
-  "/individual/:user_id",
+  '/individual/:user_id',
   talentController.getIndividualById
 );
 
