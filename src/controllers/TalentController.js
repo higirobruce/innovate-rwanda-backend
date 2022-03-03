@@ -55,12 +55,20 @@ export default class Talents {
     try {
       const response = await db.Individual.findAll({
         // where,
-        order: [
-          ['lastName', 'ASC'],
-          ['firstName', 'ASC'],
-        ],
+        // order: [
+        //   ['lastName', 'ASC'],
+        //   ['firstName', 'ASC'],
+        // ],
         limit,
         offset,
+        include: [
+          {
+            model: db.User,
+            as: 'user',
+            required: false,
+          }
+        ],
+        order: [['createdAt', 'DESC']]
       });
       return res.status(200).json({
         meta: GenerateMeta(count, limit, parseInt(page, 10)),
