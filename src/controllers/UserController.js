@@ -94,7 +94,7 @@ export default class UserController {
           {
             lastName: req.body.lastName,
             firstName: req.body.firstName,
-            accType: req.body.accountType,
+            accType: req.body.accType,
             shortDescription: req.body.shortDescription,
             location: req.body.location,
             portfolio: req.body.portfolio,
