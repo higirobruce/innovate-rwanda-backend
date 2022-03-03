@@ -1,4 +1,5 @@
-'use strict';
+
+
 module.exports = (sequelize, DataTypes) => {
   const individual = sequelize.define('Individual', {
     id: {
@@ -30,8 +31,12 @@ module.exports = (sequelize, DataTypes) => {
     sequelize,
     modelName: 'Individual',
   });
-  individual.associate = function (models) {
+  individual.associate = (models) => {
     // associations
+    individual.belongsTo(models.User, {
+      as: 'user',
+      foreignKey: 'user_id'
+    });
   };
   return individual;
 };
