@@ -51,7 +51,6 @@ export default class Talents {
     const limit = 20;
     const count = await db.Individual.count();
     const offset = page === 1 ? 0 : (parseInt(page, 10) - 1) * limit;
-    console.log('page', count, offset, limit);
     try {
       const response = await db.Individual.findAll({
         // where,
