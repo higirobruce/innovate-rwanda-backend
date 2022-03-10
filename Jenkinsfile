@@ -14,7 +14,7 @@ pipeline {
     }
     stage('Deploy') {
       steps {
-        sh './var/www/html/innovaterwanda-backend/deploy.sh'
+        sh 'yarn run env'
       }
     }
   }
