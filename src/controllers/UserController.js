@@ -6,7 +6,12 @@ import generic from '../helpers/Generic';
 import notification from '../helpers/Notification';
 import logger from '../helpers/LoggerMod';
 import responseWrapper from '../helpers/responseWrapper';
-import { NOT_FOUND, OK, UNAUTHORIZED } from '../constants/statusCodes';
+import {
+  NOT_FOUND, OK, UNAUTHORIZED, CONFLICT
+} from '../constants/statusCodes';
+
+import * as events from '../constants/eventNames';
+import { eventEmitter } from '../config/eventEmitter';
 
 // const logger = require('../helpers/LoggerMod.js');
 
@@ -308,46 +313,51 @@ export default class UserController {
    * @returns {Object} Response
    */
   static async createUser(req, res) {
-    try {
-      const hashPassword = bcrypt.hashSync(
-        req.body.password.trim(),
-        saltRounds
-      );
+    const hashPassword = bcrypt.hashSync(
+      req.body.password.trim(),
+      saltRounds
+    );
 
-      const user = await db.User.create({
-        firstName: req.body.firstName,
-        lastName: req.body.lastName,
-        email: req.body.email.trim(),
-        password: hashPassword,
-        role: req.body.role,
-        status: 'active',
-      });
-
-      notification.notify(
-        'admin account creation',
-        {
-          firstName: user.firstName,
-          lastName: user.lastName,
-          email: user.email,
-          password: req.body.password,
-        },
-        response => res
-          .status(200)
-          .json({ message: `User Account created successfully. ${response}` })
-      );
-    } catch (error) {
-      logger.customLogger.log('error', error);
-      // console.log(error)
-      if (error instanceof UniqueConstraintError) {
-        return res.status(409).send({
-          error: 'User with this email already exists',
-          field: error.errors[0].path,
-        });
+    const foundUser = await db.User.findOne({
+      where: {
+        email: req.body.email
       }
-      return res
-        .status(400)
-        .send({ message: 'Error occurred, Please try again later' });
+    });
+
+    if (foundUser) {
+      return responseWrapper({
+        res,
+        status: CONFLICT,
+        message: 'A user with such an email exists'
+      });
     }
+
+    const user = await db.User.create({
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
+      email: req.body.email.trim(),
+      password: hashPassword,
+      role: req.body.role,
+      status: 'active',
+    });
+
+    eventEmitter.emit(events.LOG_ACTIVITY, {
+      actor: req.user,
+      description: `${req.user.firstName} ${req.user.lastName} created a user with an email '${user.email}'`,
+    });
+
+    notification.notify(
+      'admin account creation',
+      {
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        password: req.body.password,
+      },
+      response => res
+        .status(200)
+        .json({ message: `User Account created successfully. ${response}` })
+    );
   }
 
   /**
@@ -403,6 +413,11 @@ export default class UserController {
                 } else {
                   res.locals.companyInfo = company;
                 }
+
+                eventEmitter.emit(events.LOG_ACTIVITY, {
+                  actor: user.get(),
+                  description: `${user.firstName} ${user.lastName} logged in`
+                });
                 next();
               })
               .catch((err) => {
@@ -581,27 +596,32 @@ export default class UserController {
    * @returns {Object} Response
    */
   static async deactivateUser(req, res) {
-    try {
-      const response = await db.User.update(
-        { status: 'inactive' },
-        {
-          where: {
-            email: req.params.email,
-          },
-        }
-      );
-      return response
-        ? res.status(200).json({
-          message: 'User deactivated successfully',
-        })
-        : res.status(404).json({
-          error: 'Sorry, deactivation failed..Try again',
-        });
-    } catch (error) {
-      logger.customLogger.log('error', error);
-      // console.log(err)
-      return res.status(400).send({ message: 'Sorry, Action failed' });
+    const foundUser = await db.User.findOne({
+      where: {
+        email: req.params.email,
+      },
+    });
+
+    if (!foundUser) {
+      return responseWrapper({
+        res,
+        status: NOT_FOUND,
+        message: 'User not found'
+      });
     }
+
+    await foundUser.update({ status: 'inactive' });
+
+    eventEmitter.emit(events.LOG_ACTIVITY, {
+      actor: req.user,
+      description: `${req.user.firstName} ${req.user.lastName} deactivated a user with email '${foundUser.email}'`
+    });
+
+    return responseWrapper({
+      res,
+      status: OK,
+      message: 'A user has been deactivated',
+    });
   }
 
   /**
@@ -627,6 +647,11 @@ export default class UserController {
 
     await foundUser.update({
       status: 'active',
+    });
+
+    eventEmitter.emit(events.LOG_ACTIVITY, {
+      actor: req.user,
+      description: `${req.user.firstName} ${req.user.lastName} activated a user with email '${foundUser.email}'`
     });
 
     await foundUser.reload();
@@ -788,23 +813,29 @@ export default class UserController {
    * @returns {Object} Response
    */
   static async changeRole(req, res) {
-    try {
-      const response = await db.User.update(
-        { role: req.body.role },
-        { where: { id: req.params.userId } }
-      );
-      return response
-        ? res.status(200).json({ message: "User's role changed successfully" })
-        : res
-          .status(404)
-          .json({ error: 'Sorry, role change failed..Try again' });
-    } catch (error) {
-      logger.customLogger.log('error', error);
-      // console.log(err)
-      return res
-        .status(400)
-        .send({ message: 'Sorry, role change failed..Try again' });
+    const foundUser = await db.User.findByPk(req.params.userId);
+    if (!foundUser) {
+      return responseWrapper({
+        res,
+        status: NOT_FOUND,
+        message: 'A user does not exist',
+      });
     }
+
+    await foundUser.update({
+      role: req.body.role,
+    });
+
+    eventEmitter.emit(events.LOG_ACTIVITY, {
+      actor: req.user,
+      description: `${req.user.firstName} ${req.user.lastName} changed a role of a user with email '${foundUser.email}'`
+    });
+
+    return responseWrapper({
+      res,
+      status: OK,
+      message: 'A user role has been updated'
+    });
   }
 
   /**

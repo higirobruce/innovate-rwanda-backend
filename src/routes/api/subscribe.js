@@ -2,32 +2,34 @@ import { Router } from 'express';
 
 import SubscribeController from '../../controllers/SubscribeController';
 
-import auth from '../../middlewares/authorization_authentication.js';
+import auth from '../../middlewares/authorization_authentication';
 import checkPermissions from '../../middlewares/checkPermissions';
+
+import asyncHandler from '../../middlewares/asyncErrorHandler';
 
 const subscribe = Router();
 
 subscribe.post(
-    "/subscribe",
-    SubscribeController.subscribeToNotification
+  '/subscribe',
+  asyncHandler(SubscribeController.subscribeToNotification)
 );
 
 subscribe.delete(
-    "/unsubscribe/:email",
-    SubscribeController.unsubscribeFromNotification
+  '/unsubscribe/:email',
+  asyncHandler(SubscribeController.unsubscribeFromNotification)
 );
 
 subscribe.get(
-    "/subscriptions",
-    auth.verifyToken,
-    checkPermissions([
-      "admin-company",
-      "admin-job",
-      "admin-event",
-      "admin-blog",
-      "admin-user",
-    ]),
-    SubscribeController.getSubscriptions
+  '/subscriptions',
+  auth.verifyToken,
+  checkPermissions([
+    'admin-company',
+    'admin-job',
+    'admin-event',
+    'admin-blog',
+    'admin-user',
+  ]),
+  asyncHandler(SubscribeController.getSubscriptions)
 );
 
 export default subscribe;

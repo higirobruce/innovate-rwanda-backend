@@ -1,81 +1,132 @@
-import db from "../models";
-import notification from "../helpers/Notification";
-import generic from "../helpers/Generic";
-const logger = require('../helpers/LoggerMod.js');
+/* eslint-disable no-plusplus */
+import db from '../models';
+import notification from '../helpers/Notification';
+import generic from '../helpers/Generic';
+import responseWrapper from '../helpers/responseWrapper';
+import { CONFLICT, NOT_FOUND, OK } from '../constants/statusCodes';
 
+import * as events from '../constants/eventNames';
+import { eventEmitter } from '../config/eventEmitter';
+
+const logger = require('../helpers/LoggerMod');
+
+/**
+ * Job Controller Class
+ */
 export default class JobController {
+  /**
+   *
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} Response
+   */
   static async jobPost(req, res) {
-    try {
-      const activities = req.body.activities;
-      const fields = req.body;
-      const author = req.user;
+    const { activities } = req.body;
+    const fields = req.body;
+    const author = req.user;
 
-      const job = await db['Job'].create({
-        title: fields.title,
-        description: fields.description,
-        companyId: author.companyId,
-        category: fields.category,
-        deadlineDate: fields.deadlineDate,
-        deadlineTime: fields.deadlineTime,
-        jobDetailsDocument: fields.jobDetailsDocument,
-        status: fields.status,
+    const job = await db.Job.create({
+      title: fields.title,
+      description: fields.description,
+      companyId: author.companyId,
+      category: fields.category,
+      deadlineDate: fields.deadlineDate,
+      deadlineTime: fields.deadlineTime,
+      jobDetailsDocument: fields.jobDetailsDocument,
+      status: fields.status,
+    });
+    const activitiesToLoad = [];
+    for (let i = 0; i < activities.length; i++) {
+      activitiesToLoad.push({
+        typeOfPost: 'job',
+        postId: job.id,
+        activityId: activities[i],
       });
-      if (job) {
-        var activitiesToLoad = new Array();
-        for (var i = 0; i < activities.length; i++) {
-          activitiesToLoad.push({ typeOfPost: 'job', postId: job.id, activityId: activities[i] });
-        }
-        if (activitiesToLoad.length > 0) {
-          await db['AudienceForPost'].bulkCreate(activitiesToLoad);
-        }
-        return res.status(200).send({
-          message: "Job post saved"
-        });
-      } else {
-        return res.status(404).send({
-          message: "Job posting failed"
-        });
-      }
-    } catch (error) {
-      logger.customLogger.log('error', error)
-      return res.status(400).send({ message: "Job not posted at this moment" });
     }
+    if (activitiesToLoad.length > 0) {
+      await db.AudienceForPost.bulkCreate(activitiesToLoad);
+    }
+    eventEmitter.emit(events.LOG_ACTIVITY, {
+      actor: author,
+      description: `${author.firstName} ${author.lastName} created a job post titled '${job.title}'`,
+    });
+    return res.status(200).send({
+      message: 'Job post saved',
+    });
   }
 
+  /**
+   *
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} Response
+   */
   static async approveOrDeclineJobPost(req, res) {
-    const decision = req.body.decision;
-    await db["Job"].findOne({ where: { id: req.body.jobId, status: { [db.Op.not]: decision } }, attributes: ["id", "title", "description", "companyId"] })
-      .then((job) => {
-        if (job) {
-          const response = job.update({ status: decision });
-          if (response) {
-            if (decision == "approved") {
-              const parameters = { id: req.body.jobId, title: job.title, description: job.description, file_name: "", format: "Job", companyId: job.companyId };
-              notification.notify("post approval", parameters, function (resp) {
-                return res.status(200).json({ message: resp });
-              });
-            } else {
-              res.status(200).json({ message: "Job " + decision })
-            }
-          } else {
-            res.status(404).json({ message: "Action Failed" });
-          }
-        } else {
-          res.status(404).json({ message: "Job could have been already treated" });
-        }
-      }).catch((error) => {
-      logger.customLogger.log('error', error)
-        //console.log(err)
-        return res.status(400).send({ message: "Sorry, Action failed" });
-      })
+    const { decision } = req.body;
+    const foundJob = await db.Job.findOne({
+      where: { id: req.body.jobId, status: { [db.Op.not]: decision } },
+      attributes: ['id', 'title', 'description', 'companyId'],
+    });
+
+    if (!foundJob) {
+      return responseWrapper({
+        res,
+        status: NOT_FOUND,
+        message: 'Job not found',
+      });
+    }
+
+    if (foundJob.status === decision) {
+      return responseWrapper({
+        res,
+        status: CONFLICT,
+        message: `This job is already ${decision}`,
+      });
+    }
+
+    await foundJob.update({ status: decision });
+
+    await foundJob.reload();
+
+    if (decision === 'approved') {
+      const parameters = {
+        id: req.body.jobId,
+        title: foundJob.title,
+        description: foundJob.description,
+        file_name: '',
+        format: 'Job',
+        companyId: foundJob.companyId,
+      };
+
+      eventEmitter.emit(events.LOG_ACTIVITY, {
+        actor: req.user,
+        description: `${req.user.firstName} ${req.user.lastName} approved a job post titled '${foundJob.title}'`,
+      });
+      notification.notify('post approval', parameters, resp => res.status(200).json({ message: resp }));
+    }
+
+    return responseWrapper({
+      res,
+      status: OK,
+      message: `Job has been ${decision}`,
+    });
   }
 
+  /**
+   *
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} Response
+   */
   static async manageJobPost(req, res) {
-    const decision = req.body.decision;
-    await db["Job"].findOne({ where: { id: req.body.jobId, status: { [db.Op.not]: decision } }, attributes: ["id", "title", "description", "companyId","messages"] })
+    const { decision } = req.body;
+    await db.Job.findOne({
+      where: { id: req.body.jobId, status: { [db.Op.not]: decision } },
+      attributes: ['id', 'title', 'description', 'companyId', 'messages'],
+    })
       .then((job) => {
         if (job) {
-          var response;
+          let response;
           if (req.body.message) {
             if (job.messages) {
               job.messages[job.messages.length] = req.body.message;
@@ -88,41 +139,186 @@ export default class JobController {
             response = job.update({ status: decision });
           }
           if (response) {
-            if (decision == "approved") {
-              const parameters = { id: req.body.jobId, title: job.title, description: job.description, file_name: "", format: "Job", companyId: job.companyId };
-              notification.notify("post approval", parameters, function (resp) {
-                return res.status(200).json({ message: resp });
+            if (decision === 'approved') {
+              const parameters = {
+                id: req.body.jobId,
+                title: job.title,
+                description: job.description,
+                file_name: '',
+                format: 'Job',
+                companyId: job.companyId,
+              };
+              eventEmitter.emit(events.LOG_ACTIVITY, {
+                actor: req.user,
+                description: `${req.user.firstName} ${req.user.lastName} approved a job post titled '${job.title}'`,
               });
+              notification.notify('post approval', parameters, resp => res.status(200).json({ message: resp }));
             } else {
-              res.status(200).json({ message: "Job " + decision })
+              res.status(200).json({ message: `Job ${decision}` });
             }
           } else {
-            res.status(404).json({ message: "Action Failed" });
+            res.status(404).json({ message: 'Action Failed' });
           }
         } else {
-          res.status(404).json({ message: "Job could have been already treated" });
+          res
+            .status(404)
+            .json({ message: 'Job could have been already treated' });
         }
-      }).catch((error) => {
-        //console.log(err)
-        logger.customLogger.log('error', error)
-        return res.status(400).send({ message: "Sorry, Action failed" });
       })
+      .catch((error) => {
+        // console.log(err)
+        logger.customLogger.log('error', error);
+        return res.status(400).send({ message: 'Sorry, Action failed' });
+      });
   }
 
+  /**
+   *
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} Response
+   */
   static async getApprovedJobsList(req, res) {
-    try {
-      const jobPosts = await db["Job"].findAll({
-        where: {
-          status: "approved",
+    const jobPosts = await db.Job.findAll({
+      where: {
+        status: 'approved',
+      },
+      include: [
+        {
+          model: db.Company,
+          attributes: ['logo', ['coName', 'companyName']],
         },
+        {
+          model: db.AudienceForPost,
+          attributes: [['activityId', 'activity']],
+          on: {
+            [db.Op.and]: [
+              db.sequelize.where(
+                db.sequelize.col('Job.id'),
+                db.Op.eq,
+                db.sequelize.col('AudienceForPosts.postId')
+              ),
+              db.sequelize.where(
+                db.sequelize.col('AudienceForPosts.typeOfPost'),
+                db.Op.eq,
+                'job'
+              ),
+            ],
+          },
+          include: [
+            {
+              model: db.BusinessActivities,
+              attributes: ['name'],
+              on: {
+                [db.Op.and]: [
+                  db.sequelize.where(
+                    db.sequelize.col('AudienceForPosts.activityId'),
+                    db.Op.eq,
+                    db.sequelize.col('AudienceForPosts->BusinessActivity.id')
+                  ),
+                ],
+              },
+            },
+          ],
+        },
+      ],
+      order: [['createdAt', 'DESC']],
+    });
+    if (jobPosts && jobPosts.length > 0) {
+      return res.status(200).json({
+        result: jobPosts,
+      });
+    }
+    return res.status(404).json({
+      result: [],
+      error: 'No job found at this moment',
+    });
+  }
+
+  /**
+   *
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} Response
+   */
+  static async getJobsListPerCompany(req, res) {
+    const jobPosts = await db.Job.findAll({
+      where: {
+        companyId: req.params.companyId,
+        status: {
+          [db.Op.not]: 'deleted',
+        },
+      },
+      include: [
+        {
+          model: db.Company,
+          attributes: ['logo', ['coName', 'companyName']],
+        },
+        {
+          model: db.AudienceForPost,
+          attributes: [['activityId', 'activity']],
+          on: {
+            [db.Op.and]: [
+              db.sequelize.where(
+                db.sequelize.col('Job.id'),
+                db.Op.eq,
+                db.sequelize.col('AudienceForPosts.postId')
+              ),
+              db.sequelize.where(
+                db.sequelize.col('AudienceForPosts.typeOfPost'),
+                db.Op.eq,
+                'job'
+              ),
+            ],
+          },
+          include: [
+            {
+              model: db.BusinessActivities,
+              attributes: ['name'],
+              on: {
+                [db.Op.and]: [
+                  db.sequelize.where(
+                    db.sequelize.col('AudienceForPosts.activityId'),
+                    db.Op.eq,
+                    db.sequelize.col('AudienceForPosts->BusinessActivity.id')
+                  ),
+                ],
+              },
+            },
+          ],
+        },
+      ],
+      order: [['createdAt', 'DESC']],
+    });
+    if (jobPosts && jobPosts.length > 0) {
+      return res.status(200).json({
+        result: jobPosts,
+      });
+    }
+    return res.status(404).json({
+      result: [],
+      error: 'No Job Posts found',
+    });
+  }
+
+  /**
+   *
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} Response
+   */
+  static async getJobsList(req, res) {
+    let jobPosts;
+    if (req.params.status === 'all') {
+      jobPosts = await db.Job.findAll({
         include: [
           {
-            model: db["Company"],
-            attributes: ["logo", ["coName", "companyName"]]
+            model: db.Company,
+            attributes: ['logo', ['coName', 'companyName']],
           },
           {
-            model: db["AudienceForPost"],
-            attributes: [["activityId", "activity"]],
+            model: db.AudienceForPost,
+            attributes: [['activityId', 'activity']],
             on: {
               [db.Op.and]: [
                 db.sequelize.where(
@@ -134,228 +330,244 @@ export default class JobController {
                   db.sequelize.col('AudienceForPosts.typeOfPost'),
                   db.Op.eq,
                   'job'
-                )
+                ),
               ],
             },
-            include: [{
-              model: db["BusinessActivities"],
-              attributes: ["name"],
+            include: [
+              {
+                model: db.BusinessActivities,
+                attributes: ['name'],
+                on: {
+                  [db.Op.and]: [
+                    db.sequelize.where(
+                      db.sequelize.col('AudienceForPosts.activityId'),
+                      db.Op.eq,
+                      db.sequelize.col(
+                        'AudienceForPosts->BusinessActivity.id'
+                      )
+                    ),
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        order: [['createdAt', 'DESC']],
+      });
+    } else {
+      jobPosts = await db.Job.findAll({
+        where: {
+          status: req.params.status,
+        },
+        include: [
+          {
+            model: db.Company,
+            attributes: ['logo', ['coName', 'companyName']],
+          },
+          {
+            model: db.AudienceForPost,
+            attributes: [['activityId', 'activity']],
+            on: {
+              [db.Op.and]: [
+                db.sequelize.where(
+                  db.sequelize.col('Job.id'),
+                  db.Op.eq,
+                  db.sequelize.col('AudienceForPosts.postId')
+                ),
+                db.sequelize.where(
+                  db.sequelize.col('AudienceForPosts.typeOfPost'),
+                  db.Op.eq,
+                  'job'
+                ),
+              ],
+            },
+            include: [
+              {
+                model: db.BusinessActivities,
+                attributes: ['name'],
+                on: {
+                  [db.Op.and]: [
+                    db.sequelize.where(
+                      db.sequelize.col('AudienceForPosts.activityId'),
+                      db.Op.eq,
+                      db.sequelize.col(
+                        'AudienceForPosts->BusinessActivity.id'
+                      )
+                    ),
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        order: [['createdAt', 'DESC']],
+      });
+    }
+    if (jobPosts && jobPosts.length > 0) {
+      return res.status(200).json({
+        result: jobPosts,
+      });
+    }
+    return res.status(404).json({
+      result: [],
+      error: 'No Job Posts found',
+    });
+  }
+
+  /**
+   *
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} Response
+   */
+  static async getJobInfo(req, res) {
+    const foundJob = await db.Job.findOne({
+      where: {
+        id: req.params.jobId,
+      },
+      include: [
+        {
+          model: db.Company,
+          attributes: ['logo', ['coName', 'companyName']],
+        },
+        {
+          model: db.AudienceForPost,
+          attributes: [['activityId', 'activity']],
+          on: {
+            [db.Op.and]: [
+              db.sequelize.where(
+                db.sequelize.col('Job.id'),
+                db.Op.eq,
+                db.sequelize.col('AudienceForPosts.postId')
+              ),
+              db.sequelize.where(
+                db.sequelize.col('AudienceForPosts.typeOfPost'),
+                db.Op.eq,
+                'job'
+              ),
+            ],
+          },
+          include: [
+            {
+              model: db.BusinessActivities,
+              attributes: ['name'],
               on: {
                 [db.Op.and]: [
                   db.sequelize.where(
                     db.sequelize.col('AudienceForPosts.activityId'),
                     db.Op.eq,
                     db.sequelize.col('AudienceForPosts->BusinessActivity.id')
-                  ),],
-              },
-            }]
-          },
-        ],
-        order: [['createdAt', 'DESC']]
-      });
-      if (jobPosts && jobPosts.length > 0) {
-        return res.status(200).json({
-          result: jobPosts,
-        });
-      }
-      return res.status(404).json({
-        result: [],
-        error: "No job found at this moment",
-      });
-    } catch (error) {
-      logger.customLogger.log('error', error)
-      return res
-        .status(400)
-        .send({ message: "No jobs found at this moment" });
-    }
-  }
-
-  static async getJobsListPerCompany(req, res) {
-    try {
-      const jobPosts = await db['Job']
-        .findAll({
-          where: {
-            companyId: req.params.companyId,
-            status: {
-              [db.Op.not]: "deleted"
-            },
-          },
-          include: [
-            {
-              model: db["Company"],
-              attributes: ["logo", ["coName", "companyName"]]
-            },
-            {
-              model: db["AudienceForPost"],
-              attributes: [["activityId", "activity"]],
-              on: {
-                [db.Op.and]: [
-                  db.sequelize.where(
-                    db.sequelize.col('Job.id'),
-                    db.Op.eq,
-                    db.sequelize.col('AudienceForPosts.postId')
                   ),
-                  db.sequelize.where(
-                    db.sequelize.col('AudienceForPosts.typeOfPost'),
-                    db.Op.eq,
-                    'job'
-                  )
                 ],
               },
-              include: [{
-                model: db["BusinessActivities"],
-                attributes: ["name"],
-                on: {
-                  [db.Op.and]: [
-                    db.sequelize.where(
-                      db.sequelize.col('AudienceForPosts.activityId'),
-                      db.Op.eq,
-                      db.sequelize.col('AudienceForPosts->BusinessActivity.id')
-                    ),],
-                },
-              }]
             },
           ],
-          order: [['createdAt', 'DESC']]
-        });
-      if (jobPosts && jobPosts.length > 0) {
-        return res.status(200).json({
-          result: jobPosts,
-        });
-      } else {
-        return res.status(404).json({
-          result: [],
-          error: "No Job Posts found",
-        });
-      }
-    } catch (error) {
-      //console.log(err)
-      logger.customLogger.log('error', error)
-      return res.status(400).send({ message: " List of jobs not got at this moment" });
-    }
+        },
+      ],
+    });
+    return foundJob
+      ? res.status(200).json({
+        result: foundJob,
+      })
+      : res.status(404).json({
+        error: 'Sorry, Job not found',
+      });
   }
 
-  static async getJobsList(req, res) {
-    try {
-      var jobPosts;
-      if (req.params.status == "all") {
-        jobPosts = await db['Job']
-          .findAll({
-            include: [
-              {
-                model: db["Company"],
-                attributes: ["logo", ["coName", "companyName"]]
-              },
-              {
-                model: db["AudienceForPost"],
-                attributes: [["activityId", "activity"]],
-                on: {
-                  [db.Op.and]: [
-                    db.sequelize.where(
-                      db.sequelize.col('Job.id'),
-                      db.Op.eq,
-                      db.sequelize.col('AudienceForPosts.postId')
-                    ),
-                    db.sequelize.where(
-                      db.sequelize.col('AudienceForPosts.typeOfPost'),
-                      db.Op.eq,
-                      'job'
-                    )
-                  ],
-                },
-                include: [{
-                  model: db["BusinessActivities"],
-                  attributes: ["name"],
-                  on: {
-                    [db.Op.and]: [
-                      db.sequelize.where(
-                        db.sequelize.col('AudienceForPosts.activityId'),
-                        db.Op.eq,
-                        db.sequelize.col('AudienceForPosts->BusinessActivity.id')
-                      ),],
-                  },
-                }]
-              },
-            ],
-            order: [['createdAt', 'DESC']]
-          });
-      } else {
-        jobPosts = await db['Job']
-          .findAll({
-            where: {
-              status: req.params.status,
-            },
-            include: [
-              {
-                model: db["Company"],
-                attributes: ["logo", ["coName", "companyName"]]
-              },
-              {
-                model: db["AudienceForPost"],
-                attributes: [["activityId", "activity"]],
-                on: {
-                  [db.Op.and]: [
-                    db.sequelize.where(
-                      db.sequelize.col('Job.id'),
-                      db.Op.eq,
-                      db.sequelize.col('AudienceForPosts.postId')
-                    ),
-                    db.sequelize.where(
-                      db.sequelize.col('AudienceForPosts.typeOfPost'),
-                      db.Op.eq,
-                      'job'
-                    )
-                  ],
-                },
-                include: [{
-                  model: db["BusinessActivities"],
-                  attributes: ["name"],
-                  on: {
-                    [db.Op.and]: [
-                      db.sequelize.where(
-                        db.sequelize.col('AudienceForPosts.activityId'),
-                        db.Op.eq,
-                        db.sequelize.col('AudienceForPosts->BusinessActivity.id')
-                      ),],
-                  },
-                }]
-              },
-            ],
-            order: [['createdAt', 'DESC']]
-          });
-      }
-      if (jobPosts && jobPosts.length > 0) {
-        return res.status(200).json({
-          result: jobPosts,
-        });
-      } else {
-        return res.status(404).json({
-          result: [],
-          error: "No Job Posts found",
-        });
-      }
-    } catch (error) {
-      //console.log(err)
-      logger.customLogger.log('error', error)
-      return res.status(400).send({ message: " List of Jobs not got at this moment" });
+  /**
+   *
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} Response
+   */
+  static async editJobInfo(req, res) {
+    const foundJob = await db.Job.findByPk(req.body.id);
+    if (!foundJob) {
+      return responseWrapper({
+        res,
+        status: NOT_FOUND,
+        message: 'Job not found',
+      });
     }
+
+    await foundJob.update({
+      ...req.body,
+      id: undefined,
+    });
+
+    eventEmitter.emit(events.LOG_ACTIVITY,
+      {
+        actor: req.user,
+        description: `${req.user.firstName} ${req.user.lastName} updated the job information titled '${foundJob.title}'`
+      });
+
+    return responseWrapper({
+      res,
+      status: OK,
+      message: 'Job has been updated successfully'
+    });
   }
 
-  static async getJobInfo(req, res) {
+  /**
+   *
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} Response
+   */
+  static async deleteJob(req, res) {
+    const foundJob = await db.Job.findOne({
+      where: {
+        id: req.query.jobId,
+      },
+    });
+
+    if (!foundJob) {
+      return responseWrapper({
+        res,
+        status: NOT_FOUND,
+        message: 'Job not found'
+      });
+    }
+
+    await foundJob.update({
+      status: 'deleted'
+    });
+
+    eventEmitter.emit(events.LOG_ACTIVITY, {
+      actor: req.user,
+      description: `${req.user.firstName} ${req.user.lastName} deleted a job titled '${foundJob.title}'`
+    });
+
+    return responseWrapper({
+      res,
+      status: OK,
+      message: 'Job deleted'
+    });
+  }
+
+  /**
+   *
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} Response
+   */
+  static async getJobsFiltered(req, res) {
     try {
-      const job = await db["Job"]
-        .findOne({
-          where: {
-            id: req.params.jobId,
-          },
+      const { filterBy } = req.query;
+      const filterValue = req.query.filterValue.trim();
+      let jobPosts;
+
+      if (filterBy === 'company') {
+        jobPosts = await db.Job.findAll({
+          where: { companyId: filterValue, status: 'approved' },
           include: [
             {
-              model: db["Company"],
-              attributes: ["logo", ["coName", "companyName"]]
+              model: db.Company,
+              attributes: ['logo', ['coName', 'companyName']],
             },
             {
-              model: db["AudienceForPost"],
-              attributes: [["activityId", "activity"]],
+              model: db.AudienceForPost,
+              attributes: [['activityId', 'activity']],
               on: {
                 [db.Op.and]: [
                   db.sequelize.where(
@@ -367,227 +579,326 @@ export default class JobController {
                     db.sequelize.col('AudienceForPosts.typeOfPost'),
                     db.Op.eq,
                     'job'
-                  )
+                  ),
                 ],
               },
-              include: [{
-                model: db["BusinessActivities"],
-                attributes: ["name"],
-                on: {
-                  [db.Op.and]: [
-                    db.sequelize.where(
-                      db.sequelize.col('AudienceForPosts.activityId'),
-                      db.Op.eq,
-                      db.sequelize.col('AudienceForPosts->BusinessActivity.id')
-                    ),],
+              include: [
+                {
+                  model: db.BusinessActivities,
+                  attributes: ['name'],
+                  on: {
+                    [db.Op.and]: [
+                      db.sequelize.where(
+                        db.sequelize.col('AudienceForPosts.activityId'),
+                        db.Op.eq,
+                        db.sequelize.col(
+                          'AudienceForPosts->BusinessActivity.id'
+                        )
+                      ),
+                    ],
+                  },
                 },
-              }]
+              ],
             },
-          ]
+          ],
+          order: [['deadlineDate', 'DESC']],
         });
-      return job
-        ? res.status(200).json({
-          result: job
-        })
-        : res.status(404).json({
-          error: "Sorry, Job not found",
+      } else if (filterBy === 'company-type') {
+        let companiesId;
+        await generic.getCompaniesIdPerType(filterValue, (theCompanies) => {
+          companiesId = theCompanies.map(company => company.id);
         });
-    } catch (error) {
-      logger.customLogger.log('error', error)
-      return res.status(400).send({ message: "Sorry, Job not found" });
-    }
-  }
 
-  static async editJobInfo(req, res) {
-    try {
-      const update = await db["Job"]
-        .update((req.body), {
-          where: {
-            id: req.body.id
-          },
-        });
-      return update
-        ? res.status(200).json({
-          result: "Edited Successfully"
-        })
-        : res.status(404).json({
-          error: "Sorry, No record edited",
-        });
-    } catch (error) {
-      logger.customLogger.log('error', error)
-      console.log(err)
-      return res.status(400).send({ message: "Sorry, Edit failed" });
-    }
-  }
-
-  static async deleteJob(req, res) {
-    try {
-      const response = await db['Job']
-        .update(
-          { status: "deleted" },
-          {
-            where: {
-              id: req.query.jobId,
+        jobPosts = await db.Job.findAll({
+          where: { companyId: { [db.Op.in]: companiesId }, status: 'approved' },
+          include: [
+            {
+              model: db.Company,
+              attributes: ['logo', ['coName', 'companyName']],
             },
+            {
+              model: db.AudienceForPost,
+              attributes: [['activityId', 'activity']],
+              on: {
+                [db.Op.and]: [
+                  db.sequelize.where(
+                    db.sequelize.col('Job.id'),
+                    db.Op.eq,
+                    db.sequelize.col('AudienceForPosts.postId')
+                  ),
+                  db.sequelize.where(
+                    db.sequelize.col('AudienceForPosts.typeOfPost'),
+                    db.Op.eq,
+                    'job'
+                  ),
+                ],
+              },
+              include: [
+                {
+                  model: db.BusinessActivities,
+                  attributes: ['name'],
+                  on: {
+                    [db.Op.and]: [
+                      db.sequelize.where(
+                        db.sequelize.col('AudienceForPosts.activityId'),
+                        db.Op.eq,
+                        db.sequelize.col(
+                          'AudienceForPosts->BusinessActivity.id'
+                        )
+                      ),
+                    ],
+                  },
+                },
+              ],
+            },
+          ],
+          order: [['deadlineDate', 'DESC']],
+        });
+      } else if (filterBy === 'topic') {
+        let postsId;
+        await generic.getPostsIdPerActivity(
+          'job',
+          filterValue,
+          (thepostsId) => {
+            postsId = thepostsId.map(postId => postId.postId);
           }
         );
-      return response
-        ? res.status(200).json({
-          message: "Deleted Successfully"
-        })
-        : res.status(404).json({
-          error: "Sorry, No record deleted"
-        });
-    } catch (error) {
-      //console.log(err)
-      logger.customLogger.log('error', error)
-      return res.status(400).send({ message: "Sorry, Action failed" });
-    }
-  }
 
-  static async getJobsFiltered(req, res) {
-    try {
-      const filterBy = req.query.filterBy;
-      const filterValue = req.query.filterValue.trim();
-      var jobPosts;
-
-      if (filterBy == "company") {
-        jobPosts = await db['Job'].findAll({
-          where: { companyId: filterValue, status: "approved" },
+        jobPosts = await db.Job.findAll({
+          where: { id: { [db.Op.in]: postsId }, status: 'approved' },
           include: [
-            { model: db["Company"], attributes: ["logo", ["coName", "companyName"]] },
             {
-              model: db["AudienceForPost"], attributes: [["activityId", "activity"]],
-              on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('Job.id'), db.Op.eq, db.sequelize.col('AudienceForPosts.postId')), db.sequelize.where(db.sequelize.col('AudienceForPosts.typeOfPost'), db.Op.eq, 'job')] },
-              include: [{
-                model: db["BusinessActivities"], attributes: ["name"],
-                on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('AudienceForPosts.activityId'), db.Op.eq, db.sequelize.col('AudienceForPosts->BusinessActivity.id'))] },
-              }]
+              model: db.Company,
+              attributes: ['logo', ['coName', 'companyName']],
             },
-          ], order: [['deadlineDate', 'DESC']]
-        });
-      } else if (filterBy == "company-type") {
-        var companiesId;
-        await generic.getCompaniesIdPerType(filterValue, function (theCompanies) {
-          companiesId = theCompanies.map(company => company.id);
-        })
-
-        jobPosts = await db['Job'].findAll({
-          where: { companyId: { [db.Op.in]: companiesId }, status: "approved" },
-          include: [
-            { model: db["Company"], attributes: ["logo", ["coName", "companyName"]] },
             {
-              model: db["AudienceForPost"], attributes: [["activityId", "activity"]],
-              on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('Job.id'), db.Op.eq, db.sequelize.col('AudienceForPosts.postId')), db.sequelize.where(db.sequelize.col('AudienceForPosts.typeOfPost'), db.Op.eq, 'job')] },
-              include: [{
-                model: db["BusinessActivities"], attributes: ["name"],
-                on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('AudienceForPosts.activityId'), db.Op.eq, db.sequelize.col('AudienceForPosts->BusinessActivity.id'))] },
-              }]
-            },
-          ], order: [['deadlineDate', 'DESC']]
-        });
-      } else if (filterBy == "topic") {
-        var postsId;
-        await generic.getPostsIdPerActivity("job", filterValue, function (thepostsId) {
-          postsId = thepostsId.map(postId => postId.postId);
-        })
-
-        jobPosts = await db['Job'].findAll({
-          where: { id: { [db.Op.in]: postsId }, status: "approved" },
-          include: [
-            { model: db["Company"], attributes: ["logo", ["coName", "companyName"]] },
-            {
-              model: db["AudienceForPost"], attributes: [["activityId", "activity"]],
-              on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('Job.id'), db.Op.eq, db.sequelize.col('AudienceForPosts.postId')), db.sequelize.where(db.sequelize.col('AudienceForPosts.typeOfPost'), db.Op.eq, 'job')] },
-              include: [{
-                model: db["BusinessActivities"], attributes: ["name"],
-                on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('AudienceForPosts.activityId'), db.Op.eq, db.sequelize.col('AudienceForPosts->BusinessActivity.id'))] },
-              }]
-            },
-          ], order: [['deadlineDate', 'DESC']]
-        });
-      } else if (filterBy == "year") {
-        jobPosts = await db['Job'].findAll({
-          where: { status: "approved", [db.Op.and]: db.sequelize.where(db.sequelize.literal('EXTRACT(YEAR FROM "Job"."deadlineDate")'), filterValue) },
-          include: [
-            { model: db["Company"], attributes: ["logo", ["coName", "companyName"]] },
-            {
-              model: db["AudienceForPost"], attributes: [["activityId", "activity"]],
-              on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('Job.id'), db.Op.eq, db.sequelize.col('AudienceForPosts.postId')), db.sequelize.where(db.sequelize.col('AudienceForPosts.typeOfPost'), db.Op.eq, 'job')] },
-              include: [{
-                model: db["BusinessActivities"], attributes: ["name"],
-                on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('AudienceForPosts.activityId'), db.Op.eq, db.sequelize.col('AudienceForPosts->BusinessActivity.id'))] },
-              }]
-            },
-          ], order: [['updatedAt', 'DESC']]
-        });
-      }
-
-      if (jobPosts && jobPosts.length > 0) {
-        return res.status(200).json({ result: jobPosts });
-      }
-      return res.status(404).json({ result: [], error: "No job found at this moment" });
-    } catch (error) {
-      //console.log(err)
-      logger.customLogger.log('error', error)
-      return res.status(400).send({ message: "No jobs found at this moment" });
-    }
-  }
-
-  static async getJobsSorted(req, res) {
-    try {
-      const sortBy = req.query.sortBy;
-      const sortValue = req.query.sortValue.trim();
-      var jobPosts;
-
-      if (sortValue == "desc" || sortValue == "asc") {
-        if (sortBy == "date") {
-          jobPosts = await db['Job'].findAll({
-            where: { status: "approved" },
-            include: [
-              { model: db["Company"], attributes: ["logo", ["coName", "companyName"]] },
-              {
-                model: db["AudienceForPost"], attributes: [["activityId", "activity"]],
-                on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('Job.id'), db.Op.eq, db.sequelize.col('AudienceForPosts.postId')), db.sequelize.where(db.sequelize.col('AudienceForPosts.typeOfPost'), db.Op.eq, 'job')] },
-                include: [{
-                  model: db["BusinessActivities"], attributes: ["name"],
-                  on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('AudienceForPosts.activityId'), db.Op.eq, db.sequelize.col('AudienceForPosts->BusinessActivity.id'))] },
-                }]
+              model: db.AudienceForPost,
+              attributes: [['activityId', 'activity']],
+              on: {
+                [db.Op.and]: [
+                  db.sequelize.where(
+                    db.sequelize.col('Job.id'),
+                    db.Op.eq,
+                    db.sequelize.col('AudienceForPosts.postId')
+                  ),
+                  db.sequelize.where(
+                    db.sequelize.col('AudienceForPosts.typeOfPost'),
+                    db.Op.eq,
+                    'job'
+                  ),
+                ],
               },
-            ], order: [['deadlineDate', sortValue]]
-          });
-        } else if (sortBy == "title") {
-          jobPosts = await db['Job'].findAll({
-            where: { status: "approved" },
-            include: [
-              { model: db["Company"], attributes: ["logo", ["coName", "companyName"]] },
-              {
-                model: db["AudienceForPost"], attributes: [["activityId", "activity"]],
-                on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('Job.id'), db.Op.eq, db.sequelize.col('AudienceForPosts.postId')), db.sequelize.where(db.sequelize.col('AudienceForPosts.typeOfPost'), db.Op.eq, 'job')] },
-                include: [{
-                  model: db["BusinessActivities"], attributes: ["name"],
-                  on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('AudienceForPosts.activityId'), db.Op.eq, db.sequelize.col('AudienceForPosts->BusinessActivity.id'))] }
-                }]
-              }
-            ], order: [['title', sortValue]]
-          });
-        }
+              include: [
+                {
+                  model: db.BusinessActivities,
+                  attributes: ['name'],
+                  on: {
+                    [db.Op.and]: [
+                      db.sequelize.where(
+                        db.sequelize.col('AudienceForPosts.activityId'),
+                        db.Op.eq,
+                        db.sequelize.col(
+                          'AudienceForPosts->BusinessActivity.id'
+                        )
+                      ),
+                    ],
+                  },
+                },
+              ],
+            },
+          ],
+          order: [['deadlineDate', 'DESC']],
+        });
+      } else if (filterBy === 'year') {
+        jobPosts = await db.Job.findAll({
+          where: {
+            status: 'approved',
+            [db.Op.and]: db.sequelize.where(
+              db.sequelize.literal('EXTRACT(YEAR FROM "Job"."deadlineDate")'),
+              filterValue
+            ),
+          },
+          include: [
+            {
+              model: db.Company,
+              attributes: ['logo', ['coName', 'companyName']],
+            },
+            {
+              model: db.AudienceForPost,
+              attributes: [['activityId', 'activity']],
+              on: {
+                [db.Op.and]: [
+                  db.sequelize.where(
+                    db.sequelize.col('Job.id'),
+                    db.Op.eq,
+                    db.sequelize.col('AudienceForPosts.postId')
+                  ),
+                  db.sequelize.where(
+                    db.sequelize.col('AudienceForPosts.typeOfPost'),
+                    db.Op.eq,
+                    'job'
+                  ),
+                ],
+              },
+              include: [
+                {
+                  model: db.BusinessActivities,
+                  attributes: ['name'],
+                  on: {
+                    [db.Op.and]: [
+                      db.sequelize.where(
+                        db.sequelize.col('AudienceForPosts.activityId'),
+                        db.Op.eq,
+                        db.sequelize.col(
+                          'AudienceForPosts->BusinessActivity.id'
+                        )
+                      ),
+                    ],
+                  },
+                },
+              ],
+            },
+          ],
+          order: [['updatedAt', 'DESC']],
+        });
       }
 
       if (jobPosts && jobPosts.length > 0) {
         return res.status(200).json({ result: jobPosts });
       }
-      return res.status(404).json({ result: [], error: "No job found at this moment" });
+      return res
+        .status(404)
+        .json({ result: [], error: 'No job found at this moment' });
     } catch (error) {
-      logger.customLogger.log('error', error)
-      return res.status(400).send({ message: "No jobs found at this moment" });
+      // console.log(err)
+      logger.customLogger.log('error', error);
+      return res.status(400).send({ message: 'No jobs found at this moment' });
     }
   }
 
+  /**
+   *
+   * @param {Object} req
+   * @param {Obect} res
+   * @returns {Object} Response
+   */
+  static async getJobsSorted(req, res) {
+    const { sortBy } = req.query;
+    const sortValue = req.query.sortValue.trim();
+    let jobPosts;
+
+    if (sortValue === 'desc' || sortValue === 'asc') {
+      if (sortBy === 'date') {
+        jobPosts = await db.Job.findAll({
+          where: { status: 'approved' },
+          include: [
+            {
+              model: db.Company,
+              attributes: ['logo', ['coName', 'companyName']],
+            },
+            {
+              model: db.AudienceForPost,
+              attributes: [['activityId', 'activity']],
+              on: {
+                [db.Op.and]: [
+                  db.sequelize.where(
+                    db.sequelize.col('Job.id'),
+                    db.Op.eq,
+                    db.sequelize.col('AudienceForPosts.postId')
+                  ),
+                  db.sequelize.where(
+                    db.sequelize.col('AudienceForPosts.typeOfPost'),
+                    db.Op.eq,
+                    'job'
+                  ),
+                ],
+              },
+              include: [
+                {
+                  model: db.BusinessActivities,
+                  attributes: ['name'],
+                  on: {
+                    [db.Op.and]: [
+                      db.sequelize.where(
+                        db.sequelize.col('AudienceForPosts.activityId'),
+                        db.Op.eq,
+                        db.sequelize.col(
+                          'AudienceForPosts->BusinessActivity.id'
+                        )
+                      ),
+                    ],
+                  },
+                },
+              ],
+            },
+          ],
+          order: [['deadlineDate', sortValue]],
+        });
+      } else if (sortBy === 'title') {
+        jobPosts = await db.Job.findAll({
+          where: { status: 'approved' },
+          include: [
+            {
+              model: db.Company,
+              attributes: ['logo', ['coName', 'companyName']],
+            },
+            {
+              model: db.AudienceForPost,
+              attributes: [['activityId', 'activity']],
+              on: {
+                [db.Op.and]: [
+                  db.sequelize.where(
+                    db.sequelize.col('Job.id'),
+                    db.Op.eq,
+                    db.sequelize.col('AudienceForPosts.postId')
+                  ),
+                  db.sequelize.where(
+                    db.sequelize.col('AudienceForPosts.typeOfPost'),
+                    db.Op.eq,
+                    'job'
+                  ),
+                ],
+              },
+              include: [
+                {
+                  model: db.BusinessActivities,
+                  attributes: ['name'],
+                  on: {
+                    [db.Op.and]: [
+                      db.sequelize.where(
+                        db.sequelize.col('AudienceForPosts.activityId'),
+                        db.Op.eq,
+                        db.sequelize.col(
+                          'AudienceForPosts->BusinessActivity.id'
+                        )
+                      ),
+                    ],
+                  },
+                },
+              ],
+            },
+          ],
+          order: [['title', sortValue]],
+        });
+      }
+    }
+
+    if (jobPosts && jobPosts.length > 0) {
+      return res.status(200).json({ result: jobPosts });
+    }
+    return res
+      .status(404)
+      .json({ result: [], error: 'No job found at this moment' });
+  }
+
+  /**
+   *
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} Response
+   */
   static async searchForJobs(req, res) {
     const searchValue = req.query.searchValue.trim();
-    generic.searchForJobs(searchValue, function (result) {
-      return res.status(result[0]).send(result[1]);
-    })
+    generic.searchForJobs(searchValue, result => res.status(result[0]).send(result[1]));
   }
 }

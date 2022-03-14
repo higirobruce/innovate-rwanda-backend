@@ -5,17 +5,19 @@ import CompanyController from '../../controllers/CompanyController';
 import auth from '../../middlewares/authorization_authentication';
 import checkPermissions from '../../middlewares/checkPermissions';
 
+import asyncHandler from '../../middlewares/asyncErrorHandler';
+
 const company = Router();
 
 company.get(
   '/directory/admin',
   auth.verifyToken,
   checkPermissions('admin-company'),
-  CompanyController.getCompaniesList
+  asyncHandler(CompanyController.getCompaniesList)
 );
 company.get(
   '/directory/public',
-  CompanyController.getApprovedCompaniesList
+  asyncHandler(CompanyController.getApprovedCompaniesList)
 );
 
 // company.get(
@@ -27,59 +29,59 @@ company.put(
   '/company/approve-decline',
   auth.verifyToken,
   checkPermissions('admin-company'),
-  CompanyController.approveOrDeclineCompany
+  asyncHandler(CompanyController.approveOrDeclineCompany)
 );
 
 company.put(
   '/company/manage',
   auth.verifyToken,
   checkPermissions(['normal', 'admin-company']),
-  CompanyController.manageCompany
+  asyncHandler(CompanyController.manageCompany)
 );
 
 company.get(
   '/company/my-company',
   auth.verifyToken,
   checkPermissions(['normal']),
-  CompanyController.getCompanyMyInfo
+  asyncHandler(CompanyController.getCompanyMyInfo)
 );
 
 company.get(
   '/company/:companyId',
   auth.verifyToken,
   checkPermissions(['normal', 'admin-company']),
-  CompanyController.getCompanyInfo
+  asyncHandler(CompanyController.getCompanyInfo)
 );
 
 company.get(
   '/company/public/:slug',
-  CompanyController.getCompanyInfoPublic
+  asyncHandler(CompanyController.getCompanyInfoPublic)
 );
 
 company.patch(
   '/company/edit/:companyId',
   auth.verifyToken,
   checkPermissions(['normal', 'admin-company']),
-  CompanyController.editCompanyInfo
+  asyncHandler(CompanyController.editCompanyInfo)
 );
 
 company.delete(
   '/company/delete/:companyId',
   auth.verifyToken,
   checkPermissions('admin-company'),
-  CompanyController.deleteCompany
+  asyncHandler(CompanyController.deleteCompany)
 );
 
 company.delete(
   '/company/delete-company',
   auth.verifyToken,
   checkPermissions('normal'),
-  CompanyController.deleteOwnCo
+  asyncHandler(CompanyController.deleteOwnCo)
 );
 
 company.get(
   '/recover-company/emaillink/:recoveryToken',
-  CompanyController.recoverCompany
+  asyncHandler(CompanyController.recoverCompany)
 );
 
 /*
@@ -88,7 +90,7 @@ company.get(
  */
 company.get(
   '/directory/filter',
-  CompanyController.getDirectoryFiltered
+  asyncHandler(CompanyController.getDirectoryFiltered)
 );
 
 /*
@@ -97,12 +99,12 @@ company.get(
  */
 company.get(
   '/directory/sort',
-  CompanyController.getDirectorySorted
+  asyncHandler(CompanyController.getDirectorySorted)
 );
 
 company.get(
   '/directory/search',
-  CompanyController.searchDirectory
+  asyncHandler(CompanyController.searchDirectory)
 );
 
 /*
@@ -112,7 +114,7 @@ company.get(
  */
 company.get(
   '/directory/filter/:type',
-  CompanyController.getDirectoryFilteredByType
+  asyncHandler(CompanyController.getDirectoryFilteredByType)
 );
 
 /*
@@ -122,12 +124,12 @@ company.get(
  */
 company.get(
   '/directory/sort/:type',
-  CompanyController.getDirectorySortedByType
+  asyncHandler(CompanyController.getDirectorySortedByType)
 );
 
 company.get(
   '/directory/search/:type',
-  CompanyController.searchDirectoryByType
+  asyncHandler(CompanyController.searchDirectoryByType)
 );
 
 export default company;

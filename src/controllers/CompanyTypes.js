@@ -1,68 +1,134 @@
-import db from "../models";
-import generic from "../helpers/Generic";
-import { UniqueConstraintError } from "sequelize";
-const logger = require('../helpers/LoggerMod.js');
+import db from '../models';
+import generic from '../helpers/Generic';
 
+
+import * as events from '../constants/eventNames';
+import { eventEmitter } from '../config/eventEmitter';
+import responseWrapper from '../helpers/responseWrapper';
+import { CONFLICT, NOT_FOUND, OK } from '../constants/statusCodes';
+
+const logger = require('../helpers/LoggerMod');
+
+/**
+ * CompanyTypes class
+ */
 export default class CompanyTypes {
+  /**
+   *
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} Response
+   */
   static async getCompanyTypes(req, res) {
     try {
-      const response = await db["CompanyTypes"].findAll({ order: [["display_order", "ASC"], ["slug", "ASC"]] });
+      const response = await db.CompanyTypes.findAll({ order: [['display_order', 'ASC'], ['slug', 'ASC']] });
       return res.status(200).json({ result: response });
     } catch (error) {
-      logger.customLogger.log('error', error)
-      //console.log(err)
-      return res.status(400).send({ message: "Sorry, no company types found" });
+      logger.customLogger.log('error', error);
+      // console.log(err)
+      return res.status(400).send({ message: 'Sorry, no company types found' });
     }
   }
 
+  /**
+   *
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} Response
+   */
   static async addType(req, res) {
-    try {
-      const response = await db['CompanyTypes'].create({
-        name: req.body.name,
-        description: req.body.description,
-        slug: generic.generateSlug_companyTypes(req.body.name),
-        image: req.body.image
+    const foundType = await db.CompanyTypes.findOne({
+      where: {
+        name: req.body.name
+      }
+    });
+
+    if (foundType) {
+      return responseWrapper({
+        res,
+        status: CONFLICT,
+        message: 'This company type already exists'
       });
-      return res.status(200).send({ message: response });
-    } catch (error) {
-      logger.customLogger.log('error', error)
-      if (error instanceof UniqueConstraintError) {
-        return res.status(409).send({
-          error:
-            "This type already exist!!!!",
-          field: error.errors[0].path
-        });
-      }
-      return res.status(400).send({ message: "Sorry, Failed to add company type at moment" });
     }
+    const response = await db.CompanyTypes.create({
+      name: req.body.name,
+      description: req.body.description,
+      slug: generic.generateSlug_companyTypes(req.body.name),
+      image: req.body.image
+    });
+
+    eventEmitter.emit(events.LOG_ACTIVITY, {
+      actor: req.user,
+      description: `${req.user.firstName} ${req.user.lastName} added a company type named '${response.name}'`,
+    });
+    return res.status(200).send({ message: response, result: response });
   }
 
+  /**
+   *
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} Response
+   */
   static async editType(req, res) {
-    try {
-      const update = await db["CompanyTypes"].update((req.body), {
-          where: { id: req.body.id}
-        });
-      return update ? res.status(200).json({ result: "Edited Successfully" })
-        : res.status(404).json({ error: "Sorry, No record edited" });
-    } catch (error) {
-      logger.customLogger.log('error', error)
-      return res.status(400).send({ message: "Sorry, Edit failed" });
+    const foundType = await db.CompanyTypes.findByPk(req.body.id);
+    if (!foundType) {
+      return responseWrapper({
+        res,
+        status: NOT_FOUND,
+        message: 'Company type not found'
+      });
     }
+
+    await foundType.update({
+      ...req.body,
+      id: undefined,
+    });
+
+    eventEmitter.emit(events.LOG_ACTIVITY, {
+      actor: req.user,
+      description: `${req.user.firstName} ${req.user.lastName} updated the company type named '${foundType.name}'`
+    });
+
+    return responseWrapper({
+      res,
+      status: OK,
+      message: 'Company type updated'
+    });
   }
 
+  /**
+   *
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} Response
+   */
   static async removeType(req, res) {
-    try {
-      const response = await db["CompanyTypes"].destroy({
-          where: { id: req.query.type }
-        })
-      if (response) {
-        return res.status(200).json({ message: "Type Removed" })
-      } else {
-        return res.status(200).json({ message: "Type not yet added" })
+    const foundType = await db.CompanyTypes.findOne({
+      where: {
+        id: req.query.type
       }
-    } catch (error) {
-      logger.customLogger.log('error', error)
-      return res.status(400).send({ message: "Sorry, Failed to remove company type at moment" });
+    });
+
+    if (!foundType) {
+      return responseWrapper({
+        res,
+        status: NOT_FOUND,
+        message: 'Company type not found'
+      });
     }
+
+    eventEmitter.emit(events.LOG_ACTIVITY, {
+      actor: req.user,
+      description: `${req.user.firstName} ${req.user.lastName} deleted a company type named '${foundType.name}'`
+    });
+
+    await foundType.destroy();
+
+    return responseWrapper({
+      res,
+      status: OK,
+      message: 'Company type has been deleted'
+    });
   }
 }

@@ -1,53 +1,103 @@
-import db from "../models";
-const logger = require('../helpers/LoggerMod.js');
+import db from '../models';
 
+import * as events from '../constants/eventNames';
+import { eventEmitter } from '../config/eventEmitter';
+import responseWrapper from '../helpers/responseWrapper';
+import { NOT_FOUND, OK } from '../constants/statusCodes';
+
+/**
+ * Event Type Controller
+ */
 export default class EventsTypes {
+  /**
+   *
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} Response
+   */
   static async getEventsTypes(req, res) {
-    try {
-      const response = await db["EventsTypes"].findAll({ order: [["name", "ASC"]] });
-      return res.status(200).json({ result: response });
-    } catch (error) {
-      logger.customLogger.log('error', error)
-      return res.status(400).send({ message: "Sorry, no event types found" });
-    }
+    const response = await db.EventsTypes.findAll({ order: [['name', 'ASC']] });
+    return res.status(200).json({ result: response });
   }
 
+  /**
+   *
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} Response
+   */
   static async addType(req, res) {
-    try {
-      const response = await db['EventsTypes'].create(req.body);
-      return res.status(200).send({ message: response });
-    } catch (error) {
-      logger.customLogger.log('error', error)
-      return res.status(400).send({ message: "Sorry, Failed to add event type at moment" });
-    }
+    const response = await db.EventsTypes.create(req.body);
+    eventEmitter.emit(events.LOG_ACTIVITY, {
+      actor: req.user,
+      description: `${req.user.firstName} ${req.user.lastName} added an event type named '${response.name}'`
+    });
+    return res.status(200).send({ message: response });
   }
 
+
+  /**
+   *
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} Response
+   */
   static async editType(req, res) {
-    try {
-      const update = await db["EventsTypes"].update((req.body), {
-        where: { id: req.body.id }
+    const foundType = await db.EventsTypes.findByPk(req.body.id);
+
+    if (!foundType) {
+      return responseWrapper({
+        res,
+        status: NOT_FOUND,
+        message: 'Event Type not found'
       });
-      return update ? res.status(200).json({ result: "Edited Successfully" })
-                    : res.status(404).json({ error: "Sorry, No record edited" });
-    } catch (error) {
-      logger.customLogger.log('error', error)
-      return res.status(400).send({ message: "Sorry, Edit failed" });
     }
+
+    await foundType.update({
+      ...req.body,
+      id: undefined,
+    });
+
+    eventEmitter.emit(events.LOG_ACTIVITY, {
+      actor: req.user,
+      description: `${req.user.firstName} ${req.user.lastName} updated an event type named '${foundType.name}'`
+    });
+
+    return responseWrapper({
+      res,
+      status: OK,
+      message: 'Event Type updated'
+    });
   }
 
+  /**
+   *
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} Response
+   */
   static async removeType(req, res) {
-    try {
-      const response = await db["EventsTypes"].destroy({
-        where: { id: req.query.type }
-      })
-      if (response) {
-        return res.status(200).json({ message: "Type Removed" })
-      } else {
-        return res.status(200).json({ message: "Type not yet added" })
-      }
-    } catch (error) {
-      logger.customLogger.log('error', error)
-      return res.status(400).send({ message: "Sorry, Failed to remove event type at moment" });
+    const foundType = await db.EventsTypes.findByPk(req.query.type);
+
+    if (!foundType) {
+      return responseWrapper({
+        res,
+        status: NOT_FOUND,
+        message: 'Event Type not found'
+      });
     }
+
+    eventEmitter.emit(events.LOG_ACTIVITY, {
+      actor: req.user,
+      description: `${req.user.firstName} ${req.user.lastName} deleted an event type named '${foundType.name}'`
+    });
+
+    await foundType.destroy();
+
+    return responseWrapper({
+      res,
+      status: OK,
+      message: 'Event Type  has been removed'
+    });
   }
 }

@@ -7,6 +7,8 @@ import routes from './routes';
 
 import joiErrors from './middlewares/validationErrors';
 
+import './helpers/events';
+
 
 const app = express();
 

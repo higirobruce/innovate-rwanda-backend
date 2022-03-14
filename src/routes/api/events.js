@@ -1,92 +1,94 @@
-import { Router } from "express";
+import { Router } from 'express';
 
-import EventsController from "../../controllers/EventsController";
+import EventsController from '../../controllers/EventsController';
 
-import auth from "../../middlewares/authorization_authentication.js";
-import checkPermissions from "../../middlewares/checkPermissions";
+import auth from '../../middlewares/authorization_authentication';
+import checkPermissions from '../../middlewares/checkPermissions';
+
+import asyncHandler from '../../middlewares/asyncErrorHandler';
 
 const events = Router();
 
 events.post(
-  "/events",
+  '/events',
   auth.verifyToken,
-  checkPermissions("normal"),
-  EventsController.eventPost
+  checkPermissions('normal'),
+  asyncHandler(EventsController.eventPost)
 );
 
 events.put(
-  "/events/approve-decline",
+  '/events/approve-decline',
   auth.verifyToken,
-  checkPermissions(["admin-event"]),
-  EventsController.approveOrDeclineEventPost
+  checkPermissions(['admin-event']),
+  asyncHandler(EventsController.approveOrDeclineEventPost)
 );
 
 events.put(
-  "/events/manage",
+  '/events/manage',
   auth.verifyToken,
-  checkPermissions("admin-event"),
-  EventsController.manageEventPost
+  checkPermissions('admin-event'),
+  asyncHandler(EventsController.manageEventPost)
 );
 
 events.get(
-  "/events/public",
-  EventsController.getApprovedEventsList
+  '/events/public',
+  asyncHandler(EventsController.getApprovedEventsList)
 );
 
 events.get(
-  "/events/company/:companyId",
+  '/events/company/:companyId',
   auth.verifyToken,
-  checkPermissions("normal"),
-  EventsController.getEventsListPerCompany
+  checkPermissions('normal'),
+  asyncHandler(EventsController.getEventsListPerCompany)
 );
 
 events.get(
-  "/events/:status",
+  '/events/:status',
   auth.verifyToken,
-  checkPermissions("admin-event"),
-  EventsController.getEventsList
+  checkPermissions('admin-event'),
+  asyncHandler(EventsController.getEventsList)
 );
 
 events.get(
-  "/events/info/:eventId",
-  EventsController.getEventInfo
+  '/events/info/:eventId',
+  asyncHandler(EventsController.getEventInfo)
 );
 
 events.patch(
-  "/events/edit",
+  '/events/edit',
   auth.verifyToken,
-  EventsController.editEventInfo
+  asyncHandler(EventsController.editEventInfo)
 );
 
 events.delete(
-  "/events/delete",
+  '/events/delete',
   auth.verifyToken,
-  checkPermissions(["normal", "admin-event"]),
-  EventsController.deleteEvent
+  checkPermissions(['normal', 'admin-event']),
+  asyncHandler(EventsController.deleteEvent)
 );
 
-/* 
+/*
  * FilterBy ---   company       | topic                 | year            | company-type
  * FilterValue--  id of company | activity id           | a year-eg.2020  |
  */
 events.get(
-  "/events/public/filter",
-  EventsController.getEventsFiltered
+  '/events/public/filter',
+  asyncHandler(EventsController.getEventsFiltered)
 );
 
-/* 
+/*
  * SortBy ---    date or  title
  * SortValue--   desc or asc
  */
 events.get(
-  "/events/public/sort",
-  EventsController.getEventsSorted
+  '/events/public/sort',
+  asyncHandler(EventsController.getEventsSorted)
 );
 
 // Search in title, description and category
 events.get(
-  "/events/public/search",
-  EventsController.searchForEvents
+  '/events/public/search',
+  asyncHandler(EventsController.searchForEvents)
 );
 
 export default events;
