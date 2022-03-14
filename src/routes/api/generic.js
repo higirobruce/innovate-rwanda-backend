@@ -1,22 +1,20 @@
 import { Router } from 'express';
-import GenericController from '../../controllers/GenericController';
-import auth from '../../middlewares/authorization_authentication.js';
-import checkPermissions from '../../middlewares/checkPermissions';
-
 import multer from 'multer';
 import path from 'path';
+import GenericController from '../../controllers/GenericController';
+import auth from '../../middlewares/authorization_authentication';
+import checkPermissions from '../../middlewares/checkPermissions';
+
 
 const storage = multer.diskStorage({
   destination: './uploads',
-  filename: (req, file, cb) => {
-    return cb(
-      null,
-      `${file.fieldname}_${Date.now()}${path.extname(file.originalname)}`
-    );
-  },
+  filename: (req, file, cb) => cb(
+    null,
+    `${file.fieldname}_${Date.now()}${path.extname(file.originalname)}`
+  ),
 });
 const upload = multer({
-  storage: storage,
+  storage,
   limits: { fileSize: 6000000, files: 1 },
 });
 
@@ -28,7 +26,7 @@ const generic = Router();
 generic.get(
   '/export',
   auth.verifyToken,
-  checkPermissions("admin-company"),
+  checkPermissions('admin-company'),
   GenericController.exportCompanies
 );
 

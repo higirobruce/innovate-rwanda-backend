@@ -1,75 +1,122 @@
-import db from "../models";
-const logger = require('../helpers/LoggerMod.js');
+import { NOT_FOUND, OK } from '../constants/statusCodes';
+import responseWrapper from '../helpers/responseWrapper';
+import db from '../models';
 
+import * as events from '../constants/eventNames';
+import { eventEmitter } from '../config/eventEmitter';
+
+/**
+ * Resource Controller Class
+ */
 export default class ResourceController {
+  /**
+   *
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} Response
+   */
   static async getResources(req, res) {
-    try {
-      const response = await db["Resource"].findAll({order: [["title", "ASC"]]});
-      return res.status(200).json({ result: response });
-    } catch (error) {
-      logger.customLogger.log('error', error)
-      return res.status(400).send({ message: "Sorry, no resources found" });
-    }
+    const response = await db.Resource.findAll({ order: [['title', 'ASC']] });
+    return res.status(200).json({ result: response });
   }
+
+  /**
+   *
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} Response
+   */
   static async getResource(req, res) {
-    try {
-      const response = await db["Resource"].findOne({
-        where: {
-          id: req.params.id
-        },
-        raw: true
-      });
-      return res.status(200).json({ result: response });
-    } catch (error) {
-      logger.customLogger.log('error', error)
-      return res.status(400).send({ message: "Sorry, no resource found" });
-    }
+    const response = await db.Resource.findOne({
+      where: {
+        id: req.params.id
+      },
+      raw: true
+    });
+    return res.status(200).json({ result: response });
   }
 
+  /**
+   *
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} Response
+   */
   static async addResource(req, res) {
-    try {
-      const response = await db['Resource'].create(
-        {
-          type: req.body.type,
-          title: req.body.title,
-          description: req.body.description,
-          file: req.body.file,
-        });
-      return res.status(200).send({ message: response });
-    } catch (error) {
-      //console.log("err",error)
-      logger.customLogger.log('error', error)
-      return res.status(400).send({ message: "Sorry, Failed to add resource at moment" });
-    }
-  }
-
-  static async editResource(req, res) {
-    try {
-      const update = await db["Resource"].update((req.body), {
-          where: { id: req.body.id }
-        });
-      return update ? res.status(200).json({ result: "Edited Successfully" })
-                    : res.status(404).json({ error: "Sorry, No record edited" });
-    } catch (error) {
-      logger.customLogger.log('error', error)
-      return res.status(400).send({ message: "Sorry, Edit failed" });
-    }
-  }
-
-  static async removeResource(req, res) {
-    try {
-      const response = await db["Resource"].destroy({
-          where: { id: req.query.resourceId },
-        })
-      if (response) {
-        return res.status(200).json({ message: "Resource Removed" })
-      } else {
-        return res.status(200).json({ message: "Resource not yet added" })
+    const response = await db.Resource.create(
+      {
+        type: req.body.type,
+        title: req.body.title,
+        description: req.body.description,
+        file: req.body.file,
       }
-    } catch (error) {
-      logger.customLogger.log('error', error)
-      //console.log(err)
-      return res.status(400).send({ message: "Sorry, Failed to remove resource at moment" });
+    );
+
+    eventEmitter.emit(events.LOG_ACTIVITY, {
+      actor: req.user,
+      description: `${req.user.firstName} ${req.user.lastName} created a resource titled '${response.title}'`
+    });
+
+    return res.status(200).send({ message: response });
+  }
+
+  /**
+   *
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} Response
+   */
+  static async editResource(req, res) {
+    const foundResource = await db.Resource.findByPk(req.body.id);
+    if (!foundResource) {
+      return responseWrapper({
+        res,
+        status: NOT_FOUND,
+        message: 'Resource not found',
+      });
     }
+
+    await foundResource.update({ ...req.body, id: undefined });
+
+
+    eventEmitter.emit(events.LOG_ACTIVITY, {
+      actor: req.user,
+      description: `${req.user.firstName} ${req.user.lastName} updated a resource titled '${foundResource.title}'`
+    });
+    return responseWrapper({
+      res,
+      status: OK,
+      message: 'Resource updated'
+    });
+  }
+
+  /**
+   *
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} Response
+   */
+  static async removeResource(req, res) {
+    const foundResource = await db.Resource.findByPk(req.query.resourceId);
+    if (!foundResource) {
+      return responseWrapper({
+        res,
+        status: NOT_FOUND,
+        message: 'Resource not found',
+      });
+    }
+
+    await foundResource.destroy();
+
+    eventEmitter.emit(events.LOG_ACTIVITY, {
+      actor: req.user,
+      description: `${req.user.firstName} ${req.user.lastName} deleted a resource titled '${foundResource.title}'`
+    });
+
+    return responseWrapper({
+      res,
+      status: OK,
+      message: 'Resource deleted'
+    });
   }
 }

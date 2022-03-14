@@ -1,18 +1,32 @@
-import db from "../models";
-import notification from "../helpers/Notification";
-import generic from "../helpers/Generic";
-const logger = require('../helpers/LoggerMod.js');
+/* eslint-disable no-plusplus */
+import db from '../models';
+import notification from '../helpers/Notification';
+import generic from '../helpers/Generic';
+import responseWrapper from '../helpers/responseWrapper';
+import { NOT_FOUND, OK } from '../constants/statusCodes';
 
+import * as events from '../constants/eventNames';
+import { eventEmitter } from '../config/eventEmitter';
+
+const logger = require('../helpers/LoggerMod');
+/**
+ * EventController Class
+ */
 export default class EvenController {
+  /**
+   *
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} Response
+   */
   static async eventPost(req, res) {
-    try {
-      const activities = req.body.activities;
-      const fields = req.body;
-      const author = req.user;
-      let event;
-      if (fields.eventDate){
-        if(fields.eventTime) {
-        event = await db['Event'].create({
+    const { activities } = req.body;
+    const fields = req.body;
+    const author = req.user;
+    let event;
+    if (fields.eventDate) {
+      if (fields.eventTime) {
+        event = await db.Event.create({
           title: fields.title,
           description: fields.description,
           companyId: author.companyId,
@@ -24,7 +38,7 @@ export default class EvenController {
           status: fields.status
         });
       } else {
-        event = await db['Event'].create({
+        event = await db.Event.create({
           title: fields.title,
           description: fields.description,
           companyId: author.companyId,
@@ -35,8 +49,8 @@ export default class EvenController {
           status: fields.status
         });
       }
-    } else if(fields.eventTime) { 
-      event = await db['Event'].create({
+    } else if (fields.eventTime) {
+      event = await db.Event.create({
         title: fields.title,
         description: fields.description,
         companyId: author.companyId,
@@ -47,73 +61,84 @@ export default class EvenController {
         status: fields.status
       });
     } else {
-        event = await db['Event'].create({
-          title: fields.title,
-          description: fields.description,
-          companyId: author.companyId,
-          author: author.id,
-          category: fields.category,
-          flyer: fields.flyer,
-          status: fields.status
-        });
+      event = await db.Event.create({
+        title: fields.title,
+        description: fields.description,
+        companyId: author.companyId,
+        author: author.id,
+        category: fields.category,
+        flyer: fields.flyer,
+        status: fields.status
+      });
     }
-      if (event) {
-        var activitiesToLoad = new Array();
-        for (var i = 0; i < activities.length; i++) {
-          activitiesToLoad.push({ typeOfPost: 'event', postId: event.id, activityId: activities[i] });
-        }
-        if (activitiesToLoad.length > 0) {
-          await db['AudienceForPost'].bulkCreate(activitiesToLoad);
-        }
-        return res.status(200).send({
-          message: "Event post saved"
-        });
-      } else {
-        return res.status(404).send({
-          message: "Event posting failed"
-        });
+    if (event) {
+      const activitiesToLoad = [];
+      for (let i = 0; i < activities.length; i++) {
+        activitiesToLoad.push({ typeOfPost: 'event', postId: event.id, activityId: activities[i] });
       }
-    } catch (error) {
-      console.log(error)
-      logger.customLogger.log('error', error)
-      return res.status(400).send({ message: " Event not submitted at this moment" });
+      if (activitiesToLoad.length > 0) {
+        await db.AudienceForPost.bulkCreate(activitiesToLoad);
+      }
+
+      eventEmitter.emit(events.LOG_ACTIVITY, {
+        actor: req.user,
+        description: `${req.user.firstName} ${req.user.lastName} created an event titled '${event.title}'`
+      });
+      return res.status(200).send({
+        message: 'Event post saved'
+      });
     }
+    return res.status(404).send({
+      message: 'Event posting failed'
+    });
   }
 
+  /**
+   *
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} Response
+   */
   static async approveOrDeclineEventPost(req, res) {
-    const decision = req.body.decision;
-    await db["Event"].findOne({ where: { id: req.body.id, status: { [db.Op.not]: decision } }, attributes: ["id", "title", "description", "flyer", "companyId"] })
+    const { decision } = req.body;
+    await db.Event.findOne({ where: { id: req.body.id, status: { [db.Op.not]: decision } }, attributes: ['id', 'title', 'description', 'flyer', 'companyId'] })
       .then((event) => {
         if (event) {
           const response = event.update({ status: decision });
           if (response) {
-            if (decision == "approved") {
-              const parameters = { id: req.body.id, title: event.title, description: event.description, file_name: event.flyer, format: "Event", companyId: event.companyId };
-              notification.notify("post approval", parameters, function (resp) {
-                return res.status(200).json({ message: resp });
-              });
+            if (decision === 'approved') {
+              const parameters = {
+                id: req.body.id, title: event.title, description: event.description, file_name: event.flyer, format: 'Event', companyId: event.companyId
+              };
+              notification.notify('post approval', parameters, resp => res.status(200).json({ message: resp }));
             } else {
-              res.status(200).json({ message: "Event " + decision })
+              res.status(200).json({ message: `Event ${decision}` });
             }
           } else {
-            res.status(404).json({ message: "Action Failed" });
+            res.status(404).json({ message: 'Action Failed' });
           }
         } else {
-          res.status(404).json({ message: "Event could have been already treated" });
+          res.status(404).json({ message: 'Event could have been already treated' });
         }
       }).catch((error) => {
-        //console.log(err)
-        logger.customLogger.log('error', error)
-        return res.status(400).send({ message: "Sorry, Action failed" });
-      })
+        // console.log(err)
+        logger.customLogger.log('error', error);
+        return res.status(400).send({ message: 'Sorry, Action failed' });
+      });
   }
 
+  /**
+   *
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} Response
+   */
   static async manageEventPost(req, res) {
-    const decision = req.body.decision;
-    await db["Event"].findOne({ where: { id: req.body.id, status: { [db.Op.not]: decision } }, attributes: ["id", "title", "description", "flyer", "companyId","messages"] })
+    const { decision } = req.body;
+    await db.Event.findOne({ where: { id: req.body.id, status: { [db.Op.not]: decision } }, attributes: ['id', 'title', 'description', 'flyer', 'companyId', 'messages'] })
       .then((event) => {
         if (event) {
-          var response;
+          let response;
           if (req.body.message) {
             if (event.messages) {
               event.messages[event.messages.length] = req.body.message;
@@ -126,27 +151,38 @@ export default class EvenController {
             response = event.update({ status: decision });
           }
           if (response) {
-            if (decision == "approved") {
-              const parameters = { id: req.body.id, title: event.title, description: event.description, file_name: event.flyer, format: "Event", companyId: event.companyId };
-              notification.notify("post approval", parameters, function (resp) {
-                return res.status(200).json({ message: resp });
+            if (decision === 'approved') {
+              const parameters = {
+                id: req.body.id, title: event.title, description: event.description, file_name: event.flyer, format: 'Event', companyId: event.companyId
+              };
+
+              eventEmitter.emit(events.LOG_ACTIVITY, {
+                actor: req.user,
+                description: `${req.user.firstName} ${req.user.lastName} approved an event titled '${event.title}'`
               });
+              notification.notify('post approval', parameters, resp => res.status(200).json({ message: resp }));
             } else {
-              res.status(200).json({ message: "Event " + decision })
+              res.status(200).json({ message: `Event ${decision}` });
             }
           } else {
-            res.status(404).json({ message: "Action Failed" });
+            res.status(404).json({ message: 'Action Failed' });
           }
         } else {
-          res.status(404).json({ message: "Event could have been already treated" });
+          res.status(404).json({ message: 'Event could have been already treated' });
         }
       }).catch((error) => {
-        //console.log(err)
-        logger.customLogger.log('error', error)
-        return res.status(400).send({ message: "Sorry, Action failed" });
-      })
+        // console.log(err)
+        logger.customLogger.log('error', error);
+        return res.status(400).send({ message: 'Sorry, Action failed' });
+      });
   }
 
+  /**
+   *
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} Response
+   */
   static async getApprovedEventsList(req, res) {
     let where = { status: 'approved' };
     const {
@@ -158,67 +194,127 @@ export default class EvenController {
       search,
     } = req.query;
 
-    try {
-      if (companyType) {
-          var companiesId;
-          await generic.getCompaniesIdPerType(companyType, function (theCompanies) {
-            companiesId = theCompanies.map(company => company.id);
-          });
+
+    if (companyType) {
+      let companiesId;
+      await generic.getCompaniesIdPerType(companyType, (theCompanies) => {
+        companiesId = theCompanies.map(company => company.id);
+      });
+      where = {
+        ...where,
+        companyId: { [db.Op.in]: companiesId },
+      };
+    }
+    if (topic) {
+      let postsId;
+      await generic.getPostsIdPerActivity('event', topic, (thepostsId) => {
+        postsId = thepostsId.map(postId => postId.postId);
+      });
+      if (postsId) {
         where = {
           ...where,
-          companyId: { [db.Op.in]: companiesId },
+          id: { [db.Op.in]: postsId }
         };
       }
-      if (topic) {
-        var postsId;
-        await generic.getPostsIdPerActivity("event", topic, function (thepostsId) {
-          postsId = thepostsId.map(postId => postId.postId);
-        });
-        if (postsId){
-          where = {
-            ...where,
-            id: { [db.Op.in]: postsId }
-          };
+    }
+    if (year) {
+      where = {
+        ...where,
+        [db.Op.and]: db.sequelize.where(db.sequelize.literal('EXTRACT(YEAR FROM "Event"."eventDate")'), year),
+      };
+    }
+
+    // manage search query
+    if (search) {
+      const searchValue = search.trim();
+      where = {
+        ...where,
+        [db.Op.or]: [
+          { title: { [db.Op.iLike]: `%${searchValue}%` } },
+          { description: { [db.Op.iLike]: `%${searchValue}%` } },
+          { category: { [db.Op.iLike]: `%${searchValue}%` } }
+        ],
+      };
+    }
+    // manage orders
+    let orderT;
+    if (orderType === 'title') {
+      orderT = 'title';
+    } else {
+      orderT = 'eventDate';
+    }
+    const order = [[orderT, orderValue || 'DESC']];
+
+    const eventPosts = await db.Event.findAll({
+      where,
+      order,
+      include: [
+        { model: db.Company, attributes: [['coName', 'companyName']] },
+        { model: db.User, attributes: ['firstName', 'lastName'] },
+        {
+          model: db.AudienceForPost,
+          attributes: [['activityId', 'activity']],
+          on: {
+            [db.Op.and]: [
+              db.sequelize.where(
+                db.sequelize.col('Event.id'),
+                db.Op.eq,
+                db.sequelize.col('AudienceForPosts.postId')
+              ),
+              db.sequelize.where(
+                db.sequelize.col('AudienceForPosts.typeOfPost'),
+                db.Op.eq,
+                'event'
+              )
+            ],
+          },
+          include: [{
+            model: db.BusinessActivities,
+            attributes: ['name'],
+            on: {
+              [db.Op.and]: [
+                db.sequelize.where(
+                  db.sequelize.col('AudienceForPosts.activityId'),
+                  db.Op.eq,
+                  db.sequelize.col('AudienceForPosts->BusinessActivity.id')
+                )],
+            },
+          }]
         }
+      ],
+    });
+    if (eventPosts && eventPosts.length > 0) {
+      return res.status(200).json({
+        result: eventPosts,
+      });
+    }
+    return res.status(404).json({
+      result: [],
+      error: 'No event found at this moment',
+    });
+  }
 
-      }
-      if (year) {
-        where = {
-          ...where,
-          [db.Op.and]: db.sequelize.where(db.sequelize.literal('EXTRACT(YEAR FROM "Event"."eventDate")'), year),
-        };
-      }
-
-      // manage search query
-      if (search) {
-        const search_value = search.trim();
-        where = {
-          ...where,
-          [db.Op.or]: [
-            { title: { [db.Op.iLike]: "%" + search_value + "%" } },
-            { description: { [db.Op.iLike]: "%" + search_value + "%" } },
-            { category: { [db.Op.iLike]: "%" + search_value + "%" } }
-          ], 
-        };
-      }
-      // manage orders
-      let orderT;
-      if (orderType === 'title') {
-        orderT = 'title';
-      } else {
-        orderT = 'eventDate';
-      }
-      let order = [[orderT, orderValue || 'DESC']];
-
-      const eventPosts = await db["Event"].findAll({
-        where,
-        order,
+  /**
+   *
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} Response
+   */
+  static async getEventsListPerCompany(req, res) {
+    const eventPosts = await db.Event
+      .findAll({
+        where: {
+          companyId: req.params.companyId,
+          status: {
+            [db.Op.not]: 'deleted'
+          },
+        },
         include: [
-          { model: db["Company"], attributes: [["coName", "companyName"]] },
-          { model: db["User"], attributes: ["firstName", "lastName"] },
+          { model: db.Company, attributes: [['coName', 'companyName']] },
+          { model: db.User, attributes: ['firstName', 'lastName'] },
           {
-            model: db["AudienceForPost"],
-            attributes: [["activityId", "activity"]],
+            model: db.AudienceForPost,
+            attributes: [['activityId', 'activity']],
             on: {
               [db.Op.and]: [
                 db.sequelize.where(
@@ -234,54 +330,49 @@ export default class EvenController {
               ],
             },
             include: [{
-              model: db["BusinessActivities"],
-              attributes: ["name"],
+              model: db.BusinessActivities,
+              attributes: ['name'],
               on: {
                 [db.Op.and]: [
                   db.sequelize.where(
                     db.sequelize.col('AudienceForPosts.activityId'),
                     db.Op.eq,
                     db.sequelize.col('AudienceForPosts->BusinessActivity.id')
-                  ),],
+                  )],
               },
             }]
           }
         ],
+        order: [['createdAt', 'DESC']]
       });
-      if (eventPosts && eventPosts.length > 0) {
-        return res.status(200).json({
-          result: eventPosts,
-        });
-      }
-      return res.status(404).json({
-        result: [],
-        error: "No event found at this moment",
+    if (eventPosts && eventPosts.length > 0) {
+      return res.status(200).json({
+        result: eventPosts,
       });
-    } catch (error) {
-      //console.log(error)
-      logger.customLogger.log('error', error)
-      return res
-        .status(400)
-        .send({ message: "No events found at this moment" });
     }
+    return res.status(404).json({
+      result: [],
+      error: 'No Event Posts found',
+    });
   }
 
-  static async getEventsListPerCompany(req, res) {
-    try {
-      const eventPosts = await db['Event']
+  /**
+   *
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} Response
+   */
+  static async getEventsList(req, res) {
+    let eventPosts;
+    if (req.params.status === 'all') {
+      eventPosts = await db.Event
         .findAll({
-          where: {
-            companyId: req.params.companyId,
-            status: {
-              [db.Op.not]: "deleted"
-            },
-          },
           include: [
-            { model: db["Company"], attributes: [["coName", "companyName"]] },
-            { model: db["User"], attributes: ["firstName", "lastName"] },
+            { model: db.Company, attributes: [['coName', 'companyName']] },
+            { model: db.User, attributes: ['firstName', 'lastName'] },
             {
-              model: db["AudienceForPost"],
-              attributes: [["activityId", "activity"]],
+              model: db.AudienceForPost,
+              attributes: [['activityId', 'activity']],
               on: {
                 [db.Op.and]: [
                   db.sequelize.where(
@@ -297,153 +388,33 @@ export default class EvenController {
                 ],
               },
               include: [{
-                model: db["BusinessActivities"],
-                attributes: ["name"],
+                model: db.BusinessActivities,
+                attributes: ['name'],
                 on: {
                   [db.Op.and]: [
                     db.sequelize.where(
                       db.sequelize.col('AudienceForPosts.activityId'),
                       db.Op.eq,
                       db.sequelize.col('AudienceForPosts->BusinessActivity.id')
-                    ),],
+                    )],
                 },
               }]
             }
           ],
           order: [['createdAt', 'DESC']]
         });
-      if (eventPosts && eventPosts.length > 0) {
-        return res.status(200).json({
-          result: eventPosts,
-        });
-      } else {
-        return res.status(404).json({
-          result: [],
-          error: "No Event Posts found",
-        });
-      }
-    } catch (error) {
-      //console.log(err)
-      logger.customLogger.log('error', error)
-      return res.status(400).send({ message: " List of events not got at this moment" });
-    }
-  }
-
-  static async getEventsList(req, res) {
-    try {
-      var eventPosts;
-      if (req.params.status == "all") {
-        eventPosts = await db['Event']
-          .findAll({
-            include: [
-              { model: db["Company"], attributes: [["coName", "companyName"]] },
-              { model: db["User"], attributes: ["firstName", "lastName"] },
-              {
-                model: db["AudienceForPost"],
-                attributes: [["activityId", "activity"]],
-                on: {
-                  [db.Op.and]: [
-                    db.sequelize.where(
-                      db.sequelize.col('Event.id'),
-                      db.Op.eq,
-                      db.sequelize.col('AudienceForPosts.postId')
-                    ),
-                    db.sequelize.where(
-                      db.sequelize.col('AudienceForPosts.typeOfPost'),
-                      db.Op.eq,
-                      'event'
-                    )
-                  ],
-                },
-                include: [{
-                  model: db["BusinessActivities"],
-                  attributes: ["name"],
-                  on: {
-                    [db.Op.and]: [
-                      db.sequelize.where(
-                        db.sequelize.col('AudienceForPosts.activityId'),
-                        db.Op.eq,
-                        db.sequelize.col('AudienceForPosts->BusinessActivity.id')
-                      ),],
-                  },
-                }]
-              }
-            ],
-            order: [['createdAt', 'DESC']]
-          });
-      } else {
-        eventPosts = await db['Event']
-          .findAll({
-            where: {
-              status: req.params.status,
-            },
-            include: [
-              { model: db["Company"], attributes: [["coName", "companyName"]] },
-              { model: db["User"], attributes: ["firstName", "lastName"] },
-              {
-                model: db["AudienceForPost"],
-                attributes: [["activityId", "activity"]],
-                on: {
-                  [db.Op.and]: [
-                    db.sequelize.where(
-                      db.sequelize.col('Event.id'),
-                      db.Op.eq,
-                      db.sequelize.col('AudienceForPosts.postId')
-                    ),
-                    db.sequelize.where(
-                      db.sequelize.col('AudienceForPosts.typeOfPost'),
-                      db.Op.eq,
-                      'event'
-                    )
-                  ],
-                },
-                include: [{
-                  model: db["BusinessActivities"],
-                  attributes: ["name"],
-                  on: {
-                    [db.Op.and]: [
-                      db.sequelize.where(
-                        db.sequelize.col('AudienceForPosts.activityId'),
-                        db.Op.eq,
-                        db.sequelize.col('AudienceForPosts->BusinessActivity.id')
-                      ),],
-                  },
-                }]
-              }
-            ],
-            order: [['createdAt', 'DESC']]
-          });
-      }
-      if (eventPosts && eventPosts.length > 0) {
-        return res.status(200).json({
-          result: eventPosts,
-        });
-      } else {
-        return res.status(404).json({
-          result: [],
-          error: "No Event Posts found",
-        });
-      }
-    } catch (error) {
-      //console.log(err)
-      logger.customLogger.log('error', error)
-      return res.status(400).send({ message: " List of Events not got at this moment" });
-    }
-  }
-
-  static async getEventInfo(req, res) {
-    try {
-      const event = await db["Event"]
-        .findOne({
+    } else {
+      eventPosts = await db.Event
+        .findAll({
           where: {
-            id: req.params.eventId,
+            status: req.params.status,
           },
           include: [
-            { model: db["Company"], attributes: [["coName", "companyName"]] },
-            { model: db["User"], attributes: ["firstName", "lastName"] },
+            { model: db.Company, attributes: [['coName', 'companyName']] },
+            { model: db.User, attributes: ['firstName', 'lastName'] },
             {
-              model: db["AudienceForPost"],
-              attributes: [["activityId", "activity"]],
+              model: db.AudienceForPost,
+              attributes: [['activityId', 'activity']],
               on: {
                 [db.Op.and]: [
                   db.sequelize.where(
@@ -459,229 +430,330 @@ export default class EvenController {
                 ],
               },
               include: [{
-                model: db["BusinessActivities"],
-                attributes: ["name"],
+                model: db.BusinessActivities,
+                attributes: ['name'],
                 on: {
                   [db.Op.and]: [
                     db.sequelize.where(
                       db.sequelize.col('AudienceForPosts.activityId'),
                       db.Op.eq,
                       db.sequelize.col('AudienceForPosts->BusinessActivity.id')
-                    ),],
+                    )],
                 },
               }]
             }
           ],
+          order: [['createdAt', 'DESC']]
         });
-      return event
-        ? res.status(200).json({
-          result: event
-        })
-        : res.status(404).json({
-          error: "Sorry, Event not found",
-        });
-    } catch (error) {
-      logger.customLogger.log('error', error)
-      return res.status(400).send({ message: "Sorry, Event not found" });
     }
+    if (eventPosts && eventPosts.length > 0) {
+      return res.status(200).json({
+        result: eventPosts,
+      });
+    }
+    return res.status(404).json({
+      result: [],
+      error: 'No Event Posts found',
+    });
   }
 
-  static async editEventInfo(req, res) {
-    try {
-      const update = await db["Event"]
-        .update((req.body), {
-          where: {
-            id: req.body.id
-          },
-        });
-      return update
-        ? res.status(200).json({
-          result: "Edited Successfully"
-        })
-        : res.status(404).json({
-          error: "Sorry, No record edited",
-        });
-    } catch (error) {
-      logger.customLogger.log('error', error)
-      return res.status(400).send({ message: "Sorry, Edit failed" });
-    }
-  }
-
-  static async deleteEvent(req, res) {
-    try {
-      const response = await db['Event']
-        .update(
-          { status: "deleted" },
+  /**
+   *
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} Response
+   */
+  static async getEventInfo(req, res) {
+    const event = await db.Event
+      .findOne({
+        where: {
+          id: req.params.eventId,
+        },
+        include: [
+          { model: db.Company, attributes: [['coName', 'companyName']] },
+          { model: db.User, attributes: ['firstName', 'lastName'] },
           {
-            where: {
-              id: req.query.eventId,
+            model: db.AudienceForPost,
+            attributes: [['activityId', 'activity']],
+            on: {
+              [db.Op.and]: [
+                db.sequelize.where(
+                  db.sequelize.col('Event.id'),
+                  db.Op.eq,
+                  db.sequelize.col('AudienceForPosts.postId')
+                ),
+                db.sequelize.where(
+                  db.sequelize.col('AudienceForPosts.typeOfPost'),
+                  db.Op.eq,
+                  'event'
+                )
+              ],
             },
+            include: [{
+              model: db.BusinessActivities,
+              attributes: ['name'],
+              on: {
+                [db.Op.and]: [
+                  db.sequelize.where(
+                    db.sequelize.col('AudienceForPosts.activityId'),
+                    db.Op.eq,
+                    db.sequelize.col('AudienceForPosts->BusinessActivity.id')
+                  )],
+              },
+            }]
           }
-        );
-      return response
-        ? res.status(200).json({
-          message: "Deleted Successfully"
-        })
-        : res.status(404).json({
-          error: "Sorry, No record deleted"
-        });
-    } catch (error) {
-      logger.customLogger.log('error', error)
-      return res.status(400).send({ message: "Sorry, Action failed" });
-    }
+        ],
+      });
+
+    return event ? responseWrapper({
+      res,
+      status: OK,
+      result: event,
+    }) : responseWrapper({
+      res,
+      status: NOT_FOUND,
+      message: 'Event not found'
+    });
   }
 
+  /**
+   *
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} Response
+   */
+  static async editEventInfo(req, res) {
+    const foundEvent = await db.Event.findOne({
+      where: {
+        id: req.body.id
+      }
+    });
+
+    if (!foundEvent) {
+      return responseWrapper({
+        res,
+        status: NOT_FOUND,
+        message: 'Event not found'
+      });
+    }
+
+    await foundEvent.update({ ...req.body });
+
+    return responseWrapper({
+      res,
+      status: OK,
+      message: 'Event has been edited successfully!'
+    });
+  }
+
+  /**
+   *
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} Response
+   */
+  static async deleteEvent(req, res) {
+    const foundEvent = await db.Event.findOne({
+      where: {
+        id: req.query.eventId,
+      }
+    });
+
+    if (!foundEvent) {
+      return responseWrapper({
+        res,
+        status: NOT_FOUND,
+        message: 'Event not found'
+      });
+    }
+
+    await foundEvent.update({
+      status: 'deleted'
+    });
+
+    eventEmitter.emit(events.LOG_ACTIVITY, {
+      actor: req.user,
+      description: `${req.user.firstName} ${req.user.lastName} deleted an event titled '${foundEvent.title}'`
+    });
+
+    return responseWrapper({
+      res,
+      status: OK,
+      message: 'Event has been deleted!'
+    });
+  }
+
+  /**
+   *
+   * @param {Oject} req
+   * @param {Object} res
+   * @returns {Object} Response
+   */
   static async getEventsFiltered(req, res) {
-    try {
-      const filterBy = req.query.filterBy;
-      const filterValue = req.query.filterValue.trim();
-      var eventPosts;
-      if (filterBy == "company") {
-        eventPosts = await db['Event'].findAll({
-          where: { companyId: filterValue, status: "approved" },
-          include: [
-            { model: db["Company"], attributes: [["coName", "companyName"]] },
-            { model: db["User"], attributes: ["firstName", "lastName"] },
-            {
-              model: db["AudienceForPost"], attributes: [["activityId", "activity"]],
-              on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('Event.id'), db.Op.eq, db.sequelize.col('AudienceForPosts.postId')), db.sequelize.where(db.sequelize.col('AudienceForPosts.typeOfPost'), db.Op.eq, 'event')] },
-              include: [{
-                model: db["BusinessActivities"], attributes: ["name"],
-                on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('AudienceForPosts.activityId'), db.Op.eq, db.sequelize.col('AudienceForPosts->BusinessActivity.id'))] },
-              }]
-            }
-          ], order: [['eventDate', 'DESC']]
-        });
-      } else if (filterBy == "company-type") {
-        var companiesId;
-        await generic.getCompaniesIdPerType(filterValue, function (theCompanies) {
-          companiesId = theCompanies.map(company => company.id);
-        })
-        eventPosts = await db['Event'].findAll({
-          where: { companyId: { [db.Op.in]: companiesId }, status: "approved" },
-          include: [
-            { model: db["Company"], attributes: [["coName", "companyName"]] },
-            { model: db["User"], attributes: ["firstName", "lastName"] },
-            {
-              model: db["AudienceForPost"], attributes: [["activityId", "activity"]],
-              on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('Event.id'), db.Op.eq, db.sequelize.col('AudienceForPosts.postId')), db.sequelize.where(db.sequelize.col('AudienceForPosts.typeOfPost'), db.Op.eq, 'event')] },
-              include: [{
-                model: db["BusinessActivities"], attributes: ["name"],
-                on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('AudienceForPosts.activityId'), db.Op.eq, db.sequelize.col('AudienceForPosts->BusinessActivity.id'))] },
-              }]
-            }
-          ], order: [['eventDate', 'DESC']]
-        });
-      } else if (filterBy == "topic") {
-        var eventsId;
-        await generic.getPostsIdPerActivity("event", filterValue, function (theEventsId) {
-          eventsId = theEventsId.map(postId => postId.postId);
-        })
-        eventPosts = await db['Event'].findAll({
-          where: { id: { [db.Op.in]: eventsId }, status: "approved" },
-          include: [
-            { model: db["Company"], attributes: [["coName", "companyName"]] },
-            { model: db["User"], attributes: ["firstName", "lastName"] },
-            {
-              model: db["AudienceForPost"], attributes: [["activityId", "activity"]],
-              on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('Event.id'), db.Op.eq, db.sequelize.col('AudienceForPosts.postId')), db.sequelize.where(db.sequelize.col('AudienceForPosts.typeOfPost'), db.Op.eq, 'event')] },
-              include: [{
-                model: db["BusinessActivities"], attributes: ["name"],
-                on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('AudienceForPosts.activityId'), db.Op.eq, db.sequelize.col('AudienceForPosts->BusinessActivity.id'))] },
-              }]
-            }
-          ], order: [['eventDate', 'DESC']]
-        });
-      } else if (filterBy == "year") {
-        eventPosts = await db['Event'].findAll({
-          where: { status: "approved", andOp: db.sequelize.where(db.sequelize.literal('EXTRACT(YEAR FROM "Event"."eventDate")'), filterValue) },
-          include: [
-            { model: db["Company"], attributes: [["coName", "companyName"]] },
-            { model: db["User"], attributes: ["firstName", "lastName"] },
-            {
-              model: db["AudienceForPost"], attributes: [["activityId", "activity"]],
-              on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('Event.id'), db.Op.eq, db.sequelize.col('AudienceForPosts.postId')), db.sequelize.where(db.sequelize.col('AudienceForPosts.typeOfPost'), db.Op.eq, 'event')] },
-              include: [{
-                model: db["BusinessActivities"], attributes: ["name"],
-                on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('AudienceForPosts.activityId'), db.Op.eq, db.sequelize.col('AudienceForPosts->BusinessActivity.id'))] },
-              }]
-            }
-          ], order: [['updatedAt', 'DESC']]
-        });
-      }
-
-      if (eventPosts && eventPosts.length > 0) {
-        return res.status(200).json({ result: eventPosts });
-      } else {
-        return res.status(404).json({ result: [], error: "No Event Posts found" });
-      }
-    } catch (error) {
-      //console.log(err)
-      logger.customLogger.log('error', error)
-      return res.status(400).send({ message: " List of Events not got at this moment" });
+    const { filterBy } = req.query;
+    const filterValue = req.query.filterValue.trim();
+    let eventPosts;
+    if (filterBy === 'company') {
+      eventPosts = await db.Event.findAll({
+        where: { companyId: filterValue, status: 'approved' },
+        include: [
+          { model: db.Company, attributes: [['coName', 'companyName']] },
+          { model: db.User, attributes: ['firstName', 'lastName'] },
+          {
+            model: db.AudienceForPost,
+            attributes: [['activityId', 'activity']],
+            on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('Event.id'), db.Op.eq, db.sequelize.col('AudienceForPosts.postId')), db.sequelize.where(db.sequelize.col('AudienceForPosts.typeOfPost'), db.Op.eq, 'event')] },
+            include: [{
+              model: db.BusinessActivities,
+              attributes: ['name'],
+              on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('AudienceForPosts.activityId'), db.Op.eq, db.sequelize.col('AudienceForPosts->BusinessActivity.id'))] },
+            }]
+          }
+        ],
+        order: [['eventDate', 'DESC']]
+      });
+    } else if (filterBy === 'company-type') {
+      let companiesId;
+      await generic.getCompaniesIdPerType(filterValue, (theCompanies) => {
+        companiesId = theCompanies.map(company => company.id);
+      });
+      eventPosts = await db.Event.findAll({
+        where: { companyId: { [db.Op.in]: companiesId }, status: 'approved' },
+        include: [
+          { model: db.Company, attributes: [['coName', 'companyName']] },
+          { model: db.User, attributes: ['firstName', 'lastName'] },
+          {
+            model: db.AudienceForPost,
+            attributes: [['activityId', 'activity']],
+            on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('Event.id'), db.Op.eq, db.sequelize.col('AudienceForPosts.postId')), db.sequelize.where(db.sequelize.col('AudienceForPosts.typeOfPost'), db.Op.eq, 'event')] },
+            include: [{
+              model: db.BusinessActivities,
+              attributes: ['name'],
+              on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('AudienceForPosts.activityId'), db.Op.eq, db.sequelize.col('AudienceForPosts->BusinessActivity.id'))] },
+            }]
+          }
+        ],
+        order: [['eventDate', 'DESC']]
+      });
+    } else if (filterBy === 'topic') {
+      let eventsId;
+      await generic.getPostsIdPerActivity('event', filterValue, (theEventsId) => {
+        eventsId = theEventsId.map(postId => postId.postId);
+      });
+      eventPosts = await db.Event.findAll({
+        where: { id: { [db.Op.in]: eventsId }, status: 'approved' },
+        include: [
+          { model: db.Company, attributes: [['coName', 'companyName']] },
+          { model: db.User, attributes: ['firstName', 'lastName'] },
+          {
+            model: db.AudienceForPost,
+            attributes: [['activityId', 'activity']],
+            on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('Event.id'), db.Op.eq, db.sequelize.col('AudienceForPosts.postId')), db.sequelize.where(db.sequelize.col('AudienceForPosts.typeOfPost'), db.Op.eq, 'event')] },
+            include: [{
+              model: db.BusinessActivities,
+              attributes: ['name'],
+              on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('AudienceForPosts.activityId'), db.Op.eq, db.sequelize.col('AudienceForPosts->BusinessActivity.id'))] },
+            }]
+          }
+        ],
+        order: [['eventDate', 'DESC']]
+      });
+    } else if (filterBy === 'year') {
+      eventPosts = await db.Event.findAll({
+        where: { status: 'approved', andOp: db.sequelize.where(db.sequelize.literal('EXTRACT(YEAR FROM "Event"."eventDate")'), filterValue) },
+        include: [
+          { model: db.Company, attributes: [['coName', 'companyName']] },
+          { model: db.User, attributes: ['firstName', 'lastName'] },
+          {
+            model: db.AudienceForPost,
+            attributes: [['activityId', 'activity']],
+            on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('Event.id'), db.Op.eq, db.sequelize.col('AudienceForPosts.postId')), db.sequelize.where(db.sequelize.col('AudienceForPosts.typeOfPost'), db.Op.eq, 'event')] },
+            include: [{
+              model: db.BusinessActivities,
+              attributes: ['name'],
+              on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('AudienceForPosts.activityId'), db.Op.eq, db.sequelize.col('AudienceForPosts->BusinessActivity.id'))] },
+            }]
+          }
+        ],
+        order: [['updatedAt', 'DESC']]
+      });
     }
+
+    if (eventPosts && eventPosts.length > 0) {
+      return res.status(200).json({ result: eventPosts });
+    }
+    return res.status(404).json({ result: [], error: 'No Event Posts found' });
   }
 
+  /**
+   *
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} Response
+   */
   static async getEventsSorted(req, res) {
-    try {
-      const sortBy = req.query.sortBy;
-      const sortValue = req.query.sortValue.trim();
-      var eventPosts;
+    const { sortBy } = req.query;
+    const sortValue = req.query.sortValue.trim();
+    let eventPosts;
 
-      if (sortBy == "date") {
-        if (sortValue == "desc" || sortValue == "asc") {
-          eventPosts = await db['Event'].findAll({
-            where: { status: "approved" },
-            include: [
-              { model: db["Company"], attributes: [["coName", "companyName"]] },
-              { model: db["User"], attributes: ["firstName", "lastName"] },
-              {
-                model: db["AudienceForPost"], attributes: [["activityId", "activity"]],
-                on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('Event.id'), db.Op.eq, db.sequelize.col('AudienceForPosts.postId')), db.sequelize.where(db.sequelize.col('AudienceForPosts.typeOfPost'), db.Op.eq, 'event')] },
-                include: [{
-                  model: db["BusinessActivities"], attributes: ["name"],
-                  on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('AudienceForPosts.activityId'), db.Op.eq, db.sequelize.col('AudienceForPosts->BusinessActivity.id'))] },
-                }]
-              }
-            ], order: [['eventDate', sortValue]]
-          });
-        }
-      } else if (sortBy == "title") {
-        if (sortValue == "desc" || sortValue == "asc") {
-          eventPosts = await db['Event'].findAll({
-            where: { status: "approved" },
-            include: [
-              { model: db["Company"], attributes: [["coName", "companyName"]] },
-              { model: db["User"], attributes: ["firstName", "lastName"] },
-              {
-                model: db["AudienceForPost"], attributes: [["activityId", "activity"]],
-                on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('Event.id'), db.Op.eq, db.sequelize.col('AudienceForPosts.postId')), db.sequelize.where(db.sequelize.col('AudienceForPosts.typeOfPost'), db.Op.eq, 'event')], },
-                include: [{
-                  model: db["BusinessActivities"], attributes: ["name"],
-                  on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('AudienceForPosts.activityId'), db.Op.eq, db.sequelize.col('AudienceForPosts->BusinessActivity.id'))] },
-                }]
-              }
-            ], order: [['title', sortValue]]
-          });
-        }
+    if (sortBy === 'date') {
+      if (sortValue === 'desc' || sortValue === 'asc') {
+        eventPosts = await db.Event.findAll({
+          where: { status: 'approved' },
+          include: [
+            { model: db.Company, attributes: [['coName', 'companyName']] },
+            { model: db.User, attributes: ['firstName', 'lastName'] },
+            {
+              model: db.AudienceForPost,
+              attributes: [['activityId', 'activity']],
+              on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('Event.id'), db.Op.eq, db.sequelize.col('AudienceForPosts.postId')), db.sequelize.where(db.sequelize.col('AudienceForPosts.typeOfPost'), db.Op.eq, 'event')] },
+              include: [{
+                model: db.BusinessActivities,
+                attributes: ['name'],
+                on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('AudienceForPosts.activityId'), db.Op.eq, db.sequelize.col('AudienceForPosts->BusinessActivity.id'))] },
+              }]
+            }
+          ],
+          order: [['eventDate', sortValue]]
+        });
       }
-
-      if (eventPosts && eventPosts.length > 0) {
-        return res.status(200).json({ result: eventPosts });
-      } else {
-        return res.status(404).json({ result: [], error: "No Event Posts found" });
+    } else if (sortBy === 'title') {
+      if (sortValue === 'desc' || sortValue === 'asc') {
+        eventPosts = await db.Event.findAll({
+          where: { status: 'approved' },
+          include: [
+            { model: db.Company, attributes: [['coName', 'companyName']] },
+            { model: db.User, attributes: ['firstName', 'lastName'] },
+            {
+              model: db.AudienceForPost,
+              attributes: [['activityId', 'activity']],
+              on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('Event.id'), db.Op.eq, db.sequelize.col('AudienceForPosts.postId')), db.sequelize.where(db.sequelize.col('AudienceForPosts.typeOfPost'), db.Op.eq, 'event')], },
+              include: [{
+                model: db.BusinessActivities,
+                attributes: ['name'],
+                on: { [db.Op.and]: [db.sequelize.where(db.sequelize.col('AudienceForPosts.activityId'), db.Op.eq, db.sequelize.col('AudienceForPosts->BusinessActivity.id'))] },
+              }]
+            }
+          ],
+          order: [['title', sortValue]]
+        });
       }
-    } catch (error) {
-      //console.log(err)
-      logger.customLogger.log('error', error)
-      return res.status(400).send({ message: " List of Events not got at this moment" });
     }
+
+    if (eventPosts && eventPosts.length > 0) {
+      return res.status(200).json({ result: eventPosts });
+    }
+    return res.status(404).json({ result: [], error: 'No Event Posts found' });
   }
 
+  /**
+   *
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} Response
+   */
   static async searchForEvents(req, res) {
     const searchValue = req.query.searchValue.trim();
-    generic.searchForEvents(searchValue, function (result) {
-      return res.status(result[0]).send(result[1]);
-    })
+    generic.searchForEvents(searchValue, result => res.status(result[0]).send(result[1]));
   }
 }

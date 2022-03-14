@@ -1,69 +1,116 @@
-import db from "../models";
-const logger = require('../helpers/LoggerMod.js');
+import db from '../models';
 
+
+import * as events from '../constants/eventNames';
+import { eventEmitter } from '../config/eventEmitter';
+import responseWrapper from '../helpers/responseWrapper';
+import { NOT_FOUND, OK } from '../constants/statusCodes';
+
+
+/**
+ * Business Activity Controller
+ */
 export default class BusinessActivities {
+  /**
+   *
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} Response
+   */
   static async getBusinessActivities(req, res) {
-    try {
-      const response = await db["BusinessActivities"].findAll({ order: [["name", "ASC"]] });
-      return res.status(200).json({ result: response });
-    } catch (error) {
-      logger.customLogger.log('error', error)
-      //console.log(err)
-      return res.status(400).send({ message: "Sorry, no business activities found" });
-    }
+    const response = await db.BusinessActivities.findAll({ order: [['name', 'ASC']] });
+    return res.status(200).json({ result: response });
   }
+
+  /**
+   *
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} Response
+   */
   static async addActivity(req, res) {
-    try {
-      const response = await db['BusinessActivities'].create(req.body);
-      return res.status(200).send({ message: response });
-    } catch (error) {
-      logger.customLogger.log('error', error)
-      return res.status(400).send({ message: "Sorry, Failed to add business activity at moment" });
-    }
+    const response = await db.BusinessActivities.create(req.body);
+
+    eventEmitter.emit(events.LOG_ACTIVITY, {
+      actor: req.user,
+      description: `${req.user.firstName} ${req.user.lastName} created a new business activity named '${response.name}'`
+    });
+    return res.status(200).send({ message: response });
   }
 
+  /**
+   *
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} Response
+   */
   static async editActivity(req, res) {
-    try {
-      const update = await db["BusinessActivities"].update((req.body), {
-        where: { id: req.body.id },
+    const foundActivity = await db.BusinessActivities.findByPk(req.body.id);
+    if (!foundActivity) {
+      return responseWrapper({
+        res,
+        status: NOT_FOUND,
+        message: 'Business activity not found'
       });
-      return update ? res.status(200).json({ result: "Edited Successfully" })
-                    : res.status(404).json({ error: "Sorry, No record edited" });
-    } catch (error) {
-      logger.customLogger.log('error', error)
-      return res.status(400).send({ message: "Sorry, Edit failed" });
     }
+
+    await foundActivity.update({
+      ...req.body,
+      id: undefined,
+    });
+
+    eventEmitter.emit(events.LOG_ACTIVITY, {
+      actor: req.user,
+      description: `${req.user.firstName} ${req.user.lastName} updated a business activity named '${foundActivity.name}'`
+    });
+
+    return responseWrapper({
+      res,
+      status: OK,
+      message: 'Business activity updated'
+    });
   }
 
+  /**
+   *
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} Response
+   */
   static async removeActivity(req, res) {
-    try {
-      const activityId = req.query.activityId;
+    const { activityId } = req.query;
 
-      await db["ActivitiesOfCompany"].destroy({
-        where: { activityId: activityId }
+    const foundActivity = await db.BusinessActivities.findByPk(activityId);
+    if (!foundActivity) {
+      return responseWrapper({
+        res,
+        status: NOT_FOUND,
+        message: 'Business activity does not exist'
       });
-
-      await db["AudienceForPost"].destroy({
-        where: { activityId: activityId }
-      });
-
-      await db["Company"].update(
-        { businessActivityId: null }, { where: { businessActivityId: activityId } }
-      );
-
-      const response = await db["BusinessActivities"].destroy({
-        where: { id: activityId }
-      });
-      
-      if (response === 1) {
-        return res.status(200).json({ message: "Activity Removed" })
-      } else {
-        return res.status(200).json({ message: "Activity not yet added" })
-      }
-    } catch (error) {
-      //console.log(error)
-      logger.customLogger.log('error', error)
-      return res.status(400).send({ message: "Sorry, Failed to remove business activity at moment" });
     }
+
+    eventEmitter.emit(events.LOG_ACTIVITY, {
+      actor: req.user,
+      description: `${req.user.firstName} ${req.user.lastName} removed a business activity named '${foundActivity.name}'`
+    });
+    await foundActivity.destroy();
+
+    await db.ActivitiesOfCompany.destroy({
+      where: { activityId }
+    });
+
+    await db.AudienceForPost.destroy({
+      where: { activityId }
+    });
+
+    await db.Company.update(
+      { businessActivityId: null }, { where: { businessActivityId: activityId } }
+    );
+
+    return responseWrapper({
+      res,
+      status: OK,
+      message: 'Business activity removed'
+    });
   }
 }

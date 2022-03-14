@@ -7,6 +7,9 @@ import generic from '../helpers/Generic';
 import responseWrapper from '../helpers/responseWrapper';
 import { NOT_FOUND, OK } from '../constants/statusCodes';
 
+import * as events from '../constants/eventNames';
+import { eventEmitter } from '../config/eventEmitter';
+
 const logger = require('../helpers/LoggerMod');
 
 /**
@@ -32,20 +35,25 @@ export default class BlogController {
       image: fields.image,
       status: fields.status,
     });
-    if (blog) {
-      const activitiesToLoad = [];
-      for (let i = 0; i < activities.length; i++) {
-        activitiesToLoad.push({ typeOfPost: 'blog', postId: blog.id, activityId: activities[i] });
-      }
-      if (activitiesToLoad.length > 0) {
-        await db.AudienceForPost.bulkCreate(activitiesToLoad);
-      }
-      return res.status(200).send({
-        message: 'Blog saved'
-      });
+
+    const activitiesToLoad = [];
+    for (let i = 0; i < activities.length; i++) {
+      activitiesToLoad.push({ typeOfPost: 'blog', postId: blog.id, activityId: activities[i] });
     }
-    return res.status(404).send({
-      message: 'Blog posting failed'
+    if (activitiesToLoad.length > 0) {
+      await db.AudienceForPost.bulkCreate(activitiesToLoad);
+    }
+
+
+    eventEmitter.emit(events.LOG_ACTIVITY, {
+      actor: author,
+      description: `${author.firstName} ${author.lastName} published a blog post titled '${fields.title}'`
+    });
+
+    return responseWrapper({
+      res,
+      status: OK,
+      message: 'Blog saved'
     });
   }
 
@@ -60,7 +68,8 @@ export default class BlogController {
     const blog = await db.Blog.findOne({ where: { id: req.body.blogId, status: { [db.Op.not]: decision } }, attributes: ['id', 'title', 'content', 'image', 'companyId'] });
 
     if (!blog) {
-      return responseWrapper(res, {
+      return responseWrapper({
+        res,
         status: NOT_FOUND,
         message: 'Blog  could have been already treated'
       });
@@ -70,12 +79,13 @@ export default class BlogController {
       const parameters = {
         id: req.body.blogId, title: blog.title, description: blog.content, file_name: blog.image, format: 'Blog', companyId: blog.companyId
       };
-      notification.notify('post approval', parameters, resp => responseWrapper(res, {
+      notification.notify('post approval', parameters, resp => responseWrapper({
+        res,
         status: OK,
         message: resp,
       }));
     } else {
-      return responseWrapper(res, { status: OK, message: `Blog ${decision}` });
+      return responseWrapper({ res, status: OK, message: `Blog ${decision}` });
     }
   }
 
@@ -104,6 +114,10 @@ export default class BlogController {
         const parameters = {
           id: req.body.blogId, title: blog.title, description: blog.content, file_name: blog.image, format: 'Blog', companyId: blog.companyId
         };
+        eventEmitter.emit(events.LOG_ACTIVITY, {
+          actor: req.user,
+          description: `${req.user.firstName} ${req.user.lastName} has approved a blog titled '${blog.title}'`
+        });
         notification.notify('post approval', parameters, resp => res.status(200).json({ message: resp }));
       } else {
         res.status(200).json({ message: `Blog ${decision}` });
@@ -484,22 +498,35 @@ export default class BlogController {
    * @returns {Object} Response
    */
   static async deleteBlog(req, res) {
-    const response = await db.Blog
-      .update(
-        { status: 'deleted' },
-        {
-          where: {
-            id: req.params.blogId,
-          },
-        }
-      );
-    return response
-      ? res.status(200).json({
-        message: 'Deleted Successfully'
-      })
-      : res.status(404).json({
-        message: 'Sorry, No record deleted'
+    const foundBlog = await db.Blog.findOne({
+      where: {
+        id: req.params.blogId
+      }
+    });
+
+    if (!foundBlog) {
+      return responseWrapper({
+        res,
+        status: NOT_FOUND,
+        message: 'Blog not found',
       });
+    }
+
+
+    await foundBlog.update({
+      status: 'deleted'
+    });
+
+    eventEmitter.emit(events.LOG_ACTIVITY, {
+      actor: req.user,
+      description: `${req.user.firstName} deleted a blog titled '${foundBlog.title}'`
+    });
+
+    return responseWrapper({
+      res,
+      status: OK,
+      message: 'Blog has been deleted successfully'
+    });
   }
 
   /**

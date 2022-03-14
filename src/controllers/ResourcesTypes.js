@@ -1,65 +1,101 @@
-import db from "../models";
-import generic from "../helpers/Generic";
-import { UniqueConstraintError } from "sequelize";
-const logger = require('../helpers/LoggerMod.js');
+import db from '../models';
 
+import * as events from '../constants/eventNames';
+import { eventEmitter } from '../config/eventEmitter';
+import responseWrapper from '../helpers/responseWrapper';
+import { NOT_FOUND, OK } from '../constants/statusCodes';
+
+
+/**
+ * Resource Type Class
+ */
 export default class ResourcesTypes {
+  /**
+   *
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} Response
+   */
   static async getResourcesTypes(req, res) {
-    try {
-      const response = await db["ResourcesTypes"].findAll({ order: [["name", "ASC"]] });
-      return res.status(200).json({ result: response });
-    } catch (error) {
-      logger.customLogger.log('error', error)
-      return res.status(400).send({ message: "Sorry, no resources types found" });
-    }
+    const response = await db.ResourcesTypes.findAll({ order: [['name', 'ASC']] });
+    return res.status(200).json({ result: response });
   }
 
+  /**
+   *
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} Response
+   */
   static async addType(req, res) {
-    try {
-      const response = await db['ResourcesTypes'].create({
-        name: req.body.name,
-        description: req.body.description,
-      });
-      return res.status(200).send({ message: response });
-    } catch (error) {
-      logger.customLogger.log('error', error)
-      if (error instanceof UniqueConstraintError) {
-        return res.status(409).send({
-          error:
-            "This type already exist!!!!",
-          field: error.errors[0].path
-        });
-      }
-      return res.status(400).send({ message: "Sorry, Failed to add resources type at moment" });
-    }
+    const response = await db.ResourcesTypes.create({
+      name: req.body.name,
+      description: req.body.description,
+    });
+
+    eventEmitter.emit(events.LOG_ACTIVITY, {
+      actor: req.user,
+      description: `${req.user.firstName} ${req.user.lastName} added a resource type named '${response.name}'`
+    });
+    return res.status(200).send({ message: response, result: response });
   }
 
+  /**
+   *
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} Response
+   */
   static async editType(req, res) {
-    try {
-      const update = await db["ResourcesTypes"].update((req.body), {
-          where: { id: req.body.id}
-        });
-      return update ? res.status(200).json({ result: "Edited Successfully" })
-        : res.status(404).json({ error: "Sorry, No record edited" });
-    } catch (error) {
-      logger.customLogger.log('error', error)
-      return res.status(400).send({ message: "Sorry, Edit failed" });
+    const foundType = await db.ResourcesTypes.findByPk(req.body.id);
+    if (!foundType) {
+      return responseWrapper({
+        res,
+        status: NOT_FOUND,
+        message: 'Resource type is not found',
+      });
     }
+
+    await foundType.update({
+      ...req.body,
+      id: undefined,
+    });
+
+    return responseWrapper({
+      res,
+      status: OK,
+      message: 'Resource type is updated'
+    });
   }
 
+  /**
+   *
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} Response
+   */
   static async removeType(req, res) {
-    try {
-      const response = await db["ResourcesTypes"].destroy({
-          where: { id: req.query.type }
-        })
-      if (response) {
-        return res.status(200).json({ message: "Type Removed" })
-      } else {
-        return res.status(200).json({ message: "Type not yet added" })
-      }
-    } catch (error) {
-      logger.customLogger.log('error', error)
-      return res.status(400).send({ message: "Sorry, Failed to remove resources type at moment" });
+    const foundType = await db.ResourcesTypes.findByPk(req.query.type);
+
+    if (!foundType) {
+      return responseWrapper({
+        res,
+        status: NOT_FOUND,
+        message: 'Resource type is not found',
+      });
     }
+
+    eventEmitter.emit(events.LOG_ACTIVITY, {
+      actor: req.user,
+      description: `${req.user.firstName} ${req.user.lastName} updated a resource type named '${foundType.name}'`
+    });
+
+    await foundType.destroy();
+
+    return responseWrapper({
+      res,
+      status: OK,
+      message: 'Resource type removed'
+    });
   }
 }

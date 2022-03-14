@@ -1,51 +1,42 @@
-import { Router } from "express";
-import ResourceController from "../../controllers/ResourceController";
-import auth from "../../middlewares/authorization_authentication.js";
-import checkPermissions from "../../middlewares/checkPermissions";
+import { Router } from 'express';
+import ResourceController from '../../controllers/ResourceController';
+import auth from '../../middlewares/authorization_authentication';
+import checkPermissions from '../../middlewares/checkPermissions';
 
-const multer = require('multer');
-const path = require('path');
+import asyncHandler from '../../middlewares/asyncErrorHandler';
 
-const storage = multer.diskStorage({
-    destination: './uploads',
-    filename: (req, file, cb) => {
-        return cb(null, `${file.fieldname}_${Date.now()}${path.extname(file.originalname)}`);
-    }
-});
-var upload = multer({
-    storage: storage,
-    limits: { fileSize: 1000000, files: 1 },
-});
 
 const resources = Router();
 
 resources.get(
-    "/resources",
-    ResourceController.getResources);
+  '/resources',
+  asyncHandler(ResourceController.getResources)
+);
 
 resources.get(
-    "/resources/:id",
-    ResourceController.getResource);
+  '/resources/:id',
+  asyncHandler(ResourceController.getResource)
+);
 
 resources.post(
-    "/resources/add-resource",
-    auth.verifyToken,
-    checkPermissions(["admin-company", "admin-job", "admin-event", "admin-blog", "admin-user"]),
-    ResourceController.addResource
+  '/resources/add-resource',
+  auth.verifyToken,
+  checkPermissions(['admin-company', 'admin-job', 'admin-event', 'admin-blog', 'admin-user']),
+  asyncHandler(ResourceController.addResource)
 );
 
 resources.patch(
-    "/resources/edit-resource",
-    auth.verifyToken,
-    checkPermissions(["admin-company", "admin-job", "admin-event", "admin-blog", "admin-user"]),
-    ResourceController.editResource
+  '/resources/edit-resource',
+  auth.verifyToken,
+  checkPermissions(['admin-company', 'admin-job', 'admin-event', 'admin-blog', 'admin-user']),
+  asyncHandler(ResourceController.editResource)
 );
 
 resources.delete(
-    "/resources/remove-resource",
-    auth.verifyToken,
-    checkPermissions(["admin-company", "admin-job", "admin-event", "admin-blog", "admin-user"]),
-    ResourceController.removeResource
+  '/resources/remove-resource',
+  auth.verifyToken,
+  checkPermissions(['admin-company', 'admin-job', 'admin-event', 'admin-blog', 'admin-user']),
+  asyncHandler(ResourceController.removeResource)
 );
 
 export default resources;

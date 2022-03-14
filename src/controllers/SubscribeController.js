@@ -1,76 +1,96 @@
 
-import db from "../models";
-import generic from "../helpers/Generic";
-import notification from "../helpers/Notification";
-import { UniqueConstraintError } from "sequelize";
-const logger = require('../helpers/LoggerMod.js');
+import db from '../models';
+import notification from '../helpers/Notification';
+import responseWrapper from '../helpers/responseWrapper';
+import { CONFLICT, NOT_FOUND, OK } from '../constants/statusCodes';
 
+import * as events from '../constants/eventNames';
+import { eventEmitter } from '../config/eventEmitter';
+
+/**
+ * Subscribe Controller class
+ */
 export default class SubscribeController {
-  static async subscribeToNotification(req, res) 
-  {
-    db['Subscription'].create({ email: req.body.email, status: "active" }).then((subscription) => {
+  /**
+   *
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} Response
+   */
+  static async subscribeToNotification(req, res) {
+    const foundSub = await db.Subbscription.findOne({
+      where: {
+        email: req.body.email
+      },
+    });
+
+    if (foundSub) {
+      return responseWrapper({
+        res,
+        status: CONFLICT,
+        message: 'You are already subscribed',
+      });
+    }
+    db.Subscription.create({ email: req.body.email, status: 'active' }).then((subscription) => {
       if (subscription) {
-        notification.notify("subscribe", { email: subscription.email }, function (response) {
-          return res.status(200).json({ message: response });
+        eventEmitter.emit(events.LOG_ACTIVITY, {
+          actor: { id: 0 },
+          description: `A user with the email '${req.body.email}' subscribed to the newsletter`
         });
+        notification.notify('subscribe', { email: subscription.email }, response => res.status(200).json({ message: response }));
       } else {
-        return res.status(401).json({ message: "Sorry, subscription failed, try later" })
+        return res.status(401).json({ message: 'Sorry, subscription failed, try later' });
       }
-      }).catch((error) => {
-        //console.log(error)
-        logger.customLogger.log('error', error)
-        if (error instanceof UniqueConstraintError) {
-          return res.status(409).send({
-            error:
-              "Email already subscribed",
-            field: error.errors[0].path,
-          });
-        }
-        res.status(401).send({
-          message: "Something went wrong",
-        });
-      });
-  }
-
-  static async unsubscribeFromNotification(req, res) {
-    await db["Subscription"].findOne({
-      where: { email: req.params.email.trim() }
-    }).then((subscription) => {
-      if (!subscription) {
-        return res.status(400).json({ message: "Receiving the emails means your company has activities belonged to by the posts, to unsubscribe change company's activities on the platform." });
-      } else {
-        subscription.destroy().then(() => {
-          res.status(200).send({
-            message: "Unsubscribed",
-          });
-        }).catch((error) => {
-          logger.customLogger.log('error', error)
-          res.status(401).send({
-            message: "An error occurred while unsubscribing, try again later",
-          });
-        });;
-      }
-
-    }).catch((error) => {
-      logger.customLogger.log('error', error)
-      res.status(401).send({
-        message: "An error occurred",
-      });
     });
   }
 
-  static async getSubscriptions(req, res) {
-    db['Subscription'].findAll({ order: [['updatedAt', 'DESC']], attributes: { exclude: ['createdAt', 'updatedAt'] } })
-      .then((subscriptions) => {
-        res.status(200).send({
-          result: subscriptions,
-        });
-    }).catch((error) => {
-      logger.customLogger.log('error', error)
-      res.status(401).send({
-        message: "list of subscriptions not got",
-        err: err,
+  /**
+   *
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} Response
+   */
+  static async unsubscribeFromNotification(req, res) {
+    const sub = await db.Subscription.findOne({
+      where: { email: req.params.email.trim() }
+    });
+
+    if (!sub) {
+      return responseWrapper({
+        res,
+        status: NOT_FOUND,
+        message: 'You are not subscribed to email notifications'
       });
+    }
+
+    await sub.destroy();
+
+    eventEmitter.emit(events.LOG_ACTIVITY, {
+      actor: { id: 0 },
+      description: `A user with the email '${req.params.email}' unsubscribed to the newsletter`
+    });
+
+    return responseWrapper({
+      res,
+      status: OK,
+      message: 'Successfully unsubscribed'
+    });
+  }
+
+  /**
+   *
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} Response
+   */
+  static async getSubscriptions(req, res) {
+    const subs = await db.Subscription.findAll({ order: [['updatedAt', 'DESC']], attributes: { exclude: ['createdAt', 'updatedAt'] } });
+
+
+    return responseWrapper({
+      res,
+      status: OK,
+      result: subs,
     });
   }
 }

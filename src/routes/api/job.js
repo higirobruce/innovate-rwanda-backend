@@ -1,104 +1,93 @@
-import { Router } from "express";
-import JobController from "../../controllers/JobController";
-import auth from "../../middlewares/authorization_authentication.js";
-import checkPermissions from "../../middlewares/checkPermissions";
+import { Router } from 'express';
+import JobController from '../../controllers/JobController';
+import auth from '../../middlewares/authorization_authentication';
+import checkPermissions from '../../middlewares/checkPermissions';
 
-const multer = require('multer');
-const path = require('path');
+import asyncHandler from '../../middlewares/asyncErrorHandler';
 
-// const storage = multer.diskStorage({
-//   destination: './uploads',
-//   filename: (req, file, cb) => {
-//     return cb(null, `${file.fieldname}_${Date.now()}${path.extname(file.originalname)}`);
-//   }
-// });
-// var upload = multer({
-//   storage: storage,
-//   limits: { fileSize: 1000000, files: 1 },
-// });
 
 const job = Router();
 
 job.post(
-  "/jobs/post",
+  '/jobs/post',
   auth.verifyToken,
-  checkPermissions("normal"),
-  JobController.jobPost
+  checkPermissions('normal'),
+  asyncHandler(JobController.jobPost)
 );
 
 job.put(
-  "/jobs/approve-decline",
+  '/jobs/approve-decline',
   auth.verifyToken,
-  checkPermissions("admin-job"),
-  JobController.approveOrDeclineJobPost
+  checkPermissions('admin-job'),
+  asyncHandler(JobController.approveOrDeclineJobPost)
 );
 
 job.put(
-  "/jobs/manage",
+  '/jobs/manage',
   auth.verifyToken,
-  checkPermissions("admin-job"),
-  JobController.manageJobPost
+  checkPermissions('admin-job'),
+  asyncHandler(JobController.manageJobPost)
 );
 
 job.get(
-  "/jobs/public",
-  JobController.getApprovedJobsList
+  '/jobs/public',
+  asyncHandler(JobController.getApprovedJobsList)
 );
 
 job.get(
-  "/jobs/company/:companyId",
+  '/jobs/company/:companyId',
   auth.verifyToken,
-  checkPermissions("normal"),
-  JobController.getJobsListPerCompany
+  checkPermissions('normal'),
+  asyncHandler(JobController.getJobsListPerCompany)
 );
 
 job.get(
-  "/jobs/:status",
+  '/jobs/:status',
   auth.verifyToken,
-  checkPermissions("admin-job"),
-  JobController.getJobsList
+  checkPermissions('admin-job'),
+  asyncHandler(JobController.getJobsList)
 );
 
 job.get(
-  "/jobs/info/:jobId",
-  JobController.getJobInfo
+  '/jobs/info/:jobId',
+  asyncHandler(JobController.getJobInfo)
 );
 
 job.patch(
-  "/jobs/edit",
+  '/jobs/edit',
   auth.verifyToken,
-  JobController.editJobInfo
+  asyncHandler(JobController.editJobInfo)
 );
 
 job.delete(
-  "/jobs/delete",
+  '/jobs/delete',
   auth.verifyToken,
-  checkPermissions(["normal", "admin-job"]),
-  JobController.deleteJob
+  checkPermissions(['normal', 'admin-job']),
+  asyncHandler(JobController.deleteJob)
 );
 
-/* 
+/*
  * FilterBy ---   company       | topic                 | year            | company-type
  * FilterValue--  id of company | activity id           | a year-eg.2020  |
  */
 job.get(
-  "/jobs/public/filter",
-  JobController.getJobsFiltered
+  '/jobs/public/filter',
+  asyncHandler(JobController.getJobsFiltered)
 );
 
-/* 
+/*
  * SortBy ---    date or  title
  * SortValue--   desc or asc
  */
 job.get(
-  "/jobs/public/sort",
-  JobController.getJobsSorted
+  '/jobs/public/sort',
+  asyncHandler(JobController.getJobsSorted)
 );
 
 // Search in Title, Description and Category
 job.get(
-  "/jobs/public/search",
-  JobController.searchForJobs
+  '/jobs/public/search',
+  asyncHandler(JobController.searchForJobs)
 );
 
 export default job;
