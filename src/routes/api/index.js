@@ -16,6 +16,7 @@ import eventsTypes from './eventsTypes';
 import resources from './resources';
 import resourcesTypes from './resourcesTypes';
 import talents from './talents';
+import logs from './logs';
 
 const router = express.Router();
 
@@ -37,5 +38,6 @@ router.use('/', resources);
 router.use('/', resourcesTypes);
 router.use('/', talents);
 router.use('/uploads', express.static('./uploads'));
+router.use('/logs', logs);
 
 export default router;
