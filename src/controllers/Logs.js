@@ -13,7 +13,14 @@ export const getLogs = asyncHandler(async (req, res) => {
   const logs = await db.Activity.findAndCountAll({
     offset,
     limit,
-    order: [['createdAt', 'DESC']]
+    order: [['createdAt', 'DESC']],
+    include: [
+      {
+        model: db.User,
+        as: 'user',
+        required: false,
+      }
+    ]
   });
 
   const total = logs.count;
