@@ -2,7 +2,6 @@
 import jwt from 'jsonwebtoken';
 import db from '../models';
 import generic from '../helpers/Generic';
-import notification from '../helpers/Notification';
 import responseWrapper from '../helpers/responseWrapper';
 
 import GenerateMeta from '../helpers/GenerateMeta';
@@ -274,20 +273,26 @@ export default class CompanyController {
           actor: req.user,
           description: `${req.user.firstName} ${req.user.lastName} ${decision} a company named '${company.name}'`
         });
-        notification.notify('company approval', parameters, resp => res
-          .status(200)
-          .json({ message: `Company ${decision} , ${resp}` }));
-      } else {
-        return res.status(404).json({
-          message:
-              ' Something is wrong, please confirm input provided is okay ',
+
+        eventEmitter.emit(events.NOTIFY, {
+          type: 'company approval',
+          parameters,
+        });
+
+        return responseWrapper({
+          res,
+          status: OK,
+          message: `Company ${decision}`
         });
       }
-    } else {
-      return res
-        .status(404)
-        .json({ message: ' The mentioned company was not found ' });
+      return res.status(404).json({
+        message:
+              ' Something is wrong, please confirm input provided is okay ',
+      });
     }
+    return res
+      .status(404)
+      .json({ message: ' The mentioned company was not found ' });
   }
 
   /**
@@ -330,13 +335,17 @@ export default class CompanyController {
             companyName: company.coName,
             decision,
           };
-          notification.notify(
-            'company approval',
+
+          eventEmitter.emit(events.NOTIFY, {
+            type: 'company approval',
             parameters,
-            resp => res
-              .status(200)
-              .json({ message: `Company ${decision} , ${resp}` })
-          );
+          });
+
+          return responseWrapper({
+            res,
+            status: OK,
+            message: `Company ${decision}`
+          });
         }
         return res.status(200).json({ message: `Company ${decision}` });
       }
@@ -805,20 +814,24 @@ export default class CompanyController {
             if (result) {
               generic.deleteCompany(companyData, (response) => {
                 if (response !== -1) {
-                  notification.notify(
-                    'delete own company',
-                    {
+                  eventEmitter.emit(events.NOTIFY, {
+                    type: 'delete own company',
+                    parameters: {
                       email: companyData.contactEmail,
                       companyName: companyData.coName,
                       token,
-                    },
-                    () => res.status(200).json({ message: response })
-                  );
-                } else {
-                  return res.status(404).json({
-                    message: 'Could not delete all, try again later',
+                    }
+                  });
+
+                  return responseWrapper({
+                    res,
+                    status: OK,
+                    message: 'Company deleted successfully, a confirmation email just got sent to you about that'
                   });
                 }
+                return res.status(404).json({
+                  message: 'Could not delete all, try again later',
+                });
               });
             } else {
               return res

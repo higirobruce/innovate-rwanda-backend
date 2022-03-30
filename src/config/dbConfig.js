@@ -12,12 +12,12 @@ const config = {
     dialect: 'postgres',
     port: process.env.DB_PORT_DEV,
     seederStorage: 'sequelize',
-    dialectOptions: {
-      ssl: {
-        require: true,
-        rejectUnauthorized: false
-      }
-    },
+    // dialectOptions: {
+    //   ssl: {
+    //     require: true,
+    //     rejectUnauthorized: false
+    //   }
+    // },
   },
   test: {
     use_env_variable: 'DATABASE_URL_TEST',

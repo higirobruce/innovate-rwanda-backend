@@ -25,10 +25,10 @@ export default class Notification {
    *
    * @param {String} notification_type
    * @param {Object} parameters
-   * @param {Function} callback - Cb function
+   * @param {Function} callback - Callback function
    * @returns {Object} - Any
    */
-  static async notify(notification_type, parameters, callback) {
+  static async notify(notification_type, parameters) {
     try {
       let mail = [], response, send = true, notifCo = false;
 
@@ -78,21 +78,20 @@ export default class Notification {
           if (mail[i] && mail[i].destination) {
             Notification.sendEmail(mail[i], (resp) => {
               if (resp === -1 || resp === 0) {
-                callback('Approved but an error accurred on email sending');
+                logger.customLogger.info('Approved but an error accurred on email sending');
               } else if (resp === 1 && i === mail.length) {
-                callback(response);
+                logger.customLogger.info(response);
               }
             });
           } else {
-            callback('Approved. No email to send to found though, no email sent');
+            logger.customLogger.info('Approved. No email to send to found though, no email sent');
           }
         }
       } else {
-        callback('Approved. No email to send found though, no email sent');
+        logger.customLogger.info('Approved. No email to send found though, no email sent');
       }
     } catch (error) {
       logger.customLogger.log('error', error);
-      callback(-2);
     }
   }
 
@@ -207,7 +206,7 @@ export default class Notification {
           // console.log(error)
           callback(0);
         } else {
-          console.log(`email sent${info.response}`);
+          logger.customLogger.info(`email sent${info.response}`);
           callback(1);
         }
       });

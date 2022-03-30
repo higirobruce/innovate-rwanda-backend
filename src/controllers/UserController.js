@@ -3,7 +3,6 @@ import jwt from 'jsonwebtoken';
 import { UniqueConstraintError } from 'sequelize';
 import db from '../models';
 import generic from '../helpers/Generic';
-import notification from '../helpers/Notification';
 import logger from '../helpers/LoggerMod';
 import responseWrapper from '../helpers/responseWrapper';
 import {
@@ -144,7 +143,16 @@ export default class UserController {
                   email: user.email,
                   token,
                 };
-                notification.notify('registration', parameters, response => res.status(200).json({ message: response }));
+                eventEmitter.emit(events.NOTIFY, {
+                  type: 'registration',
+                  parameters,
+                });
+
+                return responseWrapper({
+                  res,
+                  status: 200,
+                  message: 'An account has been created'
+                });
               })
               .catch((error) => {
                 logger.customLogger.log('error', error);
@@ -191,97 +199,104 @@ export default class UserController {
    * @returns {Object} Response
    */
   static async createCompanyAccount(req, res) {
-    try {
-      await db.sequelize.transaction(async (t) => {
-        await db.Company.create(
-          {
-            coName: req.body.coName,
-            coType: req.body.coType,
-            coWebsite: req.body.coWebsite,
-            districtBasedIn: req.body.districtBasedIn,
-            businessActivityId: req.body.businessActivityId,
-            shortDescription: req.body.shortDescription,
-            slug: generic.generateSlug(req.body.coName),
-            contactEmail: req.body.email,
-            emailDisplay: false,
-            status: 'in_editing',
-          },
-          { transaction: t }
-        )
-          .then((company) => {
-            db.ActivitiesOfCompany.create(
-              {
-                activityId: req.body.businessActivityId,
-                companyId: company.id,
-              },
-              { transaction: t }
-            );
+    console.log('COMPANY');
 
-            const hashPassword = bcrypt.hashSync(req.body.password, saltRounds);
-            const token = jwt.sign(
-              { _id: req.body.email },
-              process.env.ACCOUNT_ACTIVATION_KEY,
-              {}
-            );
+    await db.sequelize.transaction(async (t) => {
+      await db.Company.create(
+        {
+          coName: req.body.coName,
+          coType: req.body.coType,
+          coWebsite: req.body.coWebsite,
+          districtBasedIn: req.body.districtBasedIn,
+          businessActivityId: req.body.businessActivityId,
+          shortDescription: req.body.shortDescription,
+          slug: generic.generateSlug(req.body.coName),
+          contactEmail: req.body.email,
+          emailDisplay: false,
+          status: 'in_editing',
+        },
+        { transaction: t }
+      )
+        .then((company) => {
+          db.ActivitiesOfCompany.create(
+            {
+              activityId: req.body.businessActivityId,
+              companyId: company.id,
+            },
+            { transaction: t }
+          );
 
-            db.User.create(
-              {
-                firstName: req.body.firstName,
-                lastName: req.body.lastName,
-                email: req.body.email,
-                jobTitle: req.body.jobTitle,
-                password: hashPassword,
-                role: req.body.role,
-                resetLink: token,
-                companyId: company.id,
-                status: 'pending',
-              },
-              { transaction: t }
-            )
-              .then((user) => {
-                const parameters = {
-                  firstName: user.firstName,
-                  lastName: user.lastName,
-                  email: user.email,
-                  token,
-                };
-                notification.notify('registration', parameters, response => res.status(200).json({ message: response }));
-              })
-              .catch((error) => {
-                logger.customLogger.log('error', error);
-                if (error instanceof UniqueConstraintError) {
-                  return res.status(409).send({
-                    error:
+          const hashPassword = bcrypt.hashSync(req.body.password, saltRounds);
+          const token = jwt.sign(
+            { _id: req.body.email },
+            process.env.ACCOUNT_ACTIVATION_KEY,
+            {}
+          );
+
+          db.User.create(
+            {
+              firstName: req.body.firstName,
+              lastName: req.body.lastName,
+              email: req.body.email,
+              jobTitle: req.body.jobTitle,
+              password: hashPassword,
+              role: req.body.role,
+              resetLink: token,
+              companyId: company.id,
+              status: 'pending',
+            },
+            { transaction: t }
+          )
+            .then((user) => {
+              const parameters = {
+                firstName: user.firstName,
+                lastName: user.lastName,
+                email: user.email,
+                token,
+              };
+              eventEmitter.emit(events.NOTIFY, {
+                type: 'registration',
+                parameters,
+              });
+
+              return responseWrapper({
+                res,
+                status: 200,
+                message: 'An account has been created'
+              });
+            })
+            .catch((error) => {
+              logger.customLogger.log('error', error);
+              if (error instanceof UniqueConstraintError) {
+                return res.status(409).send({
+                  error:
                       'Email already used for a company on the system, Please use a different email',
-                    field: error.errors[0].path,
-                  });
-                }
-                return res
-                  .status(401)
-                  .send({
-                    message:
+                  field: error.errors[0].path,
+                });
+              }
+              return res
+                .status(401)
+                .send({
+                  message:
                       'Please confirm you provided all required info then try again',
-                  });
-              });
-          })
-          .catch((error) => {
-            logger.customLogger.log('error', error);
-            if (error instanceof UniqueConstraintError) {
-              return res.status(409).send({
-                error: 'The company is already registered on the system',
-                field: error.errors[0].path,
-              });
-            }
-            return res.status(401).send({
-              message:
-                'Please confirm you provided all required info then try again',
+                });
             });
+        })
+        .catch((error) => {
+          console.log('Errrr', error);
+          logger.customLogger.log('error', error);
+          if (error instanceof UniqueConstraintError) {
+            return res.status(409).send({
+              error: 'The company is already registered on the system',
+              field: error.errors[0].path,
+            });
+          }
+          return res.status(401).send({
+            message:
+                'Please confirm you provided all required info then try again',
           });
-      });
-    } catch (error) {
-      logger.customLogger.log('error', error);
-      return res.status(401).send({ error: 'Error occurred' });
-    }
+        });
+    });
   }
 
   /**
@@ -346,18 +361,21 @@ export default class UserController {
       description: `${req.user.firstName} ${req.user.lastName} created a user with an email '${user.email}'`,
     });
 
-    notification.notify(
-      'admin account creation',
-      {
+    eventEmitter.emit(events.NOTIFY, {
+      type: 'admin account creation',
+      parameters: {
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
         password: req.body.password,
       },
-      response => res
-        .status(200)
-        .json({ message: `User Account created successfully. ${response}` })
-    );
+    });
+
+    return responseWrapper({
+      res,
+      status: OK,
+      message: 'User account has been created'
+    });
   }
 
   /**
@@ -389,15 +407,14 @@ export default class UserController {
             });
         }
         if (!user.lastActivity && user.role === 'normal') {
-          notification.notify(
-            'first login',
-            {
+          eventEmitter.emit(events.NOTIFY, {
+            type: 'first login',
+            parameters: {
               firstName: user.firstName,
               lastName: user.lastName,
               companyId: user.companyId,
             },
-            () => {}
-          );
+          });
         }
         user.update({ lastActivity: db.sequelize.fn('NOW') });
         bcrypt.compare(req.body.password, user.password, (error, result) => {
@@ -500,19 +517,23 @@ export default class UserController {
             .update({ resetLink: token })
             .then((result) => {
               if (result) {
-                notification.notify(
-                  'forgot password',
-                  {
+                eventEmitter.emit(events.NOTIFY, {
+                  type: 'forgot password',
+                  parameters: {
                     firstName: user.firstName,
                     lastName: user.lastName,
                     email: user.email,
                     token,
                   },
-                  response => res.status(200).json({ message: response })
-                );
-              } else {
-                return res.status(404).send({ message: 'Please try again' });
+                });
+
+                return responseWrapper({
+                  res,
+                  status: 200,
+                  message: 'Email is sent, Check your email for the link'
+                });
               }
+              return res.status(404).send({ message: 'Please try again' });
             })
             .catch((error) => {
               logger.customLogger.log('error', error);
@@ -708,11 +729,18 @@ export default class UserController {
               );
             }
             user.update({ status: 'active', resetLink: null });
-            notification.notify(
-              'account activation',
-              { email: user.email },
-              response => res.status(200).json({ message: response })
-            );
+            eventEmitter.emit(events.NOTIFY, {
+              type: 'account activation',
+              parameters: {
+                email: user.email,
+              }
+            });
+
+            return responseWrapper({
+              res,
+              status: 200,
+              message: 'Account Activated. A confirmation is sent to your email'
+            });
           })
           .catch((error) => {
             logger.customLogger.log('error', error);
@@ -769,29 +797,30 @@ export default class UserController {
                 email: user.email,
                 token,
               };
-              notification.notify(
-                'account activation link resubmission',
+
+              eventEmitter.emit(events.NOTIFY, {
+                type: 'account activation link resubmission',
                 parameters,
-                () => res
-                  .status(200)
-                  .json({ message: `Activation Link sent to ${user.email}` })
-              );
-            } else {
-              return res
-                .status(200)
-                .json({
-                  message:
-                    ' Activation Link Resubmission Error, try again later',
-                });
-            }
-          } else {
-            return res
+              });
+
+              return responseWrapper({
+                res,
+                status: OK,
+                message: `Activation Link sent to ${user.email}`
+              });
+            } return res
               .status(200)
               .json({
                 message:
-                  'The account linked to provided email is no longer pending!!!',
+                ' Activation Link Resubmission Error, try again later',
               });
           }
+          return res
+            .status(200)
+            .json({
+              message:
+                  'The account linked to provided email is no longer pending!!!',
+            });
         })
         .catch((error) => {
           logger.customLogger.log('error', error);

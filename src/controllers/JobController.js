@@ -1,6 +1,5 @@
 /* eslint-disable no-plusplus */
 import db from '../models';
-import notification from '../helpers/Notification';
 import generic from '../helpers/Generic';
 import responseWrapper from '../helpers/responseWrapper';
 import { CONFLICT, NOT_FOUND, OK } from '../constants/statusCodes';
@@ -102,14 +101,18 @@ export default class JobController {
         actor: req.user,
         description: `${req.user.firstName} ${req.user.lastName} approved a job post titled '${foundJob.title}'`,
       });
-      notification.notify('post approval', parameters, resp => res.status(200).json({ message: resp }));
-    }
 
-    return responseWrapper({
-      res,
-      status: OK,
-      message: `Job has been ${decision}`,
-    });
+      eventEmitter.emit(events.NOTIFY, {
+        type: 'post approval',
+        parameters,
+      });
+
+      return responseWrapper({
+        res,
+        status: OK,
+        message: `Job has been ${decision}`,
+      });
+    }
   }
 
   /**
@@ -152,18 +155,24 @@ export default class JobController {
                 actor: req.user,
                 description: `${req.user.firstName} ${req.user.lastName} approved a job post titled '${job.title}'`,
               });
-              notification.notify('post approval', parameters, resp => res.status(200).json({ message: resp }));
-            } else {
-              res.status(200).json({ message: `Job ${decision}` });
+              eventEmitter.emit(events.NOTIFY, {
+                type: 'post approval',
+                parameters,
+              });
+
+              return responseWrapper({
+                res,
+                status: OK,
+                message: 'Post Approved, Emails sent to those in related activities and subscribers'
+              });
             }
-          } else {
-            res.status(404).json({ message: 'Action Failed' });
+            return res.status(200).json({ message: `Job ${decision}` });
           }
-        } else {
-          res
-            .status(404)
-            .json({ message: 'Job could have been already treated' });
+          return res.status(404).json({ message: 'Action Failed' });
         }
+        return res
+          .status(404)
+          .json({ message: 'Job could have been already treated' });
       })
       .catch((error) => {
         // console.log(err)
