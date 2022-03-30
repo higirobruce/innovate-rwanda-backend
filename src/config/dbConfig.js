@@ -19,6 +19,22 @@ const config = {
     //   }
     // },
   },
+  staging: {
+    url: process.env.DATABASE_URL_DEV,
+    username: process.env.DB_USER_DEV,
+    password: process.env.DB_PASSWORD_DEV,
+    database: process.env.DB_NAME_DEV,
+    host: process.env.DB_HOST_DEV,
+    dialect: 'postgres',
+    port: process.env.DB_PORT_DEV,
+    seederStorage: 'sequelize',
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    },
+  },
   test: {
     use_env_variable: 'DATABASE_URL_TEST',
     username: process.env.DB_USER_TEST,
