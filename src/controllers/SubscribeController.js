@@ -1,6 +1,5 @@
 
 import db from '../models';
-import notification from '../helpers/Notification';
 import responseWrapper from '../helpers/responseWrapper';
 import { CONFLICT, NOT_FOUND, OK } from '../constants/statusCodes';
 
@@ -37,10 +36,19 @@ export default class SubscribeController {
           actor: { id: 0 },
           description: `A user with the email '${req.body.email}' subscribed to the newsletter`
         });
-        notification.notify('subscribe', { email: subscription.email }, response => res.status(200).json({ message: response }));
-      } else {
-        return res.status(401).json({ message: 'Sorry, subscription failed, try later' });
+
+        eventEmitter.emit(events.NOTIFY, {
+          type: 'subscribe',
+          parameters: { email: subscription.email }
+        });
+
+        return responseWrapper({
+          res,
+          status: OK,
+          message: `${subscription.email} subscribed`
+        });
       }
+      return res.status(401).json({ message: 'Sorry, subscription failed, try later' });
     });
   }
 

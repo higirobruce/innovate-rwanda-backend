@@ -1,6 +1,5 @@
 /* eslint-disable no-plusplus */
 import db from '../models';
-import notification from '../helpers/Notification';
 import generic from '../helpers/Generic';
 import responseWrapper from '../helpers/responseWrapper';
 import { NOT_FOUND, OK } from '../constants/statusCodes';
@@ -110,10 +109,19 @@ export default class EvenController {
               const parameters = {
                 id: req.body.id, title: event.title, description: event.description, file_name: event.flyer, format: 'Event', companyId: event.companyId
               };
-              notification.notify('post approval', parameters, resp => res.status(200).json({ message: resp }));
-            } else {
-              res.status(200).json({ message: `Event ${decision}` });
+
+              eventEmitter.emit(events.NOTIFY, {
+                type: 'post approval',
+                parameters,
+              });
+
+              return responseWrapper({
+                res,
+                status: OK,
+                message: 'Post approved!'
+              });
             }
+            res.status(200).json({ message: `Event ${decision}` });
           } else {
             res.status(404).json({ message: 'Action Failed' });
           }
@@ -160,10 +168,13 @@ export default class EvenController {
                 actor: req.user,
                 description: `${req.user.firstName} ${req.user.lastName} approved an event titled '${event.title}'`
               });
-              notification.notify('post approval', parameters, resp => res.status(200).json({ message: resp }));
-            } else {
-              res.status(200).json({ message: `Event ${decision}` });
+
+              eventEmitter.emit(events.NOTIFY, {
+                type: 'post approval',
+                parameters,
+              });
             }
+            res.status(200).json({ message: `Event ${decision}` });
           } else {
             res.status(404).json({ message: 'Action Failed' });
           }

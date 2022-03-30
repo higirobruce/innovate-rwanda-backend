@@ -1,7 +1,6 @@
 /* eslint-disable camelcase */
 /* eslint-disable no-plusplus */
 import db from '../models';
-import notification from '../helpers/Notification';
 import generic from '../helpers/Generic';
 
 import responseWrapper from '../helpers/responseWrapper';
@@ -79,14 +78,19 @@ export default class BlogController {
       const parameters = {
         id: req.body.blogId, title: blog.title, description: blog.content, file_name: blog.image, format: 'Blog', companyId: blog.companyId
       };
-      notification.notify('post approval', parameters, resp => responseWrapper({
+
+      eventEmitter.emit(events.NOTIFY, {
+        type: 'post approval',
+        parameters
+      });
+
+      return responseWrapper({
         res,
         status: OK,
-        message: resp,
-      }));
-    } else {
-      return responseWrapper({ res, status: OK, message: `Blog ${decision}` });
+        message: 'Post approved'
+      });
     }
+    return responseWrapper({ res, status: OK, message: `Blog ${decision}` });
   }
 
   /**
@@ -118,10 +122,19 @@ export default class BlogController {
           actor: req.user,
           description: `${req.user.firstName} ${req.user.lastName} has approved a blog titled '${blog.title}'`
         });
-        notification.notify('post approval', parameters, resp => res.status(200).json({ message: resp }));
-      } else {
-        res.status(200).json({ message: `Blog ${decision}` });
+
+        eventEmitter.emit(events.NOTIFY, {
+          type: 'post approval',
+          parameters,
+        });
+
+        return responseWrapper({
+          res,
+          status: OK,
+          message: 'Post approved'
+        });
       }
+      res.status(200).json({ message: `Blog ${decision}` });
     } else {
       res.status(404).json({ message: 'Blog  could have been already treated' });
     }
