@@ -106,13 +106,13 @@ export default class JobController {
         type: 'post approval',
         parameters,
       });
-
-      return responseWrapper({
-        res,
-        status: OK,
-        message: `Job has been ${decision}`,
-      });
     }
+
+    return responseWrapper({
+      res,
+      status: OK,
+      message: `Job has been ${decision}`,
+    });
   }
 
   /**
