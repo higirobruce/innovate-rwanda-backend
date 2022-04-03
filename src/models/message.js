@@ -1,4 +1,5 @@
-'use strict';
+
+
 module.exports = (sequelize, DataTypes) => {
   const message = sequelize.define('Message', {
     id: {
@@ -31,8 +32,12 @@ module.exports = (sequelize, DataTypes) => {
     sequelize,
     modelName: 'Message',
   });
-  message.associate = function (models) {
+  message.associate = (models) => {
     // associations can be defined here
+    message.belongsTo(models.Company, {
+      as: 'company',
+      foreignKey: 'companyId'
+    });
   };
   return message;
 };
