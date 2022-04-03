@@ -1,64 +1,66 @@
-import { Router } from "express";
+import { Router } from 'express';
 
-import MessageController from "../../controllers/MessageController";
-import NotificationController from "../../controllers/NotificationController";
+import MessageController from '../../controllers/MessageController';
+import NotificationController from '../../controllers/NotificationController';
 
-import auth from "../../middlewares/authorization_authentication.js";
-import checkPermissions from "../../middlewares/checkPermissions";
+import auth from '../../middlewares/authorization_authentication';
+import checkPermissions from '../../middlewares/checkPermissions';
+import asyncHandler from '../../middlewares/asyncErrorHandler';
 
 const message = Router();
 
+message.get('/messages', auth.verifyToken, asyncHandler(MessageController.getAllMessages));
+
 message.post(
-  "/message/post",
-  MessageController.messagePost
+  '/message/post',
+  asyncHandler(MessageController.messagePost)
 );
 
 message.get(
-  "/message/company/:companyId",
+  '/message/company/:companyId',
   auth.verifyToken,
-  checkPermissions("normal"),
-  MessageController.getMessagesListPerCompany
+  checkPermissions('normal'),
+  asyncHandler(MessageController.getMessagesListPerCompany)
 );
 
 
-
 message.get(
-  "/message/info/:messageId",
+  '/message/info/:messageId',
   auth.verifyToken,
-  checkPermissions("normal"),
-  MessageController.getMessageInfo
+  checkPermissions('normal'),
+  asyncHandler(MessageController.getMessageInfo)
 );
 
 // Search in Sender email and Message
 message.get(
-  "/message/search",
+  '/message/search',
   auth.verifyToken,
-  checkPermissions("normal"),
-  MessageController.searchForMessages
+  checkPermissions('normal'),
+  asyncHandler(MessageController.searchForMessages)
 );
 
 message.put(
-  "/message/read",
+  '/message/read',
   auth.verifyToken,
-  checkPermissions(["normal","admin-company", "admin-job", "admin-event", "admin-blog", "admin-user"]),
-  MessageController.setRead
+  checkPermissions(['normal', 'admin-company', 'admin-job', 'admin-event', 'admin-blog', 'admin-user']),
+  asyncHandler(MessageController.setRead)
 );
 
 /*
  * Notifications
  */
 message.get(
-  "/notification/company",
+  '/notification/company',
   auth.verifyToken,
-  checkPermissions("normal"),
-  NotificationController.getNotificationsForCompany
+  checkPermissions('normal'),
+  asyncHandler(NotificationController.getNotificationsForCompany)
 );
 
 message.put(
-  "/notification/read",
+  '/notification/read',
   auth.verifyToken,
-  checkPermissions(["normal","admin-company", "admin-job", "admin-event", "admin-blog", "admin-user"]),
-  NotificationController.setRead
+  checkPermissions(['normal', 'admin-company', 'admin-job', 'admin-event', 'admin-blog', 'admin-user']),
+  asyncHandler(NotificationController.setRead)
 );
 
 export default message;
