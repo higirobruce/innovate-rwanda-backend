@@ -213,6 +213,13 @@ export default class MessageController {
       });
     }
 
+    const companyOwner = await db.User.findOne({
+      where: {
+        companyId: body.companyId
+      },
+      attributes: ['id']
+    });
+
     const newMessage = await db.Message.create({
       ...body,
       userId: req.user.id,
@@ -221,7 +228,7 @@ export default class MessageController {
     await db.UserMessage.create({
       lastMessageId: newMessage.id,
       userId: req.user.id,
-      recipientId: body.recipientId,
+      recipientId: companyOwner.id || 0,
     });
 
     return responseWrapper({
