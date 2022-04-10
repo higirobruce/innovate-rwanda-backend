@@ -264,6 +264,15 @@ export default class MessageController {
           required: true,
           order: [['createdAt', 'DESC']],
 
+        },
+        {
+          model: db.User,
+          as: 'sender',
+
+        },
+        {
+          model: db.User,
+          as: 'recipient'
         }
       ]
     });
