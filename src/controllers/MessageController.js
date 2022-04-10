@@ -1,10 +1,11 @@
+import { Op } from 'sequelize';
 /* eslint-disable max-len */
 import db from '../models';
 
 import * as events from '../constants/eventNames';
 import { eventEmitter } from '../config/eventEmitter';
 import responseWrapper from '../helpers/responseWrapper';
-import { OK } from '../constants/statusCodes';
+import { NOT_FOUND, OK } from '../constants/statusCodes';
 
 /**
  * MessageController Class
@@ -182,6 +183,96 @@ export default class MessageController {
       status: OK,
       data: messages.rows,
       meta,
+    });
+  }
+
+  /**
+   *
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} Response
+   */
+  static async sendMessage(req, res) {
+    const { body } = req;
+    /**
+     *
+     * - companyId
+     * - recipientId
+     * - message
+     *
+     *
+     */
+
+    const foundCompany = await db.Company.findByPk(body.companyId);
+
+    if (!foundCompany) {
+      return responseWrapper({
+        res,
+        status: NOT_FOUND,
+        message: 'Company not found'
+      });
+    }
+
+    const newMessage = await db.Message.create({
+      ...body,
+      userId: req.user.id,
+    });
+
+    await db.UserMessage.create({
+      lastMessageId: newMessage.id,
+      userId: req.user.id,
+      recipientId: body.recipientId,
+    });
+
+    return responseWrapper({
+      res,
+      status: OK,
+      message: 'Message sent!',
+      data: newMessage
+    });
+  }
+
+  /**
+   *
+   * @param {Object} req
+   * @param {Object} res
+   * @returns {Object} response
+   */
+  static async getMessageHistory(req, res) {
+    const { user } = req;
+
+    const filter = {};
+
+    filter[Op.or] = [];
+
+    filter[Op.or].push({
+      userId: user.id,
+    });
+
+    filter[Op.or].push({
+      recipientId: user.id
+    });
+
+    const messageHistory = await db.UserMessage.findAll({
+      where: {
+        ...filter,
+      },
+      include: [
+        {
+          model: db.Message,
+          as: 'lastMessage',
+          required: true,
+          order: [['createdAt', 'DESC']],
+
+        }
+      ]
+    });
+
+    return responseWrapper({
+      res,
+      status: OK,
+      message: 'Message history retrieved',
+      data: messageHistory
     });
   }
 }

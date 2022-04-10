@@ -20,6 +20,9 @@ module.exports = (sequelize, DataTypes) => {
     firstread: {
       type: DataTypes.DATE
     },
+    userId: {
+      type: DataTypes.INTEGER,
+    },
     createdAt: {
       allowNull: false,
       type: DataTypes.DATE
@@ -37,6 +40,10 @@ module.exports = (sequelize, DataTypes) => {
     message.belongsTo(models.Company, {
       as: 'company',
       foreignKey: 'companyId'
+    });
+    message.belongsTo(models.User, {
+      as: 'sender',
+      foreignKey: 'userId'
     });
   };
   return message;

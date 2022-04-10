@@ -10,6 +10,8 @@ import asyncHandler from '../../middlewares/asyncErrorHandler';
 const message = Router();
 
 message.get('/messages', auth.verifyToken, asyncHandler(MessageController.getAllMessages));
+message.post('/messages', auth.verifyToken, asyncHandler(MessageController.sendMessage));
+message.get('/messages/history', auth.verifyToken, asyncHandler(MessageController.getMessageHistory));
 
 message.post(
   '/message/post',
