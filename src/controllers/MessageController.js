@@ -163,7 +163,12 @@ export default class MessageController {
         {
           model: db.Company,
           as: 'company',
-          required: true
+          required: true,
+        },
+        {
+          model: db.User,
+          as: 'user',
+          required: true,
         }
       ],
       ...filter,
@@ -284,7 +289,7 @@ export default class MessageController {
       ]
     });
 
-    return responseWrapper({
+    return responseWrapper({ 
       res,
       status: OK,
       message: 'Message history retrieved',
