@@ -1,6 +1,7 @@
 import { Router } from 'express';
 
 import talentController from '../../controllers/TalentController';
+import asyncHandler from '../../middlewares/asyncErrorHandler';
 
 import auth from '../../middlewares/authorization_authentication';
 import checkPermissions from '../../middlewares/checkPermissions';
@@ -14,7 +15,7 @@ talents.get(
   '/talent/admin',
   auth.verifyToken,
   checkPermissions('admin-company'),
-  talentController.getTalents
+  asyncHandler(talentController.getTalents)
 );
 
 /*
@@ -22,13 +23,13 @@ talents.get(
  */
 talents.get(
   '/talent/public',
-  talentController.getTalentsActive
+  asyncHandler(talentController.getTalentsActive)
 );
 
 
 talents.get(
   '/talent/search',
-  talentController.findTalents
+  asyncHandler(talentController.findTalents)
 );
 
 /*

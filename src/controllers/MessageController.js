@@ -289,7 +289,7 @@ export default class MessageController {
       ]
     });
 
-    return responseWrapper({ 
+    return responseWrapper({
       res,
       status: OK,
       message: 'Message history retrieved',
