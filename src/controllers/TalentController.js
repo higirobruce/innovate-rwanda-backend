@@ -16,27 +16,17 @@ export default class Talents {
    * @returns {Object} Response
    */
   static async getTalents(req, res) {
-    try {
-      const response = await db.Individual.findAll({
-        order: [
-          ['lastName', 'ASC'],
-          ['firstName', 'ASC'],
-        ],
-      });
-      return responseWrapper({
-        res,
-        status: OK,
-        result: response,
-      });
-    } catch (error) {
-      // console.log(err);
-      logger.customLogger.log('error', error);
-      return responseWrapper({
-        res,
-        status: BAD_REQUEST,
-        message: 'No individual accounts found at this moment',
-      });
-    }
+    const response = await db.Individual.findAll({
+      order: [
+        ['lastName', 'ASC'],
+        ['firstName', 'ASC'],
+      ],
+    });
+    return responseWrapper({
+      res,
+      status: OK,
+      result: response,
+    });
   }
 
   /**
