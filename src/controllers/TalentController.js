@@ -17,7 +17,9 @@ export default class Talents {
    */
   static async getTalents(req, res) {
     const response = await db.Individual.findAll({
-      order: ['createdAt', 'DESC']
+      order: [
+        ['createdAt', 'DESC']
+      ],
     });
     return responseWrapper({
       res,
