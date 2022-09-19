@@ -1,4 +1,5 @@
 import db from '../models';
+
 const ExportHelper = (query) => {
   // Export companies
   let where;
@@ -14,10 +15,10 @@ const ExportHelper = (query) => {
       };
     }
     const include = [
-      { model: db['BusinessActivities'], attributes: ['name'] },
-      { model: db['BusinessActivities'], attributes: ['name'] },
+      { model: db.BusinessActivities, attributes: ['name'] },
+      { model: db.BusinessActivities, attributes: ['name'] },
       {
-        model: db['ActivitiesOfCompany'],
+        model: db.ActivitiesOfCompany,
         attributes: ['companyId', 'activityId'],
         on: {
           [db.Op.and]: [
@@ -30,7 +31,7 @@ const ExportHelper = (query) => {
         },
         include: [
           {
-            model: db['BusinessActivities'],
+            model: db.BusinessActivities,
             attributes: ['name'],
             on: {
               [db.Op.and]: [
@@ -44,11 +45,9 @@ const ExportHelper = (query) => {
           },
         ],
       },
-      { model: db['CompanyTypes'], attributes: ['name'] },
+      { model: db.CompanyTypes, attributes: ['name'] },
     ];
     return { where, include };
-  } else {
-    return;
   }
 };
 export default ExportHelper;
