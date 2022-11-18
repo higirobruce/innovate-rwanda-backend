@@ -1,7 +1,8 @@
-"use strict";
+
+
 module.exports = (sequelize, DataTypes) => {
   const BusinessActivities = sequelize.define(
-    "BusinessActivities",
+    'BusinessActivities',
     {
       id: {
         allowNull: false,
@@ -17,9 +18,10 @@ module.exports = (sequelize, DataTypes) => {
     },
     {
       sequelize,
-      modelName: "BusinessActivities",
+      modelName: 'BusinessActivities',
     }
   );
+  // eslint-disable-next-line no-unused-vars
   BusinessActivities.associate = function (models) {
     // associations
   };
