@@ -194,30 +194,30 @@ export default class CompanyController {
         {
           model: db.ActivitiesOfCompany,
           attributes: ['companyId', 'activityId'],
-          on: {
-            [db.Op.and]: [
-              db.sequelize.where(
-                db.sequelize.col('ActivitiesOfCompanies.companyId'),
-                db.Op.eq,
-                db.sequelize.col('Company.id')
-              ),
-            ],
-          },
+          // on: {
+          //   [db.Op.and]: [
+          //     db.sequelize.where(
+          //       db.sequelize.col('ActivitiesOfCompanies.companyId'),
+          //       db.Op.eq,
+          //       db.sequelize.col('Company.id')
+          //     ),
+          //   ],
+          // },
           include: [
             {
               model: db.BusinessActivities,
               attributes: ['name'],
-              on: {
-                [db.Op.and]: [
-                  db.sequelize.where(
-                    db.sequelize.col('ActivitiesOfCompanies.activityId'),
-                    db.Op.eq,
-                    db.sequelize.col(
-                      'ActivitiesOfCompanies->BusinessActivity.id'
-                    )
-                  ),
-                ],
-              },
+              // on: {
+              //   [db.Op.and]: [
+              //     db.sequelize.where(
+              //       db.sequelize.col('ActivitiesOfCompanies.activityId'),
+              //       db.Op.eq,
+              //       db.sequelize.col(
+              //         'ActivitiesOfCompanies->BusinessActivity.id'
+              //       )
+              //     ),
+              //   ],
+              // },
             },
           ],
         },
