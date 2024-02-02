@@ -12,28 +12,28 @@ services:
     build:
       context: .
     environment:
-      NODE_ENV: production
-      DATABASE_URL_PROD: http://localhost:5432
-      DB_USER_PROD: userinnovate
-      DB_PASSWORD_PROD: mySecretPassword
-      DB_NAME_PROD: innovatedb
-      DB_HOST_PROD: innovatedb
-      DB_PORT_PROD: 5432
+      NODE_ENV: 
+      DATABASE_URL_PROD: 
+      DB_USER_PROD: 
+      DB_PASSWORD_PROD: 
+      DB_NAME_PROD: 
+      DB_HOST_PROD: 
+      DB_PORT_PROD: 
       MAILER_EMAIL: 
       MAILER_CLIENT_ID:
       MAILER_CLIENT_SECRET:
       MAILER_REDIRECT_URI:
       MAILER_REFRESH_TOKEN:
 
-      APP_URL_BACKEND: http://localhost:3000
-      APP_URL: http://localhost:3000
+      APP_URL_BACKEND: 
+      APP_URL: 
       PATH_FILES: 
-      SECRETKEY: 6562258d2d0df884deaca3f1
-      COMPANY_DEL_KEY: myCompanyKeyLooongKeyCharactes
-      RESET_PASSWORD_KEY: 6562258d2d0df884deaca3f3
-      ACCOUNT_ACTIVATION_KEY: 6562258d2d0df884deaca3f4
+      SECRETKEY: 
+      COMPANY_DEL_KEY: 
+      RESET_PASSWORD_KEY: 
+      ACCOUNT_ACTIVATION_KEY: 
     ports:
-      - 3000:3000
+      - 
 
     # The commented out section below is an example of how to define a PostgreSQL
     # database that your application can use. `depends_on` tells Docker Compose to
@@ -45,19 +45,19 @@ services:
     #   db:
     #     condition: service_healthy
   db:
-    image: postgres
-    restart: always
-    user: userinnovate
+    image: 
+    restart: 
+    # user: userinnovate
     # secrets:
     #   - db-password
     # volumes:
     #   - db-data:/var/lib/postgresql/data
     environment:
-      - POSTGRES_DB=innovatedb
-      - POSTGRES_PASSWORD=mySecretPassword
-      - POSTGRES_USER=userinnovate
+      - POSTGRES_DB=
+      - POSTGRES_PASSWORD=
+      - POSTGRES_USER=
     expose:
-      - 5432
+      - 
     # healthcheck:
     #   test: ["CMD", "pg_isready"]
     #   interval: 10s
