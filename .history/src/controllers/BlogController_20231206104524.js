@@ -250,18 +250,17 @@ export default class BlogController {
         ],
       });
       if (blogPosts && blogPosts.length > 0) {
-        console.lof('Found....')
+
         return res.status(200).json({
           result: blogPosts,
         });
       }
-      console.log('nothing found!')
       return res.status(404).json({
         result: [],
         error: 'No blog posts found at this moment',
       });
     } catch (error) {
-      console.log(error)
+      // console.log(error)
       logger.customLogger.log('error', error);
       return res
         .status(400)

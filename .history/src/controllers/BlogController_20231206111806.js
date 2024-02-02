@@ -261,7 +261,7 @@ export default class BlogController {
         error: 'No blog posts found at this moment',
       });
     } catch (error) {
-      console.log(error)
+      // console.log(error)
       logger.customLogger.log('error', error);
       return res
         .status(400)

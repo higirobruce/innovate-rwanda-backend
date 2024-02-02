@@ -157,10 +157,8 @@ export default class BlogController {
       search,
     } = req.query;
 
-   
     try {
       if (companyType) {
-        console.log(companyType)
         let companiesId;
         await generic.getCompaniesIdPerType(companyType, (theCompanies) => {
           companiesId = theCompanies.map(company => company.id);
@@ -169,8 +167,6 @@ export default class BlogController {
           ...where,
           companyId: { [db.Op.in]: companiesId },
         };
-
-        console.log(companiesId)
       }
       if (topic) {
         let postsId;
@@ -250,18 +246,16 @@ export default class BlogController {
         ],
       });
       if (blogPosts && blogPosts.length > 0) {
-        console.lof('Found....')
         return res.status(200).json({
           result: blogPosts,
         });
       }
-      console.log('nothing found!')
       return res.status(404).json({
         result: [],
         error: 'No blog posts found at this moment',
       });
     } catch (error) {
-      console.log(error)
+      // console.log(error)
       logger.customLogger.log('error', error);
       return res
         .status(400)
